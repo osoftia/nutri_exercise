@@ -27,6 +27,7 @@ obj/
 .env
 .env.*
 !.env.example
+PROMPT*.txt
 
 # IDE
 .idea/
