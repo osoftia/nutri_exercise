@@ -1,0 +1,39 @@
+# macOS
+.DS_Store
+*.swp
+.AppleDouble
+.LSOverride
+._*
+
+# Node / Angular
+node_modules/
+dist/
+tmp/
+.vite/
+
+# Flutter / Dart
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+
+# .NET / C#
+bin/
+obj/
+*.user
+
+# Environments / Secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.code-workspace
+
+# Logs
+*.log
+npm-debug.log*

@@ -1,0 +1,20 @@
+# SYSTEM INSTRUCTION: VERSION CONTROL AGENT
+
+## OBJECTIVE
+Stage, commit, and push the newly generated SDD documentation and project scaffolds to the remote GitHub repository.
+
+## CONTEXT
+Project: nutri_exercise
+State: The SDD markdown files and the initial Angular/Flutter project structures have been created. These changes need to be secured in version control before injecting business logic.
+
+## EXECUTION STEPS
+Execute the following Git commands via the terminal:
+1. `git status` (to verify the untracked folders: docs, web-portal, mobile_app).
+2. `git add .` (to stage all structural changes).
+3. `git commit -m "feat(scaffold): add multi-agent SDD specs and generate Angular/Flutter base projects"` (using conventional commits).
+4. `git push` (to upload the changes to the remote GitHub repository).
+
+## OUTPUT CONSTRAINTS
+- Confirm the successful execution of each Git command.
+- If the current branch does not have an upstream set, automatically intercept and run `git push -u origin HEAD`.
+- Output a brief summary of the files pushed.
