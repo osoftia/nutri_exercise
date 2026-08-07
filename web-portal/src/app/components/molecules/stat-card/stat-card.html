@@ -1,0 +1,17 @@
+<div class="stat-card">
+  <div class="stat-card__header">
+    <span class="stat-card__label">{{ label() }}</span>
+    <span
+      class="stat-card__trend"
+      [class.stat-card__trend--down]="trend() === 'down'"
+    >
+      <app-icon [name]="trend() === 'up' ? 'trend-up' : 'trend-down'" />
+    </span>
+  </div>
+  <p class="stat-card__value">
+    {{ value() }}
+    @if (unit()) {
+      <span class="stat-card__unit">{{ unit() }}</span>
+    }
+  </p>
+</div>

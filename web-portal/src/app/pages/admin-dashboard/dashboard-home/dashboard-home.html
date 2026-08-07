@@ -1,0 +1,45 @@
+<div class="dashboard-home">
+  <app-admin-sidebar />
+
+  <div class="dashboard-home__body">
+    <app-top-navbar />
+
+    <main class="dashboard-home__content">
+      @if (loading()) {
+        <div class="dashboard-home__loading">Loading dashboard...</div>
+      }
+
+      <section class="dashboard-home__stats">
+        <app-stat-card label="Total Users" value="1,248" unit="users" />
+        <app-stat-card
+          label="Active Routines"
+          [value]="activeRoutines()"
+          unit="days"
+        />
+        <app-stat-card
+          label="Meals Planned"
+          [value]="mealsCount()"
+          unit="meals"
+          trend="down"
+        />
+      </section>
+
+      <section class="dashboard-home__panel">
+        <div class="dashboard-home__panel-header">
+          <h2 class="dashboard-home__heading">Weekly Routines</h2>
+        </div>
+        <app-data-table
+          [columns]="routineColumns"
+          [rows]="routineRows()"
+        />
+      </section>
+
+      <section class="dashboard-home__panel">
+        <div class="dashboard-home__panel-header">
+          <h2 class="dashboard-home__heading">Daily Menus</h2>
+        </div>
+        <app-data-table [columns]="dietColumns" [rows]="dietRows()" />
+      </section>
+    </main>
+  </div>
+</div>

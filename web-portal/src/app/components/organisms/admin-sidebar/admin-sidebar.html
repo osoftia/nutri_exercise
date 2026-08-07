@@ -1,0 +1,25 @@
+<aside class="admin-sidebar">
+  <a class="admin-sidebar__brand" routerLink="/admin-dashboard">
+    <span class="admin-sidebar__logo">N</span>
+    <span class="admin-sidebar__title">NutriExercise</span>
+  </a>
+
+  <nav class="admin-sidebar__nav" aria-label="Main navigation">
+    @for (item of navItems; track item.label) {
+      <a
+        class="admin-sidebar__link"
+        routerLink="/admin-dashboard"
+        routerLinkActive="admin-sidebar__link--active"
+        [attr.aria-current]="item.label === 'Dashboard' ? 'page' : null"
+      >
+        <app-icon [name]="item.icon" />
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+
+  <div class="admin-sidebar__footer">
+    <app-icon name="logout" />
+    <span>Sign out</span>
+  </div>
+</aside>

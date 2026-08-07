@@ -1,0 +1,20 @@
+<div class="search-bar">
+  <span class="search-bar__icon">
+    <app-icon name="search" />
+  </span>
+  <app-form-input
+    class="search-bar__input"
+    placeholder="Search..."
+    [(value)]="query"
+  />
+  @if (query()) {
+    <button
+      type="button"
+      class="search-bar__clear"
+      aria-label="Clear search"
+      (click)="query.set('')"
+    >
+      &times;
+    </button>
+  }
+</div>

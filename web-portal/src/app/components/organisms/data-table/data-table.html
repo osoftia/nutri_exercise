@@ -1,0 +1,26 @@
+<div class="data-table__wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        @for (col of columns(); track col.key) {
+          <th class="data-table__th">{{ col.label }}</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track $index) {
+        <tr class="data-table__row">
+          @for (col of columns(); track col.key) {
+            <td class="data-table__td">{{ row[col.key] }}</td>
+          }
+        </tr>
+      } @empty {
+        <tr>
+          <td class="data-table__empty" [attr.colspan]="columns().length">
+            No data available
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,10 @@
+<button
+  class="custom-button"
+  [class.custom-button--primary]="variant() === 'primary'"
+  [class.custom-button--ghost]="variant() === 'ghost'"
+  [class.custom-button--text]="variant() === 'text'"
+  [type]="type()"
+  [disabled]="disabled()"
+>
+  <ng-content></ng-content>
+</button>

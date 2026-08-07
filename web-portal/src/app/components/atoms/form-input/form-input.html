@@ -1,0 +1,12 @@
+<label class="form-input">
+  @if (label()) {
+    <span class="form-input__label">{{ label() }}</span>
+  }
+  <input
+    class="form-input__control"
+    [type]="type()"
+    [placeholder]="placeholder()"
+    [value]="value()"
+    (input)="value.set($any($event.target).value)"
+  />
+</label>
