@@ -4,6 +4,8 @@ import 'core/config/app_config.dart';
 import 'core/data/diet_repository.dart';
 import 'core/data/http_diet_repository.dart';
 import 'core/data/http_routine_repository.dart';
+import 'core/data/local_diet_repository.dart';
+import 'core/data/local_routine_repository.dart';
 import 'core/data/routine_repository.dart';
 import 'core/mocks/mock_diet_repository.dart';
 import 'core/mocks/mock_routine_repository.dart';
@@ -17,12 +19,18 @@ class NutriApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DietRepository dietRepository = config.useMocks
-        ? MockDietRepository()
-        : HttpDietRepository(config.apiUrl);
-    final RoutineRepository routineRepository = config.useMocks
-        ? MockRoutineRepository()
-        : HttpRoutineRepository(config.apiUrl);
+    final DietRepository dietRepository;
+    final RoutineRepository routineRepository;
+    if (config.useMocks) {
+      dietRepository = MockDietRepository();
+      routineRepository = MockRoutineRepository();
+    } else if (config.useLocalDatabase) {
+      dietRepository = LocalDietRepository();
+      routineRepository = LocalRoutineRepository();
+    } else {
+      dietRepository = HttpDietRepository(config.apiUrl);
+      routineRepository = HttpRoutineRepository(config.apiUrl);
+    }
 
     return MaterialApp(
       title: 'NutriExercise',

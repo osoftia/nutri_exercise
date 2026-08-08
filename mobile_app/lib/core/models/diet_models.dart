@@ -30,6 +30,18 @@ class Meal {
       fat: json['fat'] as int,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'mealType': mealType.name,
+      'calories': calories,
+      'protein': protein,
+      'carbs': carbs,
+      'fat': fat,
+    };
+  }
 }
 
 class DailyMenu {
@@ -50,10 +62,18 @@ class DailyMenu {
       id: json['id'] as int,
       date: json['date'] as String,
       totalCalories: json['totalCalories'] as int,
-      meals:
-          (json['meals'] as List<dynamic>)
-              .map((meal) => Meal.fromJson(meal as Map<String, dynamic>))
-              .toList(),
+      meals: (json['meals'] as List<dynamic>)
+          .map((meal) => Meal.fromJson(meal as Map<String, dynamic>))
+          .toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'date': date,
+      'totalCalories': totalCalories,
+      'meals': meals.map((meal) => meal.toJson()).toList(),
+    };
   }
 }

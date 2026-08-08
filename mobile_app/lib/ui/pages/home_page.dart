@@ -5,9 +5,12 @@ import '../../core/data/diet_repository.dart';
 import '../../core/data/routine_repository.dart';
 import '../../core/models/diet_models.dart';
 import '../../core/models/routine_models.dart';
+import '../../core/services/ai_interceptor.dart';
+import '../../core/services/notification_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/custom_button.dart';
 import '../atoms/typography.dart';
+import '../molecules/offline_ai_dialog.dart';
 import '../molecules/stat_card.dart';
 import '../organisms/bottom_nav_bar.dart';
 import '../organisms/interactive_body_map.dart';
@@ -31,6 +34,8 @@ class _HomePageState extends State<HomePage> {
   late Future<List<WorkoutDay>> _routines;
   late Future<List<DailyMenu>> _menus;
   String? _selectedMuscle;
+  final AiService _aiService = AiService();
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -41,6 +46,59 @@ class _HomePageState extends State<HomePage> {
   void _load() {
     _routines = widget.routineRepository.getWeeklyRoutine();
     _menus = widget.dietRepository.getDailyMenus();
+  }
+
+  Future<void> _askAi() async {
+    try {
+      await _aiService.ensureOnline();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You are online — AI consultation coming soon.'),
+        ),
+      );
+    } on OfflineException {
+      if (!mounted) return;
+      await showOfflineAiDialog(context);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('AI service unavailable right now.')),
+      );
+    }
+  }
+
+  Future<void> _scheduleRoutineNotification(WorkoutDay day) async {
+    try {
+      await _notificationService.scheduleWeeklyRoutine(
+        day.id,
+        _dayOfWeek(day.weekday),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Weekly reminder scheduled for ${day.weekday}')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Notifications are not available on this device.'),
+        ),
+      );
+    }
+  }
+
+  int _dayOfWeek(String weekday) {
+    return switch (weekday) {
+      'Monday' => 1,
+      'Tuesday' => 2,
+      'Wednesday' => 3,
+      'Thursday' => 4,
+      'Friday' => 5,
+      'Saturday' => 6,
+      'Sunday' => 7,
+      _ => 1,
+    };
   }
 
   @override
@@ -80,13 +138,17 @@ class _HomePageState extends State<HomePage> {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.xl),
       children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: CustomButton(
-            label: 'Refresh',
-            variant: CustomButtonVariant.ghost,
-            onPressed: () => setState(_load),
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            CustomButton(label: 'Ask AI', onPressed: _askAi),
+            const SizedBox(width: AppSpacing.md),
+            CustomButton(
+              label: 'Refresh',
+              variant: CustomButtonVariant.ghost,
+              onPressed: () => setState(_load),
+            ),
+          ],
         ),
         const SizedBox(height: AppSpacing.lg),
         Row(
@@ -132,7 +194,10 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: AppSpacing.xxl),
         const AppHeading('Weekly Routines'),
         const SizedBox(height: AppSpacing.md),
-        RoutineList(routines: routines),
+        RoutineList(
+          routines: routines,
+          onRoutineTap: _scheduleRoutineNotification,
+        ),
         const SizedBox(height: AppSpacing.xxl),
         const AppHeading('Daily Menus'),
         const SizedBox(height: AppSpacing.md),

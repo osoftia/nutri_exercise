@@ -25,6 +25,17 @@ class Exercise {
       restSeconds: json['restSeconds'] as int,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'muscleGroup': muscleGroup,
+      'sets': sets,
+      'reps': reps,
+      'restSeconds': restSeconds,
+    };
+  }
 }
 
 class WorkoutDay {
@@ -45,13 +56,20 @@ class WorkoutDay {
       id: json['id'] as int,
       weekday: json['weekday'] as String,
       focus: json['focus'] as String,
-      exercises:
-          (json['exercises'] as List<dynamic>)
-              .map(
-                (exercise) =>
-                    Exercise.fromJson(exercise as Map<String, dynamic>),
-              )
-              .toList(),
+      exercises: (json['exercises'] as List<dynamic>)
+          .map(
+            (exercise) => Exercise.fromJson(exercise as Map<String, dynamic>),
+          )
+          .toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'weekday': weekday,
+      'focus': focus,
+      'exercises': exercises.map((exercise) => exercise.toJson()).toList(),
+    };
   }
 }
