@@ -1,0 +1,11 @@
+@NutriExercise.Api_HostAddress = http://localhost:5039
+
+GET {{NutriExercise.Api_HostAddress}}/api/routine
+Accept: application/json
+
+###
+
+GET {{NutriExercise.Api_HostAddress}}/api/aiproxy
+Accept: application/json
+
+###

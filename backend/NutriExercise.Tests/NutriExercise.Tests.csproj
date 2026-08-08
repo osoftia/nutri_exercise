@@ -22,4 +22,9 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NutriExercise.Api\NutriExercise.Api.csproj" />
+    <ProjectReference Include="..\NutriExercise.Core\NutriExercise.Core.csproj" />
+  </ItemGroup>
+
 </Project>
