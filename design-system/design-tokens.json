@@ -1,0 +1,66 @@
+{
+  "name": "nutri-blue-gym",
+  "version": "1.0.0",
+  "colors": {
+    "primary": {
+      "300": "#93C5FD",
+      "400": "#60A5FA",
+      "500": "#3B82F6",
+      "600": "#2563EB"
+    },
+    "surface": {
+      "700": "#334155",
+      "800": "#1E293B",
+      "900": "#0F172A"
+    },
+    "text": {
+      "high": "#F8FAFC",
+      "medium": "#CBD5E1",
+      "low": "#64748B"
+    },
+    "accent": "#F97316",
+    "success": "#22C55E",
+    "warning": "#EAB308",
+    "danger": "#EF4444",
+    "neutral": {
+      "muscle": "#94A3B8"
+    }
+  },
+  "typography": {
+    "fontFamily": "Inter",
+    "sizes": {
+      "h1": 32,
+      "h2": 24,
+      "h3": 20,
+      "body": 16,
+      "caption": 12,
+      "label": 14
+    },
+    "weights": {
+      "regular": 400,
+      "medium": 500,
+      "semiBold": 600,
+      "bold": 700
+    }
+  },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "xxl": 32,
+    "xxxl": 48
+  },
+  "radius": {
+    "sm": 8,
+    "md": 12,
+    "lg": 20
+  },
+  "motion": {
+    "durationFastMs": 150,
+    "durationNormalMs": 250,
+    "pulseGlowMs": 300,
+    "curve": "ease-out"
+  }
+}
