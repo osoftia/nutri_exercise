@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/muscle_vectors.dart';
 import '../../core/data/diet_repository.dart';
 import '../../core/data/routine_repository.dart';
 import '../../core/models/diet_models.dart';
@@ -9,6 +10,7 @@ import '../atoms/custom_button.dart';
 import '../atoms/typography.dart';
 import '../molecules/stat_card.dart';
 import '../organisms/bottom_nav_bar.dart';
+import '../organisms/interactive_body_map.dart';
 import '../organisms/routine_list.dart';
 
 class HomePage extends StatefulWidget {
@@ -28,6 +30,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late Future<List<WorkoutDay>> _routines;
   late Future<List<DailyMenu>> _menus;
+  String? _selectedMuscle;
 
   @override
   void initState() {
@@ -112,6 +115,19 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+        const AppHeading('Muscle Map'),
+        const SizedBox(height: AppSpacing.md),
+        InteractiveBodyMap(
+          selectedMuscle: _selectedMuscle,
+          onMuscleSelected: (id) => setState(() => _selectedMuscle = id),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppText(
+          _selectedMuscle == null
+              ? 'Tap a muscle group to highlight it'
+              : 'Selected: ${muscleLabel(_selectedMuscle!)}',
         ),
         const SizedBox(height: AppSpacing.xxl),
         const AppHeading('Weekly Routines'),
