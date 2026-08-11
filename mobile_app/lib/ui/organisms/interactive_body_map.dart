@@ -97,7 +97,7 @@ Rect _figureBox(MuscleView view, Size size) {
 Path _screenPath(MuscleRegion region, Size size) {
   final box = _figureBox(region.view, size);
   final scaled = region.normalizedPath.transform(
-    (Matrix4.identity()..scaleByDouble(box.width, box.height, 1.0, 1.0))
+    (Matrix4.identity()..scale(box.width, box.height, 1.0))
         .storage,
   );
   return scaled.shift(box.topLeft);
@@ -177,7 +177,7 @@ class _BodyMapPainter extends CustomPainter {
     final box = _figureBox(view, size);
     final source = view == MuscleView.front ? frontSilhouette : backSilhouette;
     final path = source.transform(
-      (Matrix4.identity()..scaleByDouble(box.width, box.height, 1.0, 1.0))
+      (Matrix4.identity()..scale(box.width, box.height, 1.0))
           .storage,
     );
     canvas.drawPath(

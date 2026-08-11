@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/config/app_config.dart';
+import 'core/constants/api_constants.dart';
 import 'core/data/diet_repository.dart';
 import 'core/data/http_diet_repository.dart';
 import 'core/data/http_routine_repository.dart';
@@ -28,8 +29,14 @@ class NutriApp extends StatelessWidget {
       dietRepository = LocalDietRepository();
       routineRepository = LocalRoutineRepository();
     } else {
-      dietRepository = HttpDietRepository(config.apiUrl);
-      routineRepository = HttpRoutineRepository(config.apiUrl);
+      dietRepository = HttpDietRepository(
+        ApiConstants.baseUrl,
+        fallback: LocalDietRepository(),
+      );
+      routineRepository = HttpRoutineRepository(
+        ApiConstants.baseUrl,
+        fallback: LocalRoutineRepository(),
+      );
     }
 
     return MaterialApp(

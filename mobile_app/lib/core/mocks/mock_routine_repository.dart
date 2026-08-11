@@ -105,4 +105,25 @@ class MockRoutineRepository implements RoutineRepository {
       () => mockWorkoutRoutines,
     );
   }
+
+  @override
+  Future<String> generateRoutine(String userPreferences) {
+    return Future.delayed(
+      const Duration(milliseconds: 500),
+      () =>
+          'Mock AI routine for: $userPreferences\n\n'
+          'Day 1 - Chest & Triceps:\n'
+          '- Bench Press: 4 x 8-12\n'
+          '- Incline Dumbbell Press: 3 x 10-12\n'
+          '- Triceps Pushdown: 3 x 12-15\n\n'
+          'Day 2 - Back & Biceps:\n'
+          '- Deadlift: 4 x 5-8\n'
+          '- Lat Pulldown: 3 x 10-12\n'
+          '- Barbell Curl: 3 x 10-12\n\n'
+          'Day 3 - Legs & Core:\n'
+          '- Squat: 4 x 6-10\n'
+          '- Leg Press: 3 x 10-12\n'
+          '- Plank: 3 x 60 sec',
+    );
+  }
 }

@@ -27,7 +27,7 @@ class NotificationService {
         requestSoundPermission: true,
       ),
     );
-    await _plugin.initialize(settings: settings);
+    await _plugin.initialize(settings);
     _initialized = true;
   }
 
@@ -46,11 +46,11 @@ class NotificationService {
       macOS: DarwinNotificationDetails(),
     );
     await _plugin.periodicallyShow(
-      id: routineId,
-      title: 'Routine reminder',
-      body: 'Time for your Day $dayOfWeek workout',
-      repeatInterval: RepeatInterval.weekly,
-      notificationDetails: details,
+      routineId,
+      'Routine reminder',
+      'Time for your Day $dayOfWeek workout',
+      RepeatInterval.weekly,
+      details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
   }

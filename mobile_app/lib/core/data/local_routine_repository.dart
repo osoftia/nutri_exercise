@@ -37,6 +37,20 @@ class LocalRoutineRepository implements RoutineRepository {
     await _databaseHelper.upsertRoutine(day);
   }
 
+  @override
+  Future<String> generateRoutine(String userPreferences) async {
+    final day = WorkoutDay(
+      id: DateTime.now().millisecondsSinceEpoch,
+      weekday: 'Weekly',
+      focus: 'AI Generated Routine',
+      exercises: const [],
+    );
+    await saveRoutine(day);
+    return 'Offline AI routine for: $userPreferences\n\n'
+        'The backend API is unreachable, so a placeholder routine was saved '
+        'locally. Connect to the C# API to get a tailored workout plan.';
+  }
+
   Future<void> _seedIfNeeded() async {
     if (_seeded) return;
     final rows = await _databaseHelper.getRoutines();
