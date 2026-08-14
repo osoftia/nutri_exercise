@@ -13,6 +13,11 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 - **Ollama**: local AI service integration powering the routine-generation endpoint.
 - **CORS & API contracts**: CORS policy wired for Flutter/web clients with HTTP client endpoints connected end-to-end.
 
+
+## [2026-08-14]
+
+- \`ed1fa78\` feat(backend): add pgvector support and schema for RAG (ResearchDocument) and RL (AiInteraction)
+
 ## [2026-08-14]
 
 ### Added
