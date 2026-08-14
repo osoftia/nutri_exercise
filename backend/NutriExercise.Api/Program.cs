@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using NutriExercise.Core.Interfaces;
 using NutriExercise.Infrastructure.Data;
 using NutriExercise.Infrastructure.Services;
+using Pgvector.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
