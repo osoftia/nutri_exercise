@@ -31,6 +31,28 @@ public class OllamaAiService : IAiService
         return result?.Response ?? string.Empty;
     }
 
+    public async Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return Array.Empty<float>();
+        }
+
+        var request = new OllamaEmbeddingRequest
+        {
+            Model = "nomic-embed-text",
+            Prompt = text
+        };
+
+        using var response = await _httpClient.PostAsJsonAsync("api/embeddings", request, cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<OllamaEmbeddingResponse>(cancellationToken);
+
+        return result?.Embedding ?? Array.Empty<float>();
+    }
+
     private static string BuildPrompt(string userPreferences) =>
         $"You are a professional fitness coach. Based on the following user preferences, " +
         $"create a detailed weekly workout routine with exercises, sets, and reps. " +
@@ -52,5 +74,20 @@ public class OllamaAiService : IAiService
     {
         [JsonPropertyName("response")]
         public string Response { get; set; } = string.Empty;
+    }
+
+    private sealed class OllamaEmbeddingRequest
+    {
+        [JsonPropertyName("model")]
+        public string Model { get; set; } = string.Empty;
+
+        [JsonPropertyName("prompt")]
+        public string Prompt { get; set; } = string.Empty;
+    }
+
+    private sealed class OllamaEmbeddingResponse
+    {
+        [JsonPropertyName("embedding")]
+        public float[] Embedding { get; set; } = Array.Empty<float>();
     }
 }
