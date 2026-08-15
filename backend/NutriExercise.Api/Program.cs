@@ -38,6 +38,7 @@ builder.Services.AddHttpClient("Ollama", client =>
 });
 builder.Services.AddScoped<IAiService, OllamaAiService>();
 builder.Services.AddScoped<IRoutineRepository, RoutineRepository>();
+builder.Services.AddScoped<IResearchDocumentRepository, ResearchDocumentRepository>();
 
 var app = builder.Build();
 
