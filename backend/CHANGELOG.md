@@ -15,6 +15,11 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 
 
 
+
+## [2026-08-14]
+
+- \`593b9d4\` feat(backend): implement RAG ingestion endpoint and ResearchDocument repository
+
 ## [2026-08-14]
 
 - \`acec968\` feat(backend): implement embedding generation using nomic-embed-text for RAG
