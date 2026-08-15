@@ -12,6 +12,7 @@ import 'core/data/routine_repository.dart';
 import 'core/mocks/mock_diet_repository.dart';
 import 'core/mocks/mock_routine_repository.dart';
 import 'core/providers/routine_provider.dart';
+import 'core/providers/wizard_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'ui/pages/home_page.dart';
 
@@ -48,8 +49,15 @@ class NutriApp extends StatelessWidget {
       );
     }
 
-    return ChangeNotifierProvider(
-      create: (_) => RoutineProvider(routineRepository)..loadRoutine(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => RoutineProvider(routineRepository)..loadRoutine(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => RoutineWizardProvider(routineRepository),
+        ),
+      ],
       child: MaterialApp(
         title: 'NutriExercise',
         debugShowCheckedModeBanner: false,

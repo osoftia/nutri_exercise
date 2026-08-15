@@ -7,18 +7,17 @@ import '../../core/data/routine_repository.dart';
 import '../../core/models/diet_models.dart';
 import '../../core/models/routine_models.dart';
 import '../../core/providers/routine_provider.dart';
-import '../../core/services/ai_interceptor.dart';
+import '../../core/providers/wizard_provider.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/custom_button.dart';
 import '../atoms/typography.dart';
 import '../molecules/exercise_card.dart';
-import '../molecules/generated_routine_dialog.dart';
-import '../molecules/offline_ai_dialog.dart';
 import '../molecules/stat_card.dart';
 import '../organisms/bottom_nav_bar.dart';
 import '../organisms/muscle_group_visualizer.dart';
 import '../organisms/routine_list.dart';
+import 'wizard_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -36,7 +35,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<List<DailyMenu>> _menus;
-  final AiService _aiService = AiService();
   final NotificationService _notificationService = NotificationService();
 
   @override
@@ -45,84 +43,11 @@ class _HomePageState extends State<HomePage> {
     _menus = widget.dietRepository.getDailyMenus();
   }
 
-  Future<void> _askAi() async {
-    final preferences = await _promptForPreferences();
-    if (preferences == null) return;
-
-    try {
-      await _aiService.ensureOnline();
-    } on OfflineException {
-      if (!mounted) return;
-      await showOfflineAiDialog(context);
-      return;
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('AI service unavailable right now.')),
-      );
-      return;
-    }
-
-    if (!mounted) return;
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
+  void _launchWizard() {
+    context.read<RoutineWizardProvider>().reset();
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const WizardPage()),
     );
-
-    try {
-      final routine = await widget.routineRepository.generateRoutine(
-        preferences,
-      );
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      await showGeneratedRoutineDialog(context, routine);
-      if (!mounted) return;
-      setState(() {
-        _menus = widget.dietRepository.getDailyMenus();
-      });
-    } catch (_) {
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not generate the routine.')),
-      );
-    }
-  }
-
-  Future<String?> _promptForPreferences() {
-    final controller = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const AppHeading('Ask AI', size: AppHeadingSize.h3),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            maxLines: 4,
-            decoration: const InputDecoration(
-              hintText: 'e.g. Push/pull 4 days, focus on chest and back',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const AppText('Cancel'),
-            ),
-            CustomButton(
-              label: 'Generate',
-              onPressed: () {
-                final value = controller.text.trim();
-                Navigator.of(dialogContext).pop(value.isEmpty ? null : value);
-              },
-            ),
-          ],
-        );
-      },
-    ).whenComplete(controller.dispose);
   }
 
   Future<void> _scheduleRoutineNotification(WorkoutDay day) async {
@@ -167,6 +92,13 @@ class _HomePageState extends State<HomePage> {
       ),
       body: _buildBody(provider),
       bottomNavigationBar: const BottomNavBar(currentIndex: 0),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.accent,
+        foregroundColor: AppColors.textHigh,
+        onPressed: _launchWizard,
+        tooltip: 'Generate Routine',
+        child: const Icon(Icons.auto_awesome),
+      ),
     );
   }
 
@@ -217,7 +149,7 @@ class _HomePageState extends State<HomePage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            CustomButton(label: 'Ask AI', onPressed: _askAi),
+            CustomButton(label: 'Ask AI', onPressed: _launchWizard),
             const SizedBox(width: AppSpacing.md),
             CustomButton(
               label: 'Refresh',
