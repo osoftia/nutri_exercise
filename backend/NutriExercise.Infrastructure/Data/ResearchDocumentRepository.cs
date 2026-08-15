@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using NutriExercise.Core.Entities;
 using NutriExercise.Core.Interfaces;
 
@@ -16,5 +17,10 @@ public class ResearchDocumentRepository : IResearchDocumentRepository
     {
         _context.ResearchDocuments.Add(document);
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> HasDocumentsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.ResearchDocuments.AnyAsync(cancellationToken);
     }
 }
