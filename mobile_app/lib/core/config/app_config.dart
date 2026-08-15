@@ -1,13 +1,21 @@
-class AppConfig {
-  const AppConfig({
-    required this.name,
-    required this.useMocks,
-    this.useLocalDatabase = false,
-    this.apiUrl = '',
-  });
+import 'environment_config.dart';
 
-  final String name;
-  final bool useMocks;
-  final bool useLocalDatabase;
-  final String apiUrl;
+class AppConfig extends EnvironmentConfig {
+  const AppConfig({
+    required String name,
+    bool? useMocks,
+    bool? useMockApi,
+    bool useLocalDatabase = false,
+    String apiUrl = '',
+  }) : super(
+          name: name,
+          useMockApi: useMockApi ?? useMocks ?? false,
+          useLocalDatabase: useLocalDatabase,
+          apiBaseUrl: apiUrl,
+        );
+
+  String get apiUrl => apiBaseUrl;
+
+  @Deprecated('Use useMockApi instead.')
+  bool get useMocks => useMockApi;
 }

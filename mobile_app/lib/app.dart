@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'core/config/app_config.dart';
+import 'core/config/environment_config.dart';
 import 'core/constants/api_constants.dart';
 import 'core/data/diet_repository.dart';
 import 'core/data/http_diet_repository.dart';
@@ -16,25 +16,32 @@ import 'ui/pages/home_page.dart';
 class NutriApp extends StatelessWidget {
   const NutriApp({super.key, required this.config});
 
-  final AppConfig config;
+  final EnvironmentConfig config;
 
   @override
   Widget build(BuildContext context) {
+    final resolvedConfig = config.withDartDefineOverrides();
     final DietRepository dietRepository;
     final RoutineRepository routineRepository;
-    if (config.useMocks) {
+    if (resolvedConfig.useMockApi) {
       dietRepository = MockDietRepository();
-      routineRepository = MockRoutineRepository();
-    } else if (config.useLocalDatabase) {
+      routineRepository = MockRoutineRepository(
+        latency: resolvedConfig.mockLatency,
+      );
+    } else if (resolvedConfig.useLocalDatabase) {
       dietRepository = LocalDietRepository();
       routineRepository = LocalRoutineRepository();
     } else {
       dietRepository = HttpDietRepository(
-        ApiConstants.baseUrl,
+        resolvedConfig.apiBaseUrl.isEmpty
+            ? ApiConstants.baseUrl
+            : resolvedConfig.apiBaseUrl,
         fallback: LocalDietRepository(),
       );
       routineRepository = HttpRoutineRepository(
-        ApiConstants.baseUrl,
+        resolvedConfig.apiBaseUrl.isEmpty
+            ? ApiConstants.baseUrl
+            : resolvedConfig.apiBaseUrl,
         fallback: LocalRoutineRepository(),
       );
     }

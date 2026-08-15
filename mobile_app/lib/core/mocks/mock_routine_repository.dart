@@ -1,129 +1,27 @@
 import '../data/routine_repository.dart';
 import '../models/routine_models.dart';
+import 'mock_routine_payload.dart';
 
-const mockWorkoutRoutines = <WorkoutDay>[
-  WorkoutDay(
-    id: 1,
-    weekday: 'Monday',
-    focus: 'Chest & Triceps',
-    exercises: [
-      Exercise(
-        id: 1001,
-        name: 'Bench Press',
-        muscleGroup: 'Chest',
-        sets: 4,
-        reps: '8-12',
-        restSeconds: 90,
-      ),
-      Exercise(
-        id: 1002,
-        name: 'Incline Dumbbell Press',
-        muscleGroup: 'Chest',
-        sets: 3,
-        reps: '10-12',
-        restSeconds: 90,
-      ),
-      Exercise(
-        id: 1003,
-        name: 'Triceps Pushdown',
-        muscleGroup: 'Triceps',
-        sets: 3,
-        reps: '12-15',
-        restSeconds: 60,
-      ),
-    ],
-  ),
-  WorkoutDay(
-    id: 2,
-    weekday: 'Wednesday',
-    focus: 'Back & Biceps',
-    exercises: [
-      Exercise(
-        id: 2001,
-        name: 'Deadlift',
-        muscleGroup: 'Back',
-        sets: 4,
-        reps: '5-8',
-        restSeconds: 120,
-      ),
-      Exercise(
-        id: 2002,
-        name: 'Lat Pulldown',
-        muscleGroup: 'Back',
-        sets: 3,
-        reps: '10-12',
-        restSeconds: 90,
-      ),
-      Exercise(
-        id: 2003,
-        name: 'Barbell Curl',
-        muscleGroup: 'Biceps',
-        sets: 3,
-        reps: '10-12',
-        restSeconds: 60,
-      ),
-    ],
-  ),
-  WorkoutDay(
-    id: 3,
-    weekday: 'Friday',
-    focus: 'Legs & Core',
-    exercises: [
-      Exercise(
-        id: 3001,
-        name: 'Squat',
-        muscleGroup: 'Legs',
-        sets: 4,
-        reps: '6-10',
-        restSeconds: 120,
-      ),
-      Exercise(
-        id: 3002,
-        name: 'Leg Press',
-        muscleGroup: 'Legs',
-        sets: 3,
-        reps: '10-12',
-        restSeconds: 90,
-      ),
-      Exercise(
-        id: 3003,
-        name: 'Plank',
-        muscleGroup: 'Core',
-        sets: 3,
-        reps: '60 sec',
-        restSeconds: 45,
-      ),
-    ],
-  ),
-];
+final mockWorkoutRoutines =
+    mockRoutineApiPayload.map(WorkoutDay.fromJson).toList(growable: false);
 
 class MockRoutineRepository implements RoutineRepository {
+  MockRoutineRepository({this.latency = const Duration(milliseconds: 500)});
+
+  final Duration latency;
+
   @override
-  Future<List<WorkoutDay>> getWeeklyRoutine() {
-    return Future.delayed(
-      const Duration(milliseconds: 500),
-      () => mockWorkoutRoutines,
-    );
+  Future<List<WorkoutDay>> getWeeklyRoutine() async {
+    await Future<void>.delayed(latency);
+    return mockRoutineApiPayload
+        .map(WorkoutDay.fromJson)
+        .toList(growable: false);
   }
 
   @override
-  Future<String> generateRoutine(String userPreferences) {
-    return Future.delayed(
-      const Duration(milliseconds: 500),
-      () =>
-          'Mock AI routine for: $userPreferences\n\n'
-          'Day 1 - Chest & Triceps:\n'
-          '- Bench Press: 4 x 8-12\n'
-          '- Incline Dumbbell Press: 3 x 10-12\n'
-          '- Triceps Pushdown: 3 x 12-15\n\n'
-          'Day 2 - Back & Biceps:\n'
-          '- Deadlift: 4 x 5-8\n'
-          '- Lat Pulldown: 3 x 10-12\n'
-          '- Barbell Curl: 3 x 10-12\n\n'
-          'Day 3 - Legs & Core:\n'
-          '- Squat: 4 x 6-10\n'
-          '- Leg Press: 3 x 10-12\n'
-          '- Plank: 3 x 60 sec',
-    );
+  Future<String> generateRoutine(String userPreferences) async {
+    await Future<void>.delayed(latency);
+    final description = mockGeneratedRoutineApiPayload['description'] as String;
+    return description.replaceFirst('{userPreferences}', userPreferences);
   }
 }
