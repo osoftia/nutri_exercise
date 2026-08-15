@@ -16,6 +16,11 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 
 
 
+
+## [2026-08-14]
+
+- \`6cfa6bf\` feat(backend): implement RAG database seeder with foundational hypertrophy and nutrition science
+
 ## [2026-08-14]
 
 - \`593b9d4\` feat(backend): implement RAG ingestion endpoint and ResearchDocument repository
