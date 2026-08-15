@@ -17,6 +17,11 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 
 
 
+
+## [2026-08-14]
+
+- \`420bfa5\` feat(backend): implement semantic vector search and complete RAG pipeline for routine generation
+
 ## [2026-08-14]
 
 - \`6cfa6bf\` feat(backend): implement RAG database seeder with foundational hypertrophy and nutrition science
