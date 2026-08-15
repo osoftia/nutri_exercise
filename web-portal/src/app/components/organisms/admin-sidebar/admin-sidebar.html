@@ -8,7 +8,7 @@
     @for (item of navItems; track item.label) {
       <a
         class="admin-sidebar__link"
-        routerLink="/admin-dashboard"
+        [routerLink]="item.link"
         routerLinkActive="admin-sidebar__link--active"
         [attr.aria-current]="item.label === 'Dashboard' ? 'page' : null"
       >
