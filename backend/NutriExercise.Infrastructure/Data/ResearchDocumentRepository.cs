@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using NutriExercise.Core.Entities;
 using NutriExercise.Core.Interfaces;
+using Pgvector.EntityFrameworkCore;
 
 namespace NutriExercise.Infrastructure.Data;
 
@@ -22,5 +23,15 @@ public class ResearchDocumentRepository : IResearchDocumentRepository
     public async Task<bool> HasDocumentsAsync(CancellationToken cancellationToken = default)
     {
         return await _context.ResearchDocuments.AnyAsync(cancellationToken);
+    }
+
+    public async Task<List<ResearchDocument>> SearchSimilarDocumentsAsync(float[] queryVector, int limit = 2, CancellationToken cancellationToken = default)
+    {
+        var vector = new Pgvector.Vector(queryVector);
+        return await _context.ResearchDocuments
+            .Where(d => d.Embedding != null)
+            .OrderBy(d => d.Embedding!.CosineDistance(vector))
+            .Take(limit)
+            .ToListAsync(cancellationToken);
     }
 }

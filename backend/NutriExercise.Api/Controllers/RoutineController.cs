@@ -10,11 +10,13 @@ public class RoutineController : ControllerBase
 {
     private readonly IAiService _aiService;
     private readonly IRoutineRepository _routineRepository;
+    private readonly IResearchDocumentRepository _documentRepository;
 
-    public RoutineController(IAiService aiService, IRoutineRepository routineRepository)
+    public RoutineController(IAiService aiService, IRoutineRepository routineRepository, IResearchDocumentRepository documentRepository)
     {
         _aiService = aiService;
         _routineRepository = routineRepository;
+        _documentRepository = documentRepository;
     }
 
     [HttpPost("generate")]
@@ -25,7 +27,15 @@ public class RoutineController : ControllerBase
             return BadRequest("User preferences are required.");
         }
 
-        var generatedText = await _aiService.GenerateRoutineAsync(request.UserPreferences);
+        var queryVector = await _aiService.GenerateEmbeddingAsync(request.UserPreferences);
+        var relevantDocs = await _documentRepository.SearchSimilarDocumentsAsync(queryVector);
+
+        var contextText = string.Join("\n", relevantDocs.Select(d => d.Content));
+        var augmentedPrompt =
+            $"Utilizando EXCLUSIVAMENTE este conocimiento científico:\n{contextText}\n\n" +
+            $"Genera una rutina basada en esta petición del usuario: {request.UserPreferences}";
+
+        var generatedText = await _aiService.GenerateRoutineAsync(augmentedPrompt);
 
         var routine = new Routine
         {
