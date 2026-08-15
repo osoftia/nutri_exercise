@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/config/environment_config.dart';
 import '../../core/constants/muscle_group_map.dart';
 import '../../core/data/diet_repository.dart';
 import '../../core/data/routine_repository.dart';
 import '../../core/models/diet_models.dart';
 import '../../core/models/routine_models.dart';
+import '../../core/providers/environment_provider.dart';
 import '../../core/providers/routine_provider.dart';
 import '../../core/providers/wizard_provider.dart';
 import '../../core/services/notification_service.dart';
@@ -89,6 +91,21 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const AppHeading('Admin Dashboard', size: AppHeadingSize.h2),
+        actions: [
+          PopupMenuButton<Flavor>(
+            icon: const Icon(
+              Icons.settings_outlined,
+              color: AppColors.textMedium,
+            ),
+            onSelected: (flavor) {
+              context.read<EnvironmentProvider>().setFlavor(flavor);
+            },
+            itemBuilder: (_) => [
+              for (final flavor in Flavor.values)
+                PopupMenuItem(value: flavor, child: Text(flavor.name)),
+            ],
+          ),
+        ],
       ),
       body: _buildBody(provider),
       bottomNavigationBar: const BottomNavBar(currentIndex: 0),

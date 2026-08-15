@@ -65,6 +65,9 @@ class _WizardPageState extends State<WizardPage> {
         Navigator.of(context).pop();
         routineProvider.loadRoutine();
         wizardProvider.reset();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Routine saved to your dashboard.')),
+        );
       },
     );
   }

@@ -8,6 +8,7 @@ class Exercise {
     required this.sets,
     required this.reps,
     required this.restSeconds,
+    this.weight,
   });
 
   final int id;
@@ -16,6 +17,7 @@ class Exercise {
   final int sets;
   final String reps;
   final int restSeconds;
+  final String? weight;
 
   factory Exercise.fromJson(Map<String, dynamic> json) {
     return Exercise(
@@ -25,6 +27,7 @@ class Exercise {
       sets: (json['series'] ?? json['sets']) as int,
       reps: json['reps'] as String,
       restSeconds: json['restSeconds'] as int,
+      weight: json['weight'] as String?,
     );
   }
 
@@ -36,6 +39,7 @@ class Exercise {
       'sets': sets,
       'reps': reps,
       'restSeconds': restSeconds,
+      if (weight != null) 'weight': weight,
     };
   }
 }

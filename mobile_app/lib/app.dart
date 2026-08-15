@@ -2,15 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/config/environment_config.dart';
-import 'core/constants/api_constants.dart';
-import 'core/data/diet_repository.dart';
-import 'core/data/http_diet_repository.dart';
-import 'core/data/http_routine_repository.dart';
-import 'core/data/local_diet_repository.dart';
-import 'core/data/local_routine_repository.dart';
-import 'core/data/routine_repository.dart';
-import 'core/mocks/mock_diet_repository.dart';
-import 'core/mocks/mock_routine_repository.dart';
+import 'core/providers/environment_provider.dart';
 import 'core/providers/routine_provider.dart';
 import 'core/providers/wizard_provider.dart';
 import 'core/theme/app_theme.dart';
@@ -24,47 +16,29 @@ class NutriApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolvedConfig = config.withDartDefineOverrides();
-    final DietRepository dietRepository;
-    final RoutineRepository routineRepository;
-    if (resolvedConfig.useMockApi) {
-      dietRepository = MockDietRepository();
-      routineRepository = MockRoutineRepository(
-        latency: resolvedConfig.mockLatency,
-      );
-    } else if (resolvedConfig.useLocalDatabase) {
-      dietRepository = LocalDietRepository();
-      routineRepository = LocalRoutineRepository();
-    } else {
-      dietRepository = HttpDietRepository(
-        resolvedConfig.apiBaseUrl.isEmpty
-            ? ApiConstants.baseUrl
-            : resolvedConfig.apiBaseUrl,
-        fallback: LocalDietRepository(),
-      );
-      routineRepository = HttpRoutineRepository(
-        resolvedConfig.apiBaseUrl.isEmpty
-            ? ApiConstants.baseUrl
-            : resolvedConfig.apiBaseUrl,
-        fallback: LocalRoutineRepository(),
-      );
-    }
 
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => RoutineProvider(routineRepository)..loadRoutine(),
+          create: (_) => EnvironmentProvider(config: resolvedConfig),
         ),
-        ChangeNotifierProvider(
-          create: (_) => RoutineWizardProvider(routineRepository),
+        ListenableProxyProvider<EnvironmentProvider, RoutineProvider>(
+          update: (_, env, __) =>
+              RoutineProvider(env.routineRepository)..loadRoutine(),
+        ),
+        ListenableProxyProvider<EnvironmentProvider, RoutineWizardProvider>(
+          update: (_, env, __) => RoutineWizardProvider(env.routineRepository),
         ),
       ],
       child: MaterialApp(
         title: 'NutriExercise',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.dark,
-        home: HomePage(
-          dietRepository: dietRepository,
-          routineRepository: routineRepository,
+        home: Consumer<EnvironmentProvider>(
+          builder: (context, env, _) => HomePage(
+            dietRepository: env.dietRepository,
+            routineRepository: env.routineRepository,
+          ),
         ),
       ),
     );
