@@ -18,6 +18,11 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 
 
 
+
+## [2026-08-14]
+
+- \`c1928df\` feat(backend): implement RLHF tracking fields, interaction history, and feedback endpoints
+
 ## [2026-08-14]
 
 - \`420bfa5\` feat(backend): implement semantic vector search and complete RAG pipeline for routine generation
