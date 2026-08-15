@@ -14,10 +14,12 @@ class InteractiveBodyMap extends StatefulWidget {
     super.key,
     this.selectedMuscle,
     this.onMuscleSelected,
+    this.activeRegions,
   });
 
   final String? selectedMuscle;
   final ValueChanged<String?>? onMuscleSelected;
+  final Set<String>? activeRegions;
 
   @override
   State<InteractiveBodyMap> createState() => _InteractiveBodyMapState();
@@ -75,7 +77,11 @@ class _InteractiveBodyMapState extends State<InteractiveBodyMap>
             onTapUp: _handleTap,
             child: CustomPaint(
               size: Size(constraints.maxWidth, constraints.maxHeight),
-              painter: _BodyMapPainter(selectedMuscle: _selected, glow: _glow),
+              painter: _BodyMapPainter(
+                selectedMuscle: _selected,
+                activeRegions: widget.activeRegions ?? const {},
+                glow: _glow,
+              ),
             ),
           );
         },
@@ -97,8 +103,7 @@ Rect _figureBox(MuscleView view, Size size) {
 Path _screenPath(MuscleRegion region, Size size) {
   final box = _figureBox(region.view, size);
   final scaled = region.normalizedPath.transform(
-    (Matrix4.identity()..scale(box.width, box.height, 1.0))
-        .storage,
+    (Matrix4.identity()..scale(box.width, box.height, 1.0)).storage,
   );
   return scaled.shift(box.topLeft);
 }
@@ -111,9 +116,14 @@ MuscleRegion? muscleAt(Offset position, Size size) {
 }
 
 class _BodyMapPainter extends CustomPainter {
-  const _BodyMapPainter({required this.selectedMuscle, required this.glow});
+  const _BodyMapPainter({
+    required this.selectedMuscle,
+    required this.activeRegions,
+    required this.glow,
+  });
 
   final String? selectedMuscle;
+  final Set<String> activeRegions;
   final double glow;
 
   @override
@@ -121,44 +131,45 @@ class _BodyMapPainter extends CustomPainter {
     _paintSilhouette(canvas, size, MuscleView.front);
     _paintSilhouette(canvas, size, MuscleView.back);
 
-    final hasSelection = selectedMuscle != null;
     for (final region in muscleRegions) {
       final isSelected = region.id == selectedMuscle;
+      final isActive = activeRegions.contains(region.id);
       final path = _screenPath(region, size);
-      canvas.drawPath(
-        path,
-        Paint()
-          ..style = PaintingStyle.fill
-          ..color = AppColors.neutralMuscle.withValues(
-            alpha: isSelected ? 0.0 : (hasSelection ? 0.12 : 0.22),
-          ),
-      );
-      if (!isSelected) {
-        canvas.drawPath(
-          path,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.4
-            ..color = AppColors.neutralMuscle.withValues(alpha: 0.55),
-        );
-      }
-    }
 
-    if (hasSelection) {
-      for (final region in muscleRegions) {
-        if (region.id != selectedMuscle) continue;
-        final path = _screenPath(region, size);
+      if (isSelected) {
         canvas.drawPath(
           path,
           Paint()
-            ..color = AppColors.primary500.withValues(alpha: 0.25 + 0.30 * glow)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+            ..color = AppColors.accent.withValues(alpha: 0.70)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
         );
         canvas.drawPath(
           path,
           Paint()
             ..style = PaintingStyle.fill
-            ..color = AppColors.primary500.withValues(alpha: 0.60),
+            ..color = AppColors.accent.withValues(alpha: 0.70),
+        );
+        canvas.drawPath(
+          path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.5
+            ..color = AppColors.accent,
+        );
+      } else if (isActive) {
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color = AppColors.primary500.withValues(alpha: 0.45)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+        );
+        canvas.drawPath(
+          path,
+          Paint()
+            ..style = PaintingStyle.fill
+            ..color = AppColors.primary500.withValues(
+              alpha: 0.45 + 0.15 * glow,
+            ),
         );
         canvas.drawPath(
           path,
@@ -166,6 +177,20 @@ class _BodyMapPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2.0
             ..color = AppColors.primary300,
+        );
+      } else {
+        canvas.drawPath(
+          path,
+          Paint()
+            ..style = PaintingStyle.fill
+            ..color = AppColors.neutralMuscle.withValues(alpha: 0.15),
+        );
+        canvas.drawPath(
+          path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.4
+            ..color = AppColors.neutralMuscle.withValues(alpha: 0.55),
         );
       }
     }
@@ -177,8 +202,7 @@ class _BodyMapPainter extends CustomPainter {
     final box = _figureBox(view, size);
     final source = view == MuscleView.front ? frontSilhouette : backSilhouette;
     final path = source.transform(
-      (Matrix4.identity()..scale(box.width, box.height, 1.0))
-          .storage,
+      (Matrix4.identity()..scale(box.width, box.height, 1.0)).storage,
     );
     canvas.drawPath(
       path.shift(box.topLeft),
@@ -204,7 +228,7 @@ class _BodyMapPainter extends CustomPainter {
     final painter = TextPainter(
       text: TextSpan(
         text: text,
-        style: TextStyle(
+        style: const TextStyle(
           color: AppColors.textLow,
           fontSize: 12,
           fontWeight: FontWeight.w600,
@@ -221,6 +245,7 @@ class _BodyMapPainter extends CustomPainter {
   @override
   bool shouldRepaint(_BodyMapPainter oldDelegate) {
     return oldDelegate.selectedMuscle != selectedMuscle ||
-        oldDelegate.glow != glow;
+        oldDelegate.glow != glow ||
+        oldDelegate.activeRegions != activeRegions;
   }
 }

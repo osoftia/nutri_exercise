@@ -91,6 +91,15 @@ Path _leftLeg() {
     ..close();
 }
 
+Path _shoulders() {
+  return Path()
+    ..moveTo(0.35, 0.14)
+    ..lineTo(0.65, 0.14)
+    ..lineTo(0.68, 0.22)
+    ..lineTo(0.32, 0.22)
+    ..close();
+}
+
 Path _back() {
   return Path()
     ..moveTo(0.45, 0.14)
@@ -135,6 +144,14 @@ List<MuscleRegion> _buildRegions() {
   );
   addPair('arms', 'Arms', MuscleView.front, _leftArm());
   addPair('legs', 'Legs', MuscleView.front, _leftLeg());
+  regions.add(
+    MuscleRegion(
+      id: 'shoulders',
+      label: 'Shoulders',
+      view: MuscleView.front,
+      normalizedPath: _shoulders(),
+    ),
+  );
   addPair('arms', 'Arms', MuscleView.back, _leftArm());
   addPair('legs', 'Legs', MuscleView.back, _leftLeg());
   regions.add(

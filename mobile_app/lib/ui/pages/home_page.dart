@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../../core/constants/muscle_vectors.dart';
+import '../../core/constants/muscle_group_map.dart';
 import '../../core/data/diet_repository.dart';
 import '../../core/data/routine_repository.dart';
 import '../../core/models/diet_models.dart';
 import '../../core/models/routine_models.dart';
+import '../../core/providers/routine_provider.dart';
 import '../../core/services/ai_interceptor.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/custom_button.dart';
 import '../atoms/typography.dart';
+import '../molecules/exercise_card.dart';
 import '../molecules/generated_routine_dialog.dart';
 import '../molecules/offline_ai_dialog.dart';
 import '../molecules/stat_card.dart';
 import '../organisms/bottom_nav_bar.dart';
-import '../organisms/interactive_body_map.dart';
+import '../organisms/muscle_group_visualizer.dart';
 import '../organisms/routine_list.dart';
 
 class HomePage extends StatefulWidget {
@@ -32,20 +35,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late Future<List<WorkoutDay>> _routines;
   late Future<List<DailyMenu>> _menus;
-  String? _selectedMuscle;
   final AiService _aiService = AiService();
   final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
     super.initState();
-    _load();
-  }
-
-  void _load() {
-    _routines = widget.routineRepository.getWeeklyRoutine();
     _menus = widget.dietRepository.getDailyMenus();
   }
 
@@ -84,7 +80,9 @@ class _HomePageState extends State<HomePage> {
       Navigator.of(context).pop();
       await showGeneratedRoutineDialog(context, routine);
       if (!mounted) return;
-      setState(_load);
+      setState(() {
+        _menus = widget.dietRepository.getDailyMenus();
+      });
     } catch (_) {
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -162,38 +160,57 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<RoutineProvider>();
     return Scaffold(
       appBar: AppBar(
         title: const AppHeading('Admin Dashboard', size: AppHeadingSize.h2),
       ),
-      body: FutureBuilder<List<WorkoutDay>>(
-        future: _routines,
-        builder: (context, routinesSnapshot) {
-          return FutureBuilder<List<DailyMenu>>(
-            future: _menus,
-            builder: (context, menusSnapshot) {
-              if (!routinesSnapshot.hasData || !menusSnapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              return _buildContent(routinesSnapshot.data!, menusSnapshot.data!);
-            },
-          );
-        },
-      ),
+      body: _buildBody(provider),
       bottomNavigationBar: const BottomNavBar(currentIndex: 0),
     );
   }
 
-  Widget _buildContent(List<WorkoutDay> routines, List<DailyMenu> menus) {
-    final totalMeals = menus.fold<int>(
-      0,
-      (sum, menu) => sum + menu.meals.length,
-    );
-    final totalCalories = menus.fold<int>(
-      0,
-      (sum, menu) => sum + menu.totalCalories,
-    );
+  Widget _buildBody(RoutineProvider provider) {
+    if (provider.status == RoutineStatus.loading ||
+        provider.status == RoutineStatus.idle) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (provider.status == RoutineStatus.error) {
+      return Center(
+        child: AppText(provider.error ?? 'Failed to load routines.'),
+      );
+    }
+    return _buildContent(provider);
+  }
 
+  Widget _buildContent(RoutineProvider provider) {
+    return FutureBuilder<List<DailyMenu>>(
+      future: _menus,
+      builder: (context, menusSnapshot) {
+        if (!menusSnapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final menus = menusSnapshot.data!;
+        final totalMeals = menus.fold<int>(
+          0,
+          (sum, menu) => sum + menu.meals.length,
+        );
+        final totalCalories = menus.fold<int>(
+          0,
+          (sum, menu) => sum + menu.totalCalories,
+        );
+        return _buildDashboard(provider, menus, totalMeals, totalCalories);
+      },
+    );
+  }
+
+  Widget _buildDashboard(
+    RoutineProvider provider,
+    List<DailyMenu> menus,
+    int totalMeals,
+    int totalCalories,
+  ) {
+    final exercises = provider.selectedDayExercises;
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.xl),
       children: [
@@ -205,7 +222,7 @@ class _HomePageState extends State<HomePage> {
             CustomButton(
               label: 'Refresh',
               variant: CustomButtonVariant.ghost,
-              onPressed: () => setState(_load),
+              onPressed: provider.loadRoutine,
             ),
           ],
         ),
@@ -215,7 +232,7 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               child: StatCard(
                 label: 'Active Routines',
-                value: '${routines.length}',
+                value: '${provider.routine.length}',
                 unit: 'days',
               ),
             ),
@@ -240,22 +257,36 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: AppSpacing.xxl),
         const AppHeading('Muscle Map'),
         const SizedBox(height: AppSpacing.md),
-        InteractiveBodyMap(
-          selectedMuscle: _selectedMuscle,
-          onMuscleSelected: (id) => setState(() => _selectedMuscle = id),
-        ),
+        const MuscleGroupVisualizer(),
+        const SizedBox(height: AppSpacing.xxl),
+        const AppHeading('Exercises'),
         const SizedBox(height: AppSpacing.md),
-        AppText(
-          _selectedMuscle == null
-              ? 'Tap a muscle group to highlight it'
-              : 'Selected: ${muscleLabel(_selectedMuscle!)}',
-        ),
+        if (exercises.isEmpty)
+          const AppText('Select a day to view exercises.')
+        else
+          for (final exercise in exercises)
+            ExerciseCard(
+              exercise: exercise,
+              isHighlighted: provider.selectedMuscleRegion != null &&
+                  muscleGroupToRegion[exercise.muscleGroup] ==
+                      provider.selectedMuscleRegion,
+              onTap: () {
+                final regionId =
+                    muscleGroupToRegion[exercise.muscleGroup];
+                if (regionId != null) {
+                  provider.selectMuscleRegion(regionId);
+                }
+              },
+            ),
         const SizedBox(height: AppSpacing.xxl),
         const AppHeading('Weekly Routines'),
         const SizedBox(height: AppSpacing.md),
         RoutineList(
-          routines: routines,
-          onRoutineTap: _scheduleRoutineNotification,
+          routines: provider.routine,
+          onRoutineTap: (day) {
+            provider.selectDay(day);
+            _scheduleRoutineNotification(day);
+          },
         ),
         const SizedBox(height: AppSpacing.xxl),
         const AppHeading('Daily Menus'),

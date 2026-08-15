@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'core/config/environment_config.dart';
 import 'core/constants/api_constants.dart';
@@ -10,6 +11,7 @@ import 'core/data/local_routine_repository.dart';
 import 'core/data/routine_repository.dart';
 import 'core/mocks/mock_diet_repository.dart';
 import 'core/mocks/mock_routine_repository.dart';
+import 'core/providers/routine_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'ui/pages/home_page.dart';
 
@@ -46,13 +48,16 @@ class NutriApp extends StatelessWidget {
       );
     }
 
-    return MaterialApp(
-      title: 'NutriExercise',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
-      home: HomePage(
-        dietRepository: dietRepository,
-        routineRepository: routineRepository,
+    return ChangeNotifierProvider(
+      create: (_) => RoutineProvider(routineRepository)..loadRoutine(),
+      child: MaterialApp(
+        title: 'NutriExercise',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.dark,
+        home: HomePage(
+          dietRepository: dietRepository,
+          routineRepository: routineRepository,
+        ),
       ),
     );
   }
