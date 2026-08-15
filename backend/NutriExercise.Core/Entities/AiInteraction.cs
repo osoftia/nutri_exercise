@@ -12,5 +12,9 @@ public class AiInteraction
 
     public int? UserRating { get; set; }
 
+    public string? UsedContext { get; set; }
+
+    public bool? IsCorrect { get; set; }
+
     public DateTime CreatedAt { get; set; }
 }
