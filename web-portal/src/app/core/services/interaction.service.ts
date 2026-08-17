@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 import { AiInteraction, UpdateFeedbackRequest } from '../models/interaction.model';
 import { mockInteractions, mockApplyFeedback } from '../mocks/mock-interactions.data';
 

@@ -1,6 +1,25 @@
-:root {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+@use '@angular/material' as mat;
+
+html {
   color-scheme: dark;
+}
+
+$theme: mat.define-theme(
+  (
+    color: (
+      theme-type: dark,
+      primary: mat.$blue-palette,
+      tertiary: mat.$orange-palette,
+    ),
+    typography: (
+      plain-family: 'Inter',
+      brand-family: 'Inter',
+    ),
+  )
+);
+
+:root {
+  @include mat.all-component-themes($theme);
 }
 
 body {

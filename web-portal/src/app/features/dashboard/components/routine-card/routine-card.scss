@@ -1,0 +1,25 @@
+.routine-card {
+  margin-bottom: 16px;
+}
+
+.routine-card__title {
+  font-size: 16px;
+  font-weight: 600;
+  white-space: normal;
+}
+
+.routine-card__chips {
+  margin-top: 4px;
+}
+
+.routine-card__body {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+
+.routine-card__feedback {
+  color: #22c55e;
+  font-size: 14px;
+  margin: 0 0 12px;
+}

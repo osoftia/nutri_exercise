@@ -41,6 +41,31 @@
   gap: 12px;
 }
 
+.dashboard-home__summary {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.dashboard-home__ai-loading,
+.dashboard-home__ai-error,
+.dashboard-home__ai-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px;
+  border-radius: 12px;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+}
+
+.dashboard-home__ai-error p,
+.dashboard-home__ai-empty p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
 .dashboard-home__panel-header {
   display: flex;
   align-items: center;

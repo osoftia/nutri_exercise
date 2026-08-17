@@ -9,6 +9,40 @@
         <div class="dashboard-home__loading">Loading dashboard...</div>
       }
 
+      <section class="dashboard-home__panel">
+        <div class="dashboard-home__panel-header">
+          <h2 class="dashboard-home__heading">AI-Generated Routines</h2>
+          @if (store.total() > 0) {
+            <span class="dashboard-home__summary">
+              {{ store.total() }} routines · {{ store.hasFeedback() }} with feedback
+            </span>
+          }
+        </div>
+
+        @if (store.loading()) {
+          <div class="dashboard-home__ai-loading">
+            <mat-spinner diameter="40" />
+          </div>
+        } @else if (store.error(); as message) {
+          <div class="dashboard-home__ai-error">
+            <p>{{ message }}</p>
+            <button mat-flat-button (click)="store.retry()">Retry</button>
+          </div>
+        } @else if (store.total() === 0) {
+          <div class="dashboard-home__ai-empty">
+            <p>No AI-generated routines yet.</p>
+          </div>
+        } @else {
+          @for (interaction of store.interactions(); track interaction.id) {
+            <app-routine-card
+              [interaction]="interaction"
+              [submitting]="store.submittingIds().has(interaction.id)"
+              (feedbackSubmitted)="store.submitFeedback($event.id, $event.text)"
+            />
+          }
+        }
+      </section>
+
       <section class="dashboard-home__stats">
         <app-stat-card label="Total Users" value="1,248" unit="users" />
         <app-stat-card
