@@ -5,5 +5,5 @@ export type { Environment } from './environment.model';
 export const environment: Environment = {
   production: false,
   useMocks: true,
-  apiUrl: '',
+  apiUrl: 'http://localhost:5000/api',
 };
