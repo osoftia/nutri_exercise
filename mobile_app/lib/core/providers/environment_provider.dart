@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 
 import '../config/environment_config.dart';
 import '../constants/api_constants.dart';
+import '../data/api_routine_repository.dart';
 import '../data/diet_repository.dart';
 import '../data/http_diet_repository.dart';
-import '../data/http_routine_repository.dart';
 import '../data/local_diet_repository.dart';
 import '../data/local_routine_repository.dart';
 import '../data/routine_repository.dart';
@@ -50,7 +50,7 @@ class EnvironmentProvider extends ChangeNotifier {
       return MockRoutineRepository(latency: _config.mockLatency);
     }
     if (_config.useLocalDatabase) return LocalRoutineRepository();
-    return HttpRoutineRepository(
+    return ApiRoutineRepository(
       _config.apiBaseUrl.isEmpty ? ApiConstants.baseUrl : _config.apiBaseUrl,
       fallback: LocalRoutineRepository(),
     );
