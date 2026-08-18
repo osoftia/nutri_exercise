@@ -7,6 +7,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { DashboardHome } from './dashboard-home';
 import { DashboardStore } from '../../../core/stores/dashboard.store';
 import { Diet } from '../../../core/services/diet';
+import { ExportService } from '../../../core/services/export.service';
 import { InteractionService } from '../../../core/services/interaction.service';
 import { Routine } from '../../../core/services/routine';
 import { AiInteraction } from '../../../core/models/interaction.model';
@@ -44,6 +45,7 @@ describe('DashboardHome', () => {
           useValue: { getInteractions, updateFeedback: vi.fn() },
         },
         { provide: MatSnackBar, useValue: { open: vi.fn() } },
+        { provide: ExportService, useValue: { downloadDpoDataset: vi.fn() } },
       ],
     }).compileComponents();
 
@@ -153,5 +155,31 @@ describe('DashboardHome', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('app-search-filter')).not.toBeNull();
+  });
+
+  it('renders the export action with the eligible count', () => {
+    getSubject.next([
+      interaction('a', { rating: 'thumbs_up', feedbackText: 'Great volume.' }),
+      interaction('b', { rating: null }),
+    ]);
+    getSubject.complete();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'Export DPO Dataset (1)',
+    );
+  });
+
+  it('disables export when no interaction is eligible', () => {
+    getSubject.next([interaction('a', { rating: null })]);
+    getSubject.complete();
+    fixture.detectChanges();
+
+    const exportButton = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+    ).find((button) => button.textContent?.includes('Export DPO Dataset'));
+
+    expect(exportButton).toBeDefined();
+    expect(exportButton?.disabled).toBe(true);
   });
 });

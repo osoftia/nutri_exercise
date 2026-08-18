@@ -181,6 +181,35 @@ describe('DashboardStore', () => {
     expect(store.visibleTotal()).toBe(2);
   });
 
+  it('computes the exportable interactions and count', () => {
+    store.load();
+    getSubject.next([
+      interaction('a', { rating: 'thumbs_up', feedbackText: 'Great volume.' }),
+      interaction('b', { rating: 'thumbs_down', feedbackText: 'Too short.' }),
+      interaction('c', { rating: 'thumbs_up', feedbackText: null }),
+      interaction('d', { rating: null, feedbackText: 'No rating.' }),
+    ]);
+    getSubject.complete();
+
+    expect(store.exportableInteractions().map((i) => i.id)).toEqual(['a', 'b']);
+    expect(store.exportableCount()).toBe(2);
+  });
+
+  it('grows the exportable count when feedback is submitted', () => {
+    const updated = interaction('a', { rating: 'thumbs_up', feedbackText: 'Nice volume' });
+    service.updateFeedback.mockReturnValue(of(updated));
+
+    store.load();
+    getSubject.next([interaction('a')]);
+    getSubject.complete();
+
+    expect(store.exportableCount()).toBe(0);
+
+    store.submitFeedback('a', 'Nice volume');
+
+    expect(store.exportableCount()).toBe(1);
+  });
+
   it('reset clears the loaded data and all filters', () => {
     store.load();
     getSubject.next([interaction('a')]);

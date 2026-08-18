@@ -11,6 +11,7 @@ import {
 } from '../../../components/organisms/data-table/data-table';
 import { RoutineCard } from '../../../features/dashboard/components/routine-card/routine-card';
 import { SearchFilter } from '../../../features/dashboard/components/search-filter/search-filter';
+import { DpoExport } from '../../../features/dashboard/components/dpo-export/dpo-export';
 import { Diet } from '../../../core/services/diet';
 import { Routine } from '../../../core/services/routine';
 import { DashboardStore } from '../../../core/stores/dashboard.store';
@@ -26,6 +27,7 @@ import { WorkoutDay } from '../../../core/mocks/mock-routine.data';
     DataTable,
     RoutineCard,
     SearchFilter,
+    DpoExport,
     MatProgressSpinnerModule,
     MatButtonModule,
   ],

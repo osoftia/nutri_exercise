@@ -5,6 +5,7 @@ import { finalize } from 'rxjs/operators';
 import { AiInteraction } from '../models/interaction.model';
 import { InteractionService } from '../services/interaction.service';
 import { filterInteractions } from '../utils/interaction-filter.util';
+import { isDpoEligible } from '../utils/dpo-export.util';
 
 @Service()
 export class DashboardStore {
@@ -39,6 +40,9 @@ export class DashboardStore {
       this.dateFrom() !== null ||
       this.dateTo() !== null,
   );
+
+  readonly exportableInteractions = computed(() => this.interactions().filter(isDpoEligible));
+  readonly exportableCount = computed(() => this.exportableInteractions().length);
 
   setSearchQuery(query: string): void {
     this.searchQuery.set(query);

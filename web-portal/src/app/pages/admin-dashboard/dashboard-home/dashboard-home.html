@@ -13,13 +13,16 @@
         <div class="dashboard-home__panel-header">
           <h2 class="dashboard-home__heading">AI-Generated Routines</h2>
           @if (store.total() > 0) {
-            <span class="dashboard-home__summary">
-              @if (store.filtersActive()) {
-                {{ store.visibleTotal() }} of {{ store.total() }} routines
-              } @else {
-                {{ store.total() }} routines · {{ store.hasFeedback() }} with feedback
-              }
-            </span>
+            <div class="dashboard-home__header-actions">
+              <span class="dashboard-home__summary">
+                @if (store.filtersActive()) {
+                  {{ store.visibleTotal() }} of {{ store.total() }} routines
+                } @else {
+                  {{ store.total() }} routines · {{ store.hasFeedback() }} with feedback
+                }
+              </span>
+              <app-dpo-export [interactions]="store.interactions()" />
+            </div>
           }
         </div>
 

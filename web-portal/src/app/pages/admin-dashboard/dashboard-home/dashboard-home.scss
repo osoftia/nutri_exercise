@@ -72,6 +72,14 @@
   justify-content: space-between;
 }
 
+.dashboard-home__header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .dashboard-home__heading {
   margin: 0;
   font-size: 18px;
