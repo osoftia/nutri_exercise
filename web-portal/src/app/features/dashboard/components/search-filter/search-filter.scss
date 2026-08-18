@@ -4,9 +4,9 @@
   align-items: center;
   gap: 12px;
   padding: 16px;
-  border-radius: 12px;
-  background-color: #1e293b;
-  border: 1px solid #334155;
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+  box-shadow: var(--shadow-neumorph-down);
 }
 
 .search-filter__query {

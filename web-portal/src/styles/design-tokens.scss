@@ -1,0 +1,40 @@
+:root {
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-border: #334155;
+  --color-text-high: #f8fafc;
+  --color-text-medium: #cbd5e1;
+  --color-text-low: #64748b;
+  --color-primary: #3b82f6;
+  --color-primary-light: #93c5fd;
+  --color-accent: #f97316;
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-danger: #ef4444;
+  --color-neutral: #94a3b8;
+
+  --font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+  --font-size-caption: 12px;
+  --font-size-label: 14px;
+  --font-size-body: 16px;
+  --font-size-h3: 20px;
+  --font-size-h2: 24px;
+  --font-size-h1: 32px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --motion-fast: 150ms;
+  --motion-normal: 250ms;
+  --ease-out: ease-out;
+
+  --shadow-neumorph-up:
+    8px 8px 16px rgba(0, 0, 0, 0.45),
+    -8px -8px 16px rgba(255, 255, 255, 0.04);
+  --shadow-neumorph-down:
+    inset 6px 6px 12px rgba(0, 0, 0, 0.45),
+    inset -6px -6px 12px rgba(255, 255, 255, 0.04);
+  --shadow-neumorph-flat:
+    4px 4px 10px rgba(0, 0, 0, 0.35),
+    -4px -4px 10px rgba(255, 255, 255, 0.03);
+}

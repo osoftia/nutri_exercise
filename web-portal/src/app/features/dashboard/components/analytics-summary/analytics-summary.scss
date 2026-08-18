@@ -9,26 +9,25 @@
   flex-direction: column;
   gap: 8px;
   padding: 16px;
-  background-color: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 12px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
 }
 
 .analytics-summary__label {
-  font-size: 12px;
-  color: #64748b;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-low);
 }
 
 .analytics-summary__value {
   font-size: 24px;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--color-text-high);
 }
 
 .analytics-summary__tile--positive .analytics-summary__value {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .analytics-summary__tile--negative .analytics-summary__value {
-  color: #ef4444;
+  color: var(--color-danger);
 }
