@@ -1,0 +1,19 @@
+.search-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+}
+
+.search-filter__query {
+  flex: 1 1 260px;
+  min-width: 200px;
+}
+
+.search-filter__date {
+  flex: 0 1 180px;
+}

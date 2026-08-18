@@ -7,15 +7,19 @@ import { AiInteraction } from '../models/interaction.model';
 import { InteractionService } from '../services/interaction.service';
 import { DashboardStore } from './dashboard.store';
 
-const interaction = (id: string, feedbackText: string | null = null): AiInteraction => ({
+const iso = (year: number, month: number, day: number, hour = 12): string =>
+  new Date(year, month - 1, day, hour).toISOString();
+
+const interaction = (id: string, overrides: Partial<AiInteraction> = {}): AiInteraction => ({
   id,
   userPrompt: 'Age: 28, Goal: build_muscle, Level: intermediate',
   generatedRoutine: 'Weekly routine\nDay 1 - Push: Bench press 4x8',
   rating: null,
-  feedbackText,
-  createdAt: '2026-08-17T09:30:00Z',
+  feedbackText: null,
+  createdAt: iso(2026, 8, 17, 9),
   model: 'llama3.2',
   status: 'completed',
+  ...overrides,
 });
 
 describe('DashboardStore', () => {
@@ -56,7 +60,7 @@ describe('DashboardStore', () => {
 
   it('computes totals and feedback count', () => {
     store.load();
-    getSubject.next([interaction('a', 'Great volume'), interaction('b')]);
+    getSubject.next([interaction('a', { feedbackText: 'Great volume' }), interaction('b')]);
     getSubject.complete();
 
     expect(store.total()).toBe(2);
@@ -82,7 +86,7 @@ describe('DashboardStore', () => {
   });
 
   it('applies feedback and shows a success snackbar', () => {
-    const updated = interaction('a', 'Nice volume');
+    const updated = interaction('a', { feedbackText: 'Nice volume' });
     service.updateFeedback.mockReturnValue(of(updated));
 
     store.load();
@@ -115,10 +119,74 @@ describe('DashboardStore', () => {
     );
   });
 
-  it('resets all state', () => {
+  it('filters visible interactions by search query', () => {
+    store.load();
+    getSubject.next([
+      interaction('a', { generatedRoutine: 'Push day\nBench press 4x8' }),
+      interaction('b', { generatedRoutine: 'Pull day\nDeadlift 3x5' }),
+    ]);
+    getSubject.complete();
+
+    store.setSearchQuery('push');
+
+    expect(store.visibleInteractions().map((i) => i.id)).toEqual(['a']);
+    expect(store.visibleTotal()).toBe(1);
+    expect(store.filtersActive()).toBe(true);
+  });
+
+  it('filters visible interactions by a date range', () => {
+    store.load();
+    getSubject.next([
+      interaction('a', { createdAt: iso(2026, 8, 16, 10) }),
+      interaction('b', { createdAt: iso(2026, 8, 15, 9) }),
+    ]);
+    getSubject.complete();
+
+    store.setDateRange(new Date(2026, 7, 16, 12), new Date(2026, 7, 16, 12));
+
+    expect(store.visibleInteractions().map((i) => i.id)).toEqual(['a']);
+  });
+
+  it('applies query and date range together', () => {
+    store.load();
+    getSubject.next([
+      interaction('a', { generatedRoutine: 'Push day\nBench press 4x8', createdAt: iso(2026, 8, 16, 10) }),
+      interaction('b', { generatedRoutine: 'Pull day\nDeadlift 3x5', createdAt: iso(2026, 8, 15, 9) }),
+    ]);
+    getSubject.complete();
+
+    store.setSearchQuery('push');
+    store.setDateRange(new Date(2026, 7, 16, 12), null);
+
+    expect(store.visibleInteractions().map((i) => i.id)).toEqual(['a']);
+  });
+
+  it('clearFilters resets every filter', () => {
+    store.load();
+    getSubject.next([
+      interaction('a', { generatedRoutine: 'Push day\nBench press 4x8' }),
+      interaction('b', { generatedRoutine: 'Pull day\nDeadlift 3x5' }),
+    ]);
+    getSubject.complete();
+
+    store.setSearchQuery('push');
+    store.setDateRange(new Date(2026, 7, 16, 12), new Date(2026, 7, 18, 12));
+
+    expect(store.filtersActive()).toBe(true);
+    expect(store.visibleTotal()).toBe(1);
+
+    store.clearFilters();
+
+    expect(store.filtersActive()).toBe(false);
+    expect(store.visibleTotal()).toBe(2);
+  });
+
+  it('reset clears the loaded data and all filters', () => {
     store.load();
     getSubject.next([interaction('a')]);
     getSubject.complete();
+    store.setSearchQuery('push');
+    store.setDateRange(new Date(2026, 7, 16, 12), null);
 
     store.reset();
 
@@ -126,5 +194,8 @@ describe('DashboardStore', () => {
     expect(store.loading()).toBe(false);
     expect(store.error()).toBeNull();
     expect(store.submittingIds().size).toBe(0);
+    expect(store.searchQuery()).toBe('');
+    expect(store.dateFrom()).toBeNull();
+    expect(store.dateTo()).toBeNull();
   });
 });

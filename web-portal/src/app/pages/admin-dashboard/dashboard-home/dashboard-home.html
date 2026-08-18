@@ -14,10 +14,22 @@
           <h2 class="dashboard-home__heading">AI-Generated Routines</h2>
           @if (store.total() > 0) {
             <span class="dashboard-home__summary">
-              {{ store.total() }} routines · {{ store.hasFeedback() }} with feedback
+              @if (store.filtersActive()) {
+                {{ store.visibleTotal() }} of {{ store.total() }} routines
+              } @else {
+                {{ store.total() }} routines · {{ store.hasFeedback() }} with feedback
+              }
             </span>
           }
         </div>
+
+        @if (store.total() > 0) {
+          <app-search-filter
+            (queryChange)="store.setSearchQuery($event)"
+            (dateRangeChange)="store.setDateRange($event.from, $event.to)"
+            (clear)="store.clearFilters()"
+          />
+        }
 
         @if (store.loading()) {
           <div class="dashboard-home__ai-loading">
@@ -32,8 +44,12 @@
           <div class="dashboard-home__ai-empty">
             <p>No AI-generated routines yet.</p>
           </div>
+        } @else if (store.visibleTotal() === 0) {
+          <div class="dashboard-home__ai-empty">
+            <p>No routines match your filters.</p>
+          </div>
         } @else {
-          @for (interaction of store.interactions(); track interaction.id) {
+          @for (interaction of store.visibleInteractions(); track interaction.id) {
             <app-routine-card
               [interaction]="interaction"
               [submitting]="store.submittingIds().has(interaction.id)"

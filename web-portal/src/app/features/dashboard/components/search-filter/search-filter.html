@@ -1,0 +1,39 @@
+<div class="search-filter">
+  <mat-form-field appearance="outline" class="search-filter__query">
+    <mat-label>Search routines</mat-label>
+    <input
+      matInput
+      [value]="query()"
+      (input)="onQueryInput($any($event.target).value)"
+      placeholder="Search prompt, text, or model..."
+    />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="search-filter__date">
+    <mat-label>From</mat-label>
+    <input
+      matInput
+      [matDatepicker]="fromPicker"
+      (dateChange)="onFromChange($event.value)"
+      placeholder="Start date"
+    />
+    <mat-datepicker-toggle matIconSuffix [for]="fromPicker" />
+    <mat-datepicker #fromPicker />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="search-filter__date">
+    <mat-label>To</mat-label>
+    <input
+      matInput
+      [matDatepicker]="toPicker"
+      (dateChange)="onToChange($event.value)"
+      placeholder="End date"
+    />
+    <mat-datepicker-toggle matIconSuffix [for]="toPicker" />
+    <mat-datepicker #toPicker />
+  </mat-form-field>
+
+  @if (filtersActive()) {
+    <button mat-stroked-button type="button" (click)="clearFilters()">Clear filters</button>
+  }
+</div>

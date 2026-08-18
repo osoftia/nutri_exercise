@@ -11,7 +11,7 @@ import { InteractionService } from '../../../core/services/interaction.service';
 import { Routine } from '../../../core/services/routine';
 import { AiInteraction } from '../../../core/models/interaction.model';
 
-const interaction = (id: string): AiInteraction => ({
+const interaction = (id: string, overrides: Partial<AiInteraction> = {}): AiInteraction => ({
   id,
   userPrompt: 'Age: 28, Goal: build_muscle, Level: intermediate',
   generatedRoutine: 'Weekly routine\nDay 1 - Push: Bench press 4x8',
@@ -20,6 +20,7 @@ const interaction = (id: string): AiInteraction => ({
   createdAt: '2026-08-17T09:30:00Z',
   model: 'llama3.2',
   status: 'completed',
+  ...overrides,
 });
 
 describe('DashboardHome', () => {
@@ -96,5 +97,61 @@ describe('DashboardHome', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelectorAll('app-routine-card').length).toBe(2);
+  });
+
+  it('filters the rendered cards by search query', () => {
+    getSubject.next([
+      interaction('a', { generatedRoutine: 'Push day\nBench press 4x8' }),
+      interaction('b', { generatedRoutine: 'Pull day\nDeadlift 3x5' }),
+    ]);
+    getSubject.complete();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('app-routine-card').length).toBe(2);
+
+    fixture.componentInstance.store.setSearchQuery('push');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('app-routine-card').length).toBe(1);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('1 of 2 routines');
+  });
+
+  it('shows the filtered empty state when nothing matches', () => {
+    getSubject.next([interaction('a')]);
+    getSubject.complete();
+    fixture.detectChanges();
+
+    fixture.componentInstance.store.setSearchQuery('zzz');
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('No routines match your filters.');
+    expect(fixture.nativeElement.querySelectorAll('app-routine-card').length).toBe(0);
+  });
+
+  it('clears filters and restores the full list', () => {
+    getSubject.next([
+      interaction('a', { generatedRoutine: 'Push day\nBench press 4x8' }),
+      interaction('b', { generatedRoutine: 'Pull day\nDeadlift 3x5' }),
+    ]);
+    getSubject.complete();
+    fixture.detectChanges();
+
+    fixture.componentInstance.store.setSearchQuery('push');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('app-routine-card').length).toBe(1);
+
+    fixture.componentInstance.store.clearFilters();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('app-routine-card').length).toBe(2);
+  });
+
+  it('renders the search filter once interactions are loaded', () => {
+    getSubject.next([interaction('a')]);
+    getSubject.complete();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-search-filter')).not.toBeNull();
   });
 });

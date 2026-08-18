@@ -4,6 +4,7 @@ import { finalize } from 'rxjs/operators';
 
 import { AiInteraction } from '../models/interaction.model';
 import { InteractionService } from '../services/interaction.service';
+import { filterInteractions } from '../utils/interaction-filter.util';
 
 @Service()
 export class DashboardStore {
@@ -15,10 +16,43 @@ export class DashboardStore {
   readonly error = signal<string | null>(null);
   readonly submittingIds = signal<ReadonlySet<string>>(new Set());
 
+  readonly searchQuery = signal('');
+  readonly dateFrom = signal<Date | null>(null);
+  readonly dateTo = signal<Date | null>(null);
+
   readonly total = computed(() => this.interactions().length);
   readonly hasFeedback = computed(
     () => this.interactions().filter((interaction) => interaction.feedbackText !== null).length,
   );
+
+  readonly visibleInteractions = computed(() =>
+    filterInteractions(this.interactions(), {
+      query: this.searchQuery(),
+      from: this.dateFrom(),
+      to: this.dateTo(),
+    }),
+  );
+  readonly visibleTotal = computed(() => this.visibleInteractions().length);
+  readonly filtersActive = computed(
+    () =>
+      this.searchQuery().trim() !== '' ||
+      this.dateFrom() !== null ||
+      this.dateTo() !== null,
+  );
+
+  setSearchQuery(query: string): void {
+    this.searchQuery.set(query);
+  }
+
+  setDateRange(from: Date | null, to: Date | null): void {
+    this.dateFrom.set(from);
+    this.dateTo.set(to);
+  }
+
+  clearFilters(): void {
+    this.setSearchQuery('');
+    this.setDateRange(null, null);
+  }
 
   load(): void {
     if (this.loading()) {
@@ -72,5 +106,8 @@ export class DashboardStore {
     this.loading.set(false);
     this.error.set(null);
     this.submittingIds.set(new Set());
+    this.searchQuery.set('');
+    this.dateFrom.set(null);
+    this.dateTo.set(null);
   }
 }
