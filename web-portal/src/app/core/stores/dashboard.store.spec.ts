@@ -210,6 +210,40 @@ describe('DashboardStore', () => {
     expect(store.exportableCount()).toBe(1);
   });
 
+    it('computes the analytics from the loaded interactions', () => {
+    store.load();
+    getSubject.next([
+      interaction('a', { rating: 'thumbs_up' }),
+      interaction('b', { rating: 'thumbs_down' }),
+      interaction('c', { rating: null }),
+    ]);
+    getSubject.complete();
+
+    expect(store.analytics().totalRoutines).toBe(3);
+    expect(store.analytics().reviewedCount).toBe(2);
+    expect(store.analytics().positiveCount).toBe(1);
+    expect(store.analytics().negativeCount).toBe(1);
+    expect(store.analytics().positivePercent).toBe(50);
+    expect(store.analytics().negativePercent).toBe(50);
+  });
+
+  it('updates the analytics when a rating is submitted', () => {
+    const updated = interaction('a', { rating: 'thumbs_up' });
+    service.updateFeedback.mockReturnValue(of(updated));
+
+    store.load();
+    getSubject.next([interaction('a')]);
+    getSubject.complete();
+
+    expect(store.analytics().reviewedCount).toBe(0);
+    expect(store.analytics().positivePercent).toBe(0);
+
+    store.submitFeedback('a', 'Nice volume');
+
+    expect(store.analytics().reviewedCount).toBe(1);
+    expect(store.analytics().positivePercent).toBe(100);
+  });
+
   it('reset clears the loaded data and all filters', () => {
     store.load();
     getSubject.next([interaction('a')]);

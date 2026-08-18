@@ -12,6 +12,7 @@ import {
 import { RoutineCard } from '../../../features/dashboard/components/routine-card/routine-card';
 import { SearchFilter } from '../../../features/dashboard/components/search-filter/search-filter';
 import { DpoExport } from '../../../features/dashboard/components/dpo-export/dpo-export';
+import { AnalyticsSummary } from '../../../features/dashboard/components/analytics-summary/analytics-summary';
 import { Diet } from '../../../core/services/diet';
 import { Routine } from '../../../core/services/routine';
 import { DashboardStore } from '../../../core/stores/dashboard.store';
@@ -28,6 +29,7 @@ import { WorkoutDay } from '../../../core/mocks/mock-routine.data';
     RoutineCard,
     SearchFilter,
     DpoExport,
+    AnalyticsSummary,
     MatProgressSpinnerModule,
     MatButtonModule,
   ],

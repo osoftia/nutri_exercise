@@ -1,0 +1,21 @@
+<section class="analytics-summary" aria-label="RLHF analytics summary">
+  <mat-card class="analytics-summary__tile">
+    <span class="analytics-summary__label">Total Routines Generated</span>
+    <span class="analytics-summary__value">{{ analytics().totalRoutines }}</span>
+  </mat-card>
+
+  <mat-card class="analytics-summary__tile">
+    <span class="analytics-summary__label">Total Reviewed</span>
+    <span class="analytics-summary__value">{{ analytics().reviewedCount }}</span>
+  </mat-card>
+
+  <mat-card class="analytics-summary__tile analytics-summary__tile--positive">
+    <span class="analytics-summary__label">Positive</span>
+    <span class="analytics-summary__value">{{ analytics().positivePercent }}%</span>
+  </mat-card>
+
+  <mat-card class="analytics-summary__tile analytics-summary__tile--negative">
+    <span class="analytics-summary__label">Negative</span>
+    <span class="analytics-summary__value">{{ analytics().negativePercent }}%</span>
+  </mat-card>
+</section>

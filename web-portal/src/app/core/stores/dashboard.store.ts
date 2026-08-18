@@ -6,6 +6,7 @@ import { AiInteraction } from '../models/interaction.model';
 import { InteractionService } from '../services/interaction.service';
 import { filterInteractions } from '../utils/interaction-filter.util';
 import { isDpoEligible } from '../utils/dpo-export.util';
+import { computeAnalytics } from '../utils/analytics.util';
 
 @Service()
 export class DashboardStore {
@@ -43,6 +44,8 @@ export class DashboardStore {
 
   readonly exportableInteractions = computed(() => this.interactions().filter(isDpoEligible));
   readonly exportableCount = computed(() => this.exportableInteractions().length);
+
+  readonly analytics = computed(() => computeAnalytics(this.interactions()));
 
   setSearchQuery(query: string): void {
     this.searchQuery.set(query);

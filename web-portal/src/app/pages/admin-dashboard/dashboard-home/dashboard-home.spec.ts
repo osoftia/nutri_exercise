@@ -182,4 +182,27 @@ describe('DashboardHome', () => {
     expect(exportButton).toBeDefined();
     expect(exportButton?.disabled).toBe(true);
   });
+
+  it('renders the analytics summary once interactions are loaded', () => {
+    getSubject.next([
+      interaction('a', { rating: 'thumbs_up' }),
+      interaction('b', { rating: 'thumbs_down' }),
+      interaction('c', { rating: null }),
+    ]);
+    getSubject.complete();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(fixture.nativeElement.querySelector('app-analytics-summary')).not.toBeNull();
+    expect(el.textContent).toContain('Total Routines Generated');
+    expect(el.textContent).toContain('Total Reviewed');
+  });
+
+  it('omits the analytics summary while there are no interactions', () => {
+    getSubject.next([]);
+    getSubject.complete();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-analytics-summary')).toBeNull();
+  });
 });

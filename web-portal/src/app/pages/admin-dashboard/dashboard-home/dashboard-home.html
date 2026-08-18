@@ -10,6 +10,10 @@
       }
 
       <section class="dashboard-home__panel">
+        @if (store.total() > 0) {
+          <app-analytics-summary [analytics]="store.analytics()" />
+        }
+
         <div class="dashboard-home__panel-header">
           <h2 class="dashboard-home__heading">AI-Generated Routines</h2>
           @if (store.total() > 0) {

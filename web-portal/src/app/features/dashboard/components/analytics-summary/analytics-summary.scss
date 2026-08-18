@@ -1,0 +1,34 @@
+.analytics-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.analytics-summary__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+}
+
+.analytics-summary__label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.analytics-summary__value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.analytics-summary__tile--positive .analytics-summary__value {
+  color: #22c55e;
+}
+
+.analytics-summary__tile--negative .analytics-summary__value {
+  color: #ef4444;
+}
