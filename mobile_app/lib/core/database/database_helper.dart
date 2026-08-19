@@ -50,6 +50,13 @@ class DatabaseHelper {
         meals_json TEXT NOT NULL
       )
     ''');
+    await db.execute('''
+      CREATE TABLE notification_prefs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        pref_key TEXT NOT NULL UNIQUE,
+        enabled INTEGER NOT NULL
+      )
+    ''');
   }
 
   Future<List<Map<String, Object?>>> getRoutines() async {
@@ -84,5 +91,28 @@ class DatabaseHelper {
         menu.meals.map((meal) => meal.toJson()).toList(),
       ),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<Map<String, Object?>>> getNotificationPrefs() async {
+    final db = await database;
+    return db.query('notification_prefs');
+  }
+
+  Future<void> upsertNotificationPref(String key, bool enabled) async {
+    final db = await database;
+    await db.insert('notification_prefs', {
+      'pref_key': key,
+      'enabled': enabled ? 1 : 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> deleteRoutine(int id) async {
+    final db = await database;
+    await db.delete('routines', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteDiet(int id) async {
+    final db = await database;
+    await db.delete('diets', where: 'id = ?', whereArgs: [id]);
   }
 }

@@ -1,0 +1,133 @@
+# Milestone 10 — Settings & Notifications Module Execution Log (TDD)
+
+## Date: 2026-08-19
+## Branch: `feature/m10-settings-notifications`
+
+## Overview
+Implemented the Settings screen for the Flutter `mobile_app`: saved-record
+management (view/edit/delete routines) and notification preferences toggles
+(exercise alerts, food alerts, daily intake reminders). Executed as a strict
+Red → Green → Verify TDD cycle driven by the Gherkin contract in
+`mobile_app/test/features/m10_settings.feature`.
+
+---
+
+## Architect deliverables (created first)
+- `mobile_app/test/features/m10_settings.feature` — 10 Gherkin scenarios
+  (open settings, view record, edit record, delete record, toggles off by
+  default, enable each toggle, persistence across screen changes).
+- `docs/milestone_10_plan.md` — technical plan (branch, data-layer analysis,
+  new components, mocking strategy, TDD order, DoD).
+
+---
+
+## PHASE 1 — RED (Test-First)
+
+### Test files written
+| File | Covers |
+|------|--------|
+| `test/data/notification_prefs_repository_test.dart` | `MockNotificationPrefsRepository` defaults + in-memory persistence; `MockSettingsRepository` list/update/delete; `NotificationPrefType` keys. |
+| `test/data/local_notification_prefs_repository_test.dart` | `LocalNotificationPrefsRepository` against an in-memory SQLite DB (via `sqflite_common_ffi`). |
+| `test/features/m10_settings_widget_test.dart` | `SettingsPage` widget tests for all 10 feature scenarios. |
+
+### Confirmed failure
+`flutter test <3 files>` -> FAILED (compile errors): all production classes
+(`SettingsRepository`, `NotificationPrefsRepository`, `NotificationPrefType`,
+`Mock*Repository`, `SettingsPage`) did not exist yet — the expected RED state.
+
+---
+
+## PHASE 2 — GREEN (Implementation)
+
+### Files created (production)
+| File | Purpose |
+|------|---------|
+| `lib/core/models/notification_pref.dart` | `NotificationPrefType` enum with stable `key` + user-facing `label`. |
+| `lib/core/data/notification_prefs_repository.dart` | Abstract `NotificationPrefsRepository` (`isEnabled`, `setEnabled`). |
+| `lib/core/data/settings_repository.dart` | Abstract `SettingsRepository` (`getRecords`, `updateRecordFocus`, `deleteRecord`). |
+| `lib/core/data/local_notification_prefs_repository.dart` | SQLite-backed prefs repo (`notification_prefs` table). |
+| `lib/core/data/local_settings_repository.dart` | SQLite-backed settings repo (records CRUD via `DatabaseHelper`). |
+| `lib/core/mocks/mock_notification_prefs_repository.dart` | In-memory prefs test double. |
+| `lib/core/mocks/mock_settings_repository.dart` | In-memory settings test double seeded from `mockWorkoutRoutines`. |
+| `lib/ui/pages/settings_page.dart` | `SettingsPage` UI: Saved Records list (tap-to-expand details, edit dialog, delete confirm) + Notification Preferences `SwitchListTile`s. |
+
+### Files modified
+| File | Change |
+|------|--------|
+| `lib/core/database/database_helper.dart` | Added `notification_prefs` table to `_onCreate`; added `getNotificationPrefs`, `upsertNotificationPref`, `deleteRoutine`, `deleteDiet`. |
+| `mobile_app/pubspec.yaml` | Added dev dependency `sqflite_common_ffi` (in-memory DB for tests). |
+| `mobile_app/pubspec.lock` | Lockfile updated. |
+
+### Design decisions
+- **New `SettingsRepository` abstraction** instead of overloading the existing
+  `RoutineRepository` contract (which only has `getWeeklyRoutine` +
+  `generateRoutine`), keeping ripple effects minimal and the settings CRUD
+  testable with a dedicated mock.
+- **`NotificationPrefsRepository`** decouples the UI toggles from persistence;
+  defaults to all-disabled (missing rows => `false`).
+- **`sqflite_common_ffi`** added as a dev dependency so the SQLite-backed
+  `LocalNotificationPrefsRepository` could be verified with a real in-memory
+  database in unit tests (matching the existing `DatabaseHelper(database: ...)`
+  override hook).
+
+### Test-fix iterations
+1. **Missing mock imports** — the RED test files referenced `Mock*Repository`
+   without importing them; added the imports.
+2. **`TextEditingController` disposed too early** — the edit dialog disposed its
+   controller via `showDialog(...).whenComplete(controller.dispose)`, which ran
+   while the dialog exit animation still referenced the controller, throwing
+   "A TextEditingController was used after being disposed" and cascading
+   framework assertions. Fixed by moving controller ownership into a dedicated
+   `_EditFocusDialog` StatefulWidget that disposes it in `dispose()`.
+3. **Expand action** — the record tile only expanded via a trailing icon; made
+   the `ListTile` itself tappable to satisfy the "tap record to view details"
+   scenario.
+4. **`flutter analyze` warnings** — removed an unused `_togglePref` method and
+   an unused import to reach a clean analyze.
+
+---
+
+## PHASE 3 — VERIFY
+
+### `flutter test` (full suite)
+```
+00:12 +29: All tests passed!
+```
+All 29 tests pass (10 M10 widget tests + 4 M10 data tests + M9 + pre-existing).
+
+### `flutter analyze`
+```
+5 issues found.
+```
+All 5 are pre-existing `deprecated_member_use` infos in
+`lib/core/constants/muscle_vectors.dart` and
+`lib/ui/organisms/interactive_body_map.dart` — none introduced by M10. M10 code
+is clean (zero warnings/errors).
+
+---
+
+## PHASE 4 — Documentation & Commit
+- Log file: `docs/m10_execution_changes.log` (this file).
+- Commit: `git add .` + `git commit -m "feat(m10): implement settings, db management and notification toggles"`.
+
+---
+
+## Gherkin contract fulfillment
+| Scenario | Test | Status |
+|----------|------|--------|
+| Opening settings shows saved records | `opening the settings screen shows saved records and focus` | PASS |
+| Viewing a saved routine record | `tapping a record shows its exercise details` | PASS |
+| Editing a saved routine record | `editing the focus area persists the change` | PASS |
+| Deleting a saved routine record | `deleting a record removes it from list and repository` | PASS |
+| Exercise alerts disabled by default | `all toggles are off by default` | PASS |
+| Enabling exercise alerts | `toggling exercise alerts on persists the preference` | PASS |
+| Enabling food alerts | `toggling food alerts on persists the preference` | PASS |
+| Enabling daily intake reminders | `toggling daily intake reminders on persists the preference` | PASS |
+| Notification prefs persist across screen changes | `preferences persist when the page is rebuilt` | PASS |
+
+## Environment notes
+- Project `.fvmrc` pins Flutter 3.29.0 (Dart >= 3.7). Used FVM-cached
+  Flutter 3.35.3 / Dart 3.9.2 (`C:\Users\User\fvm\versions\3.10.0`).
+- Added `sqflite_common_ffi` dev dependency for hermetic in-memory SQLite tests.
+- M9 (voice input) was completed and committed on `feature/m9-voice-input`
+  before starting M10.
