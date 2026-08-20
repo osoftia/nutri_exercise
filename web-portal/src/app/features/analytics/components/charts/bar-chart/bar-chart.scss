@@ -1,0 +1,33 @@
+.bar-chart {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+}
+
+.bar-chart__track {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.bar-chart__block {
+  fill: var(--color-block-primary);
+}
+
+.bar-chart__label {
+  font-family: var(--font-family);
+  font-size: 10px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  fill: var(--color-text-low);
+}
+
+.bar-chart__value {
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  fill: var(--color-text-high);
+}

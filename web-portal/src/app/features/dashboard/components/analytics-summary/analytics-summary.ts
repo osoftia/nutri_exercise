@@ -1,11 +1,10 @@
 import { Component, input } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
 
 import { AnalyticsMetrics } from '../../../../core/utils/analytics.util';
 
 @Component({
   selector: 'app-analytics-summary',
-  imports: [MatCardModule],
+  imports: [],
   templateUrl: './analytics-summary.html',
   styleUrl: './analytics-summary.scss',
 })

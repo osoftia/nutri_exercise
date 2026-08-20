@@ -32,32 +32,37 @@ body {
 
 .mat-mdc-card {
   background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-neumorph-up) !important;
+  border: var(--border-thin);
+  border-radius: var(--radius-none);
+  box-shadow: none;
 }
 
 .mat-mdc-button-base,
 .mdc-button {
-  border-radius: var(--radius-md);
-  font-weight: 600;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .mat-mdc-raised-button:not(:disabled),
 .mat-mdc-unelevated-button:not(:disabled) {
-  box-shadow: var(--shadow-neumorph-flat) !important;
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
 }
 
 .mat-mdc-button-base:not(:disabled):hover {
-  box-shadow: var(--shadow-neumorph-up) !important;
+  border-color: var(--color-accent);
+  box-shadow: none;
 }
 
 .mat-mdc-button-base:not(:disabled):active {
-  box-shadow: var(--shadow-neumorph-down) !important;
+  border-color: var(--color-text-high);
+  box-shadow: none;
 }
 
 .mat-mdc-text-field-wrapper {
   background-color: var(--color-bg);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-neumorph-down);
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
 }

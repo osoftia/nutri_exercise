@@ -44,8 +44,11 @@ describe('AnalyticsSummary', () => {
     expect(el.textContent).toContain('33%');
   });
 
-  it('renders four material tiles', () => {
-    expect(fixture.nativeElement.querySelectorAll('mat-card').length).toBe(4);
+  it('renders the editorial solid blocks', () => {
+    expect(fixture.nativeElement.querySelectorAll('.analytics-summary__block').length).toBe(2);
+    expect(fixture.nativeElement.querySelectorAll('.analytics-summary__split-tile').length).toBe(
+      2,
+    );
   });
 
   it('updates reactively when the metrics input changes', () => {

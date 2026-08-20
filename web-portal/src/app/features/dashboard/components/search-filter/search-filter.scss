@@ -4,9 +4,10 @@
   align-items: center;
   gap: 12px;
   padding: 16px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-none);
+  border: var(--border-thin);
   background-color: var(--color-bg);
-  box-shadow: var(--shadow-neumorph-down);
+  box-shadow: none;
 }
 
 .search-filter__query {
