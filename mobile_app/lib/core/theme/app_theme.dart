@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
   static const Color primary300 = Color(0xFF93C5FD);
@@ -38,23 +39,40 @@ class AppRadius {
   static const double lg = 20;
 }
 
+/// Soft light/dark shadows used by the neumorphic design language.
+class NeumorphicStyles {
+  /// Top-left highlight that catches the light.
+  static const BoxShadow lightShadow = BoxShadow(
+    color: Color(0x26FFFFFF),
+    offset: Offset(-6, -6),
+    blurRadius: 12,
+  );
+
+  /// Bottom-right drop shadow that grounds the element.
+  static const BoxShadow darkShadow = BoxShadow(
+    color: Color(0x66000000),
+    offset: Offset(6, 6),
+    blurRadius: 12,
+  );
+
+  /// Inset shadow used for "pressed" neumorphic elements.
+  static const BoxShadow innerShadow = BoxShadow(
+    color: Color(0x33000000),
+    offset: Offset(4, 4),
+    blurRadius: 8,
+    spreadRadius: -2,
+  );
+}
+
 /// Central Flutter theme that strictly consumes the `design-system/design-tokens.json` values.
 class AppTheme {
+  /// Global default typography family (Montserrat via google_fonts).
+  static const String fontFamily = 'Montserrat';
+
   static ThemeData get light => dark;
 
-  static ThemeData get dark => ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    scaffoldBackgroundColor: AppColors.surface900,
-    colorScheme: ColorScheme.dark(
-      primary: AppColors.primary500,
-      secondary: AppColors.accent,
-      surface: AppColors.surface800,
-      onSurface: AppColors.textHigh,
-      error: AppColors.danger,
-    ),
-    fontFamily: 'Inter',
-    textTheme: const TextTheme(
+  static ThemeData get dark {
+    final baseTextTheme = const TextTheme(
       displayLarge: TextStyle(
         fontSize: 32,
         fontWeight: FontWeight.w700,
@@ -90,36 +108,51 @@ class AppTheme {
         fontWeight: FontWeight.w600,
         color: AppColors.textLow,
       ),
-    ),
-    cardTheme: const CardThemeData(
-      color: AppColors.surface800,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: AppColors.surface900,
+      colorScheme: ColorScheme.dark(
+        primary: AppColors.primary500,
+        secondary: AppColors.accent,
+        surface: AppColors.surface800,
+        onSurface: AppColors.textHigh,
+        error: AppColors.danger,
       ),
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.surface900,
-      foregroundColor: AppColors.textHigh,
-      elevation: 0,
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: AppColors.surface900,
-      indicatorColor: AppColors.primary500.withValues(alpha: 0.2),
-      iconTheme: WidgetStateProperty.resolveWith((states) {
-        final selected = states.contains(WidgetState.selected);
-        return IconThemeData(
-          color: selected ? AppColors.primary400 : AppColors.textLow,
-        );
-      }),
-      labelTextStyle: WidgetStateProperty.resolveWith((states) {
-        final selected = states.contains(WidgetState.selected);
-        return TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: selected ? AppColors.primary300 : AppColors.textLow,
-        );
-      }),
-    ),
-  );
+      fontFamily: fontFamily,
+      textTheme: GoogleFonts.montserratTextTheme(baseTextTheme),
+      cardTheme: const CardTheme(
+        color: AppColors.surface800,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+        ),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.surface900,
+        foregroundColor: AppColors.textHigh,
+        elevation: 0,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.transparent,
+        indicatorColor: AppColors.primary500.withOpacity(0.2),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected ? AppColors.primary400 : AppColors.textLow,
+          );
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: selected ? AppColors.primary300 : AppColors.textLow,
+          );
+        }),
+      ),
+    );
+  }
 }

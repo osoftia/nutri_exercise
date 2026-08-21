@@ -136,7 +136,7 @@ class _WizardVoiceInputFieldState extends State<WizardVoiceInputField>
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: _listening
-            ? AppColors.primary500.withValues(alpha: 0.25)
+            ? AppColors.primary500.withOpacity(0.25)
             : Colors.transparent,
         boxShadow: _listening
             ? [

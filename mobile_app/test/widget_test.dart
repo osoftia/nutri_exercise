@@ -41,9 +41,10 @@ void main() {
       const NutriApp(config: AppConfig(name: 'dev', useMocks: true)),
     );
 
-    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpAndSettle();
 
-    expect(find.text('Admin Dashboard'), findsOneWidget);
+    expect(find.text('Push Day'), findsOneWidget);
+    expect(find.text('Nutrition'), findsOneWidget);
     expect(AppTheme.dark.scaffoldBackgroundColor, const Color(0xFF0F172A));
   });
 }
