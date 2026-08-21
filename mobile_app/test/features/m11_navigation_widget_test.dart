@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:nutri_mobile_app/core/mocks/mock_profile_repository.dart';
+import 'package:nutri_mobile_app/core/state/user_profile_controller.dart';
 import 'package:nutri_mobile_app/core/theme/app_theme.dart';
 import 'package:nutri_mobile_app/ui/organisms/bottom_nav_bar.dart';
 import 'package:nutri_mobile_app/ui/pages/main_shell_page.dart';
@@ -17,8 +19,14 @@ void main() {
   });
 
   Future<void> pumpShell(WidgetTester tester) async {
+    final controller = UserProfileController(
+      repository: MockProfileRepository(),
+    );
     await tester.pumpWidget(
-      MaterialApp(theme: AppTheme.dark, home: const MainShellPage()),
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: MainShellPage(profileController: controller),
+      ),
     );
     await tester.pumpAndSettle();
   }
@@ -75,7 +83,7 @@ void main() {
       expect(find.byKey(const Key('calendar_grid')), findsOneWidget);
     });
 
-    testWidgets('navigating to the Profile tab shows a static user profile', (
+    testWidgets('navigating to the Profile tab shows the profile form', (
       tester,
     ) async {
       await pumpShell(tester);
@@ -84,8 +92,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(ProfilePage), findsOneWidget);
-      expect(find.text('Alex Carter'), findsOneWidget);
-      expect(find.text('Muscle Gain'), findsOneWidget);
+      expect(find.byKey(const Key('profile_name_field')), findsOneWidget);
+      expect(find.byKey(const Key('profile_save_button')), findsOneWidget);
     });
 
     testWidgets('each tab retains its mock content when revisited', (

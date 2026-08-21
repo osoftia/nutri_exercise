@@ -36,7 +36,12 @@ class NeumorphicContainer extends StatelessWidget {
                 NeumorphicStyles.darkShadow,
               ],
       ),
-      child: child,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(borderRadius),
+        clipBehavior: Clip.antiAlias,
+        child: child,
+      ),
     );
   }
 }

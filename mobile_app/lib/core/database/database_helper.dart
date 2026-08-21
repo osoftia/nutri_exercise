@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/diet_models.dart';
 import '../models/routine_models.dart';
+import '../models/user_profile.dart';
 
 /// Local SQLite storage for offline-first persistence of routines and diets.
 ///
@@ -55,6 +56,16 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         pref_key TEXT NOT NULL UNIQUE,
         enabled INTEGER NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE profile (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        name TEXT NOT NULL,
+        age INTEGER NOT NULL,
+        weight_kg REAL NOT NULL,
+        height_cm REAL NOT NULL,
+        goal TEXT NOT NULL
       )
     ''');
   }
@@ -114,5 +125,22 @@ class DatabaseHelper {
   Future<void> deleteDiet(int id) async {
     final db = await database;
     await db.delete('diets', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Returns the single profile row, or `null` when none has been saved.
+  Future<Map<String, Object?>?> getProfile() async {
+    final db = await database;
+    final rows = await db.query('profile', where: 'id = 1', limit: 1);
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Upserts the single profile row.
+  Future<void> upsertProfile(UserProfile profile) async {
+    final db = await database;
+    await db.insert(
+      'profile',
+      profile.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 }
