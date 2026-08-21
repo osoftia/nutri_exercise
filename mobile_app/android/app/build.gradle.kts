@@ -7,7 +7,7 @@ plugins {
 android {
     namespace = "com.example.nutri_mobile_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "26.3.11579264"
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
