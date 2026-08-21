@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_profile_repository.dart';
+import 'package:nutri_mobile_app/core/mocks/mock_schedule_repository.dart';
+import 'package:nutri_mobile_app/core/state/schedule_controller.dart';
 import 'package:nutri_mobile_app/core/state/user_profile_controller.dart';
 import 'package:nutri_mobile_app/core/theme/app_theme.dart';
 import 'package:nutri_mobile_app/ui/organisms/bottom_nav_bar.dart';
@@ -19,13 +21,20 @@ void main() {
   });
 
   Future<void> pumpShell(WidgetTester tester) async {
-    final controller = UserProfileController(
+    final profileController = UserProfileController(
       repository: MockProfileRepository(),
+    );
+    final scheduleController = ScheduleController(
+      repository: MockScheduleRepository(),
+      initialMonth: DateTime(2026, 8),
     );
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.dark,
-        home: MainShellPage(profileController: controller),
+        home: MainShellPage(
+          profileController: profileController,
+          scheduleController: scheduleController,
+        ),
       ),
     );
     await tester.pumpAndSettle();

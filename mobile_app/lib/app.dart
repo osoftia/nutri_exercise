@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'core/config/app_config.dart';
 import 'core/data/local_profile_repository.dart';
 import 'core/data/profile_repository.dart';
+import 'core/data/schedule_repository.dart';
 import 'core/mocks/mock_profile_repository.dart';
+import 'core/mocks/mock_schedule_repository.dart';
+import 'core/state/schedule_controller.dart';
 import 'core/state/user_profile_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'ui/pages/main_shell_page.dart';
@@ -22,11 +25,20 @@ class NutriApp extends StatelessWidget {
       repository: profileRepository,
     );
 
+    // Schedule events are mock-seeded for M13; persistence is a follow-up.
+    final ScheduleRepository scheduleRepository = MockScheduleRepository();
+    final scheduleController = ScheduleController(
+      repository: scheduleRepository,
+    );
+
     return MaterialApp(
       title: 'NutriExercise',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
-      home: MainShellPage(profileController: profileController),
+      home: MainShellPage(
+        profileController: profileController,
+        scheduleController: scheduleController,
+      ),
     );
   }
 }
