@@ -57,5 +57,26 @@ void main() {
       );
       expect(plan.milestoneFor(2), isNull);
     });
+
+    test('maintain keeps factors near baseline', () {
+      final plan = generateProjectionPlan(
+        startWeightKg: 70,
+        goal: FitnessGoal.maintain,
+      );
+      final month6 = plan.milestoneFor(6)!;
+      expect(month6.shoulderFactor, 0.5);
+      expect(month6.weightKg, 70);
+    });
+
+    test('endurance builds modest shoulders and sheds some weight', () {
+      final plan = generateProjectionPlan(
+        startWeightKg: 70,
+        goal: FitnessGoal.endurance,
+      );
+      final month6 = plan.milestoneFor(6)!;
+      expect(month6.shoulderFactor, 0.58);
+      expect(month6.waistFactor, 0.44);
+      expect(month6.weightKg, closeTo(67.0, 0.0001));
+    });
   });
 }

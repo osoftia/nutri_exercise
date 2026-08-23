@@ -107,5 +107,33 @@ void main() {
       expect(controller.consumedCalories, 1150);
       expect(avatarPainter(tester).morph, greaterThan(before));
     });
+
+    testWidgets('custom meal entry adds calories', (tester) async {
+      final controller = await pumpNutrition(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('food_name_field')),
+        'Banana',
+      );
+      await tester.enterText(
+        find.byKey(const Key('food_calories_field')),
+        '120',
+      );
+      await tester.tap(find.byKey(const Key('food_add_button')));
+      await tester.pumpAndSettle();
+
+      expect(controller.consumedCalories, 1120);
+    });
+
+    testWidgets('custom meal entry with missing fields is ignored', (
+      tester,
+    ) async {
+      final controller = await pumpNutrition(tester);
+
+      await tester.tap(find.byKey(const Key('food_add_button')));
+      await tester.pumpAndSettle();
+
+      expect(controller.consumedCalories, 1000);
+    });
   });
 }

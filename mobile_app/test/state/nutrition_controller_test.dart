@@ -69,5 +69,16 @@ void main() {
       expect(controller.carbsProgress, closeTo(80 / 250, 0.0001));
       expect(controller.fatProgress, closeTo(20 / 70, 0.0001));
     });
+
+    test('derived getters expose ratio, targets and loading state', () async {
+      await controller.load();
+
+      expect(controller.calorieRatio, closeTo(0.5, 0.0001));
+      expect(controller.macroTargets.protein, 150);
+      expect(controller.macroTargets.carbs, 250);
+      expect(controller.macroTargets.fat, 70);
+      expect(controller.entries, isEmpty);
+      expect(controller.isLoading, isFalse);
+    });
   });
 }
