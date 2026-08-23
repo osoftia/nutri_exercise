@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 import 'core/config/app_config.dart';
 import 'core/data/local_profile_repository.dart';
+import 'core/data/nutrition_repository.dart';
 import 'core/data/profile_repository.dart';
 import 'core/data/schedule_repository.dart';
+import 'core/mocks/mock_nutrition_repository.dart';
 import 'core/mocks/mock_profile_repository.dart';
 import 'core/mocks/mock_schedule_repository.dart';
+import 'core/state/nutrition_controller.dart';
 import 'core/state/schedule_controller.dart';
 import 'core/state/user_profile_controller.dart';
 import 'core/theme/app_theme.dart';
@@ -31,6 +34,12 @@ class NutriApp extends StatelessWidget {
       repository: scheduleRepository,
     );
 
+    // Nutrition is mock-seeded for M14; SQLite persistence is a follow-up.
+    final NutritionRepository nutritionRepository = MockNutritionRepository();
+    final nutritionController = NutritionController(
+      repository: nutritionRepository,
+    );
+
     return MaterialApp(
       title: 'NutriExercise',
       debugShowCheckedModeBanner: false,
@@ -38,6 +47,7 @@ class NutriApp extends StatelessWidget {
       home: MainShellPage(
         profileController: profileController,
         scheduleController: scheduleController,
+        nutritionController: nutritionController,
       ),
     );
   }

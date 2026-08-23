@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/state/nutrition_controller.dart';
 import '../../core/state/schedule_controller.dart';
 import '../../core/state/user_profile_controller.dart';
 import '../organisms/bottom_nav_bar.dart';
@@ -13,10 +14,12 @@ class MainShellPage extends StatefulWidget {
     super.key,
     required this.profileController,
     required this.scheduleController,
+    required this.nutritionController,
   });
 
   final UserProfileController profileController;
   final ScheduleController scheduleController;
+  final NutritionController nutritionController;
 
   @override
   State<MainShellPage> createState() => _MainShellPageState();
@@ -27,7 +30,7 @@ class _MainShellPageState extends State<MainShellPage> {
 
   late final List<Widget> _tabs = [
     const RoutinesPage(),
-    const NutritionPage(),
+    NutritionPage(controller: widget.nutritionController),
     SchedulePage(controller: widget.scheduleController),
     ProfilePage(controller: widget.profileController),
   ];

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:nutri_mobile_app/core/mocks/mock_nutrition_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_profile_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_schedule_repository.dart';
+import 'package:nutri_mobile_app/core/state/nutrition_controller.dart';
 import 'package:nutri_mobile_app/core/state/schedule_controller.dart';
 import 'package:nutri_mobile_app/core/state/user_profile_controller.dart';
 import 'package:nutri_mobile_app/core/theme/app_theme.dart';
@@ -21,6 +23,10 @@ void main() {
   });
 
   Future<void> pumpShell(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
     final profileController = UserProfileController(
       repository: MockProfileRepository(),
     );
@@ -28,12 +34,16 @@ void main() {
       repository: MockScheduleRepository(),
       initialMonth: DateTime(2026, 8),
     );
+    final nutritionController = NutritionController(
+      repository: MockNutritionRepository(),
+    );
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.dark,
         home: MainShellPage(
           profileController: profileController,
           scheduleController: scheduleController,
+          nutritionController: nutritionController,
         ),
       ),
     );
@@ -75,6 +85,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(NutritionPage), findsOneWidget);
+      expect(find.byKey(const Key('calorie_summary')), findsOneWidget);
       expect(find.text('Oatmeal & Berries'), findsOneWidget);
       expect(find.text('Grilled Chicken Bowl'), findsOneWidget);
     });
