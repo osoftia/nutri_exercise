@@ -3,8 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_nutrition_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_profile_repository.dart';
+import 'package:nutri_mobile_app/core/mocks/mock_projection_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_schedule_repository.dart';
 import 'package:nutri_mobile_app/core/state/nutrition_controller.dart';
+import 'package:nutri_mobile_app/core/state/projection_controller.dart';
 import 'package:nutri_mobile_app/core/state/schedule_controller.dart';
 import 'package:nutri_mobile_app/core/state/user_profile_controller.dart';
 import 'package:nutri_mobile_app/core/theme/app_theme.dart';
@@ -37,6 +39,9 @@ void main() {
     final nutritionController = NutritionController(
       repository: MockNutritionRepository(),
     );
+    final projectionController = ProjectionController(
+      repository: MockProjectionRepository(),
+    );
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.dark,
@@ -44,6 +49,7 @@ void main() {
           profileController: profileController,
           scheduleController: scheduleController,
           nutritionController: nutritionController,
+          projectionController: projectionController,
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/diet_models.dart';
+import '../models/projection_models.dart';
 import '../models/routine_models.dart';
 import '../models/user_profile.dart';
 
@@ -14,7 +15,7 @@ class DatabaseHelper {
   DatabaseHelper({Database? database}) : _databaseOverride = database;
 
   static const String _dbName = 'nutri_exercise.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
 
   final Database? _databaseOverride;
   Database? _database;
@@ -30,6 +31,7 @@ class DatabaseHelper {
       version: _dbVersion,
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
     return _database!;
   }
@@ -66,6 +68,34 @@ class DatabaseHelper {
         weight_kg REAL NOT NULL,
         height_cm REAL NOT NULL,
         goal TEXT NOT NULL
+      )
+    ''');
+    await _createProjectionTables(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _createProjectionTables(db);
+    }
+  }
+
+  Future<void> _createProjectionTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS projection_plan (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        start_weight_kg REAL NOT NULL,
+        goal TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS projection_milestone (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        plan_id INTEGER NOT NULL,
+        month INTEGER NOT NULL,
+        weight_kg REAL NOT NULL,
+        shoulder_factor REAL NOT NULL,
+        waist_factor REAL NOT NULL,
+        focus TEXT NOT NULL
       )
     ''');
   }
@@ -142,5 +172,38 @@ class DatabaseHelper {
       profile.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  /// Returns the single projection plan row, or `null` when none is saved.
+  Future<Map<String, Object?>?> getProjectionPlan() async {
+    final db = await database;
+    final rows = await db.query('projection_plan', where: 'id = 1', limit: 1);
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Returns all projection milestone rows ordered by month.
+  Future<List<Map<String, Object?>>> getProjectionMilestones() async {
+    final db = await database;
+    return db.query('projection_milestone', orderBy: 'month');
+  }
+
+  /// Replaces the stored projection plan and its milestones in a transaction.
+  Future<void> saveProjectionPlan(ProjectionPlan plan) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.insert(
+        'projection_plan',
+        {
+          'id': 1,
+          'start_weight_kg': plan.startWeightKg,
+          'goal': plan.goal.name,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      await txn.delete('projection_milestone');
+      for (final milestone in plan.milestones) {
+        await txn.insert('projection_milestone', milestone.toMap(planId: 1));
+      }
+    });
   }
 }
