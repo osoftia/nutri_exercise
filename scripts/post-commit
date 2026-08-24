@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# post-commit hook: automatically append dated entries to project-specific CHANGELOG files.
+#
+# Behaviour
+#   - Detects whether the just-created commit touched backend/ or mobile_app/.
+#   - Appends the date, commit hash, and full commit message to the matching CHANGELOG.md.
+#   - Creates a silent follow-up commit ("chore(changelog): ...") carrying the changelog updates.
+#
+# Infinite-loop guard
+#   - The follow-up commit message contains "chore(changelog)". When this hook runs again for
+#     that commit it exits immediately, so the flow terminates.
+#   - Commits that only touch CHANGELOG files themselves are also skipped.
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+[ -z "$REPO_ROOT" ] && exit 0
+
+# Guard 1: ignore commits produced by this hook.
+COMMIT_MSG="$(git log -1 --pretty=%B 2>/dev/null | tr '\n' ' ')"
+case "$COMMIT_MSG" in
+  *"chore(changelog)"*) exit 0 ;;
+esac
+
+DATE="$(date +%Y-%m-%d)"
+HASH="$(git rev-parse --short HEAD 2>/dev/null)"
+SUBJECT="$(git log -1 --pretty=%s 2>/dev/null)"
+
+# Guard 2: skip commits that only touch changelog files (e.g. the init commit).
+FILES="$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null)"
+backend_files="$(printf '%s\n' "$FILES" | grep '^backend/' | grep -v '^backend/CHANGELOG.md$' || true)"
+mobile_files="$(printf '%s\n' "$FILES" | grep '^mobile_app/' | grep -v '^mobile_app/CHANGELOG.md$' || true)"
+
+[ -n "$backend_files" ] && BACKEND_NEEDS_UPDATE=1 || BACKEND_NEEDS_UPDATE=0
+[ -n "$mobile_files" ] && MOBILE_NEEDS_UPDATE=1 || MOBILE_NEEDS_UPDATE=0
+
+[ "$BACKEND_NEEDS_UPDATE" -eq 0 ] && [ "$MOBILE_NEEDS_UPDATE" -eq 0 ] && exit 0
+
+# Insert a new entry right before the most recent one (or at the end if none exist yet).
+append_entry() {
+  local changelog="$1"
+  local entry="$2"
+  [ -f "$changelog" ] || return 0
+
+  local tmp inserted line
+  tmp="$(mktemp)"
+  inserted=0
+
+  while IFS= read -r line; do
+    if [ "$inserted" -eq 0 ]; then
+      case "$line" in
+        "## ["*)
+          printf '\n%s\n\n' "$entry" >> "$tmp"
+          inserted=1
+          ;;
+      esac
+    fi
+    printf '%s\n' "$line" >> "$tmp"
+  done < "$changelog"
+
+  if [ "$inserted" -eq 0 ]; then
+    printf '\n%s\n' "$entry" >> "$tmp"
+  fi
+
+  mv "$tmp" "$changelog"
+}
+
+ENTRY=$(printf '## [%s]\n\n- \`%s\` %s' "$DATE" "$HASH" "$SUBJECT")
+
+[ "$BACKEND_NEEDS_UPDATE" -eq 1 ] && append_entry "$REPO_ROOT/backend/CHANGELOG.md" "$ENTRY"
+[ "$MOBILE_NEEDS_UPDATE" -eq 1 ] && append_entry "$REPO_ROOT/mobile_app/CHANGELOG.md" "$ENTRY"
+
+# Stage and create the silent follow-up commit (guard string prevents recursion).
+if [ "$BACKEND_NEEDS_UPDATE" -eq 1 ] && [ "$MOBILE_NEEDS_UPDATE" -eq 1 ]; then
+  git add "$REPO_ROOT/backend/CHANGELOG.md" "$REPO_ROOT/mobile_app/CHANGELOG.md"
+elif [ "$BACKEND_NEEDS_UPDATE" -eq 1 ]; then
+  git add "$REPO_ROOT/backend/CHANGELOG.md"
+else
+  git add "$REPO_ROOT/mobile_app/CHANGELOG.md"
+fi
+
+git -C "$REPO_ROOT" commit -m "chore(changelog): update changelog [auto]" --no-verify >/dev/null 2>&1 || exit 0

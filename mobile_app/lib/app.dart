@@ -1,45 +1,66 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import 'core/config/environment_config.dart';
-import 'core/providers/environment_provider.dart';
-import 'core/providers/routine_provider.dart';
-import 'core/providers/wizard_provider.dart';
+import 'core/config/app_config.dart';
+import 'core/data/local_profile_repository.dart';
+import 'core/data/local_projection_repository.dart';
+import 'core/data/nutrition_repository.dart';
+import 'core/data/profile_repository.dart';
+import 'core/data/projection_repository.dart';
+import 'core/data/schedule_repository.dart';
+import 'core/mocks/mock_nutrition_repository.dart';
+import 'core/mocks/mock_profile_repository.dart';
+import 'core/mocks/mock_projection_repository.dart';
+import 'core/mocks/mock_schedule_repository.dart';
+import 'core/state/nutrition_controller.dart';
+import 'core/state/projection_controller.dart';
+import 'core/state/schedule_controller.dart';
+import 'core/state/user_profile_controller.dart';
 import 'core/theme/app_theme.dart';
-import 'ui/pages/home_page.dart';
+import 'ui/pages/main_shell_page.dart';
 
 class NutriApp extends StatelessWidget {
   const NutriApp({super.key, required this.config});
 
-  final EnvironmentConfig config;
+  final AppConfig config;
 
   @override
   Widget build(BuildContext context) {
-    final resolvedConfig = config.withDartDefineOverrides();
+    final ProfileRepository profileRepository = config.useMocks
+        ? MockProfileRepository()
+        : LocalProfileRepository();
+    final profileController = UserProfileController(
+      repository: profileRepository,
+    );
 
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (_) => EnvironmentProvider(config: resolvedConfig),
-        ),
-        ListenableProxyProvider<EnvironmentProvider, RoutineProvider>(
-          update: (_, env, __) =>
-              RoutineProvider(env.routineRepository)..loadRoutine(),
-        ),
-        ListenableProxyProvider<EnvironmentProvider, RoutineWizardProvider>(
-          update: (_, env, __) => RoutineWizardProvider(env.routineRepository),
-        ),
-      ],
-      child: MaterialApp(
-        title: 'NutriExercise',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.dark,
-        home: Consumer<EnvironmentProvider>(
-          builder: (context, env, _) => HomePage(
-            dietRepository: env.dietRepository,
-            routineRepository: env.routineRepository,
-          ),
-        ),
+    // Schedule events are mock-seeded for M13; persistence is a follow-up.
+    final ScheduleRepository scheduleRepository = MockScheduleRepository();
+    final scheduleController = ScheduleController(
+      repository: scheduleRepository,
+    );
+
+    // Nutrition is mock-seeded for M14; SQLite persistence is a follow-up.
+    final NutritionRepository nutritionRepository = MockNutritionRepository();
+    final nutritionController = NutritionController(
+      repository: nutritionRepository,
+    );
+
+    // Long-term body projection plan is SQLite-backed (or mock-seeded in tests).
+    final ProjectionRepository projectionRepository = config.useMocks
+        ? MockProjectionRepository()
+        : LocalProjectionRepository();
+    final projectionController = ProjectionController(
+      repository: projectionRepository,
+    );
+
+    return MaterialApp(
+      title: 'NutriExercise',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.dark,
+      home: MainShellPage(
+        profileController: profileController,
+        scheduleController: scheduleController,
+        nutritionController: nutritionController,
+        projectionController: projectionController,
       ),
     );
   }

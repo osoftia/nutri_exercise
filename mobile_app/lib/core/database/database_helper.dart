@@ -1,10 +1,12 @@
 import 'dart:convert';
 
-import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/diet_models.dart';
+import '../models/projection_models.dart';
 import '../models/routine_models.dart';
+import '../models/user_profile.dart';
 
 /// Local SQLite storage for offline-first persistence of routines and diets.
 ///
@@ -23,9 +25,9 @@ class DatabaseHelper {
     if (override != null) return override;
     final existing = _database;
     if (existing != null) return existing;
-    final dbPath = p.join(await getDatabasesPath(), _dbName);
+    final dir = await getApplicationDocumentsDirectory();
     _database = await openDatabase(
-      dbPath,
+      '${dir.path}/$_dbName',
       version: _dbVersion,
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onCreate: _onCreate,
@@ -40,33 +42,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY,
         weekday TEXT NOT NULL,
         focus TEXT NOT NULL,
-        created_at TEXT,
-        is_generated INTEGER NOT NULL DEFAULT 0
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE exercises (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        routine_id INTEGER NOT NULL,
-        name TEXT NOT NULL,
-        muscle_group TEXT NOT NULL,
-        sets INTEGER NOT NULL,
-        reps TEXT NOT NULL,
-        rest_seconds INTEGER NOT NULL,
-        weight TEXT,
-        position INTEGER NOT NULL DEFAULT 0,
-        FOREIGN KEY (routine_id) REFERENCES routines (id) ON DELETE CASCADE
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE sets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        exercise_id INTEGER NOT NULL,
-        set_number INTEGER NOT NULL,
-        reps INTEGER NOT NULL,
-        weight TEXT,
-        is_completed INTEGER NOT NULL DEFAULT 0,
-        FOREIGN KEY (exercise_id) REFERENCES exercises (id) ON DELETE CASCADE
+        exercises_json TEXT NOT NULL
       )
     ''');
     await db.execute('''
@@ -77,89 +53,51 @@ class DatabaseHelper {
         meals_json TEXT NOT NULL
       )
     ''');
+    await db.execute('''
+      CREATE TABLE notification_prefs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        pref_key TEXT NOT NULL UNIQUE,
+        enabled INTEGER NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE profile (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        name TEXT NOT NULL,
+        age INTEGER NOT NULL,
+        weight_kg REAL NOT NULL,
+        height_cm REAL NOT NULL,
+        goal TEXT NOT NULL
+      )
+    ''');
+    await _createProjectionTables(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute('''
-        CREATE TABLE routines_v2 (
-          id INTEGER PRIMARY KEY,
-          weekday TEXT NOT NULL,
-          focus TEXT NOT NULL,
-          created_at TEXT,
-          is_generated INTEGER NOT NULL DEFAULT 0
-        )
-      ''');
-      await db.execute('''
-        CREATE TABLE exercises (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          routine_id INTEGER NOT NULL,
-          name TEXT NOT NULL,
-          muscle_group TEXT NOT NULL,
-          sets INTEGER NOT NULL,
-          reps TEXT NOT NULL,
-          rest_seconds INTEGER NOT NULL,
-          weight TEXT,
-          position INTEGER NOT NULL DEFAULT 0,
-          FOREIGN KEY (routine_id) REFERENCES routines_v2 (id) ON DELETE CASCADE
-        )
-      ''');
-      await db.execute('''
-        CREATE TABLE sets (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          exercise_id INTEGER NOT NULL,
-          set_number INTEGER NOT NULL,
-          reps INTEGER NOT NULL,
-          weight TEXT,
-          is_completed INTEGER NOT NULL DEFAULT 0,
-          FOREIGN KEY (exercise_id) REFERENCES exercises (id) ON DELETE CASCADE
-        )
-      ''');
-
-      final oldRows = await db.query('routines');
-      for (final row in oldRows) {
-        final id = row['id'] as int;
-        final weekday = row['weekday'] as String;
-        final focus = row['focus'] as String;
-        final exercisesJson = row['exercises_json'] as String? ?? '[]';
-        final exercises = (jsonDecode(exercisesJson) as List<dynamic>)
-            .map((e) => Exercise.fromJson(e as Map<String, dynamic>))
-            .toList();
-
-        await db.insert('routines_v2', {
-          'id': id,
-          'weekday': weekday,
-          'focus': focus,
-          'created_at': DateTime.now().toIso8601String(),
-          'is_generated': 0,
-        });
-        for (var i = 0; i < exercises.length; i++) {
-          final ex = exercises[i];
-          final exId = await db.insert('exercises', {
-            'routine_id': id,
-            'name': ex.name,
-            'muscle_group': ex.muscleGroup,
-            'sets': ex.sets,
-            'reps': ex.reps,
-            'rest_seconds': ex.restSeconds,
-            'weight': ex.weight,
-            'position': i,
-          });
-          for (var s = 1; s <= ex.sets; s++) {
-            await db.insert('sets', {
-              'exercise_id': exId,
-              'set_number': s,
-              'reps': _parseReps(ex.reps),
-              'weight': ex.weight,
-              'is_completed': 0,
-            });
-          }
-        }
-      }
-
-      await db.execute('DROP TABLE routines');
-      await db.execute('ALTER TABLE routines_v2 RENAME TO routines');
+      await _createProjectionTables(db);
     }
+  }
+
+  Future<void> _createProjectionTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS projection_plan (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        start_weight_kg REAL NOT NULL,
+        goal TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS projection_milestone (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        plan_id INTEGER NOT NULL,
+        month INTEGER NOT NULL,
+        weight_kg REAL NOT NULL,
+        shoulder_factor REAL NOT NULL,
+        waist_factor REAL NOT NULL,
+        focus TEXT NOT NULL
+      )
+    ''');
   }
 
   Future<List<Map<String, Object?>>> getRoutines() async {
@@ -167,82 +105,21 @@ class DatabaseHelper {
     return db.query('routines', orderBy: 'id');
   }
 
-  Future<Map<String, Object?>?> getRoutineById(int id) async {
-    final db = await database;
-    final rows = await db.query('routines', where: 'id = ?', whereArgs: [id]);
-    return rows.isEmpty ? null : rows.first;
-  }
-
-  Future<int> insertRoutine({
-    required int id,
-    required String weekday,
-    required String focus,
-    bool isGenerated = false,
-  }) async {
-    final db = await database;
-    return db.insert('routines', {
-      'id': id,
-      'weekday': weekday,
-      'focus': focus,
-      'created_at': DateTime.now().toIso8601String(),
-      'is_generated': isGenerated ? 1 : 0,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  Future<void> deleteRoutine(int id) async {
-    final db = await database;
-    await db.delete('routines', where: 'id = ?', whereArgs: [id]);
-  }
-
-  Future<List<Map<String, Object?>>> getExercisesForRoutine(int routineId) async {
-    final db = await database;
-    return db.query('exercises',
-        where: 'routine_id = ?', whereArgs: [routineId], orderBy: 'position');
-  }
-
-  Future<int> insertExercise({
-    required int routineId,
-    required Exercise exercise,
-    required int position,
-  }) async {
-    final db = await database;
-    return db.insert('exercises', {
-      'routine_id': routineId,
-      'name': exercise.name,
-      'muscle_group': exercise.muscleGroup,
-      'sets': exercise.sets,
-      'reps': exercise.reps,
-      'rest_seconds': exercise.restSeconds,
-      'weight': exercise.weight,
-      'position': position,
-    });
-  }
-
-  Future<List<Map<String, Object?>>> getSetsForExercise(int exerciseId) async {
-    final db = await database;
-    return db.query('sets',
-        where: 'exercise_id = ?', whereArgs: [exerciseId], orderBy: 'set_number');
-  }
-
-  Future<int> insertSet({
-    required int exerciseId,
-    required int setNumber,
-    required int reps,
-    String? weight,
-  }) async {
-    final db = await database;
-    return db.insert('sets', {
-      'exercise_id': exerciseId,
-      'set_number': setNumber,
-      'reps': reps,
-      'weight': weight,
-      'is_completed': 0,
-    });
-  }
-
   Future<List<Map<String, Object?>>> getDiets() async {
     final db = await database;
     return db.query('diets', orderBy: 'id');
+  }
+
+  Future<void> upsertRoutine(WorkoutDay day) async {
+    final db = await database;
+    await db.insert('routines', {
+      'id': day.id,
+      'weekday': day.weekday,
+      'focus': day.focus,
+      'exercises_json': jsonEncode(
+        day.exercises.map((exercise) => exercise.toJson()).toList(),
+      ),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> upsertDiet(DailyMenu menu) async {
@@ -257,55 +134,76 @@ class DatabaseHelper {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<void> clearAll() async {
+  Future<List<Map<String, Object?>>> getNotificationPrefs() async {
     final db = await database;
-    await db.delete('sets');
-    await db.delete('exercises');
-    await db.delete('routines');
-    await db.delete('diets');
+    return db.query('notification_prefs');
   }
 
-  /// Persists a full [WorkoutDay] (routine + exercises + sets) atomically.
-  Future<void> saveWorkoutDay(WorkoutDay day, {bool isGenerated = false}) async {
+  Future<void> upsertNotificationPref(String key, bool enabled) async {
+    final db = await database;
+    await db.insert('notification_prefs', {
+      'pref_key': key,
+      'enabled': enabled ? 1 : 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> deleteRoutine(int id) async {
+    final db = await database;
+    await db.delete('routines', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteDiet(int id) async {
+    final db = await database;
+    await db.delete('diets', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Returns the single profile row, or `null` when none has been saved.
+  Future<Map<String, Object?>?> getProfile() async {
+    final db = await database;
+    final rows = await db.query('profile', where: 'id = 1', limit: 1);
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Upserts the single profile row.
+  Future<void> upsertProfile(UserProfile profile) async {
+    final db = await database;
+    await db.insert(
+      'profile',
+      profile.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Returns the single projection plan row, or `null` when none is saved.
+  Future<Map<String, Object?>?> getProjectionPlan() async {
+    final db = await database;
+    final rows = await db.query('projection_plan', where: 'id = 1', limit: 1);
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Returns all projection milestone rows ordered by month.
+  Future<List<Map<String, Object?>>> getProjectionMilestones() async {
+    final db = await database;
+    return db.query('projection_milestone', orderBy: 'month');
+  }
+
+  /// Replaces the stored projection plan and its milestones in a transaction.
+  Future<void> saveProjectionPlan(ProjectionPlan plan) async {
     final db = await database;
     await db.transaction((txn) async {
-      await txn.insert('routines', {
-        'id': day.id,
-        'weekday': day.weekday,
-        'focus': day.focus,
-        'created_at': DateTime.now().toIso8601String(),
-        'is_generated': isGenerated ? 1 : 0,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-
-      await txn.delete('exercises', where: 'routine_id = ?', whereArgs: [day.id]);
-
-      for (var i = 0; i < day.exercises.length; i++) {
-        final ex = day.exercises[i];
-        final exId = await txn.insert('exercises', {
-          'routine_id': day.id,
-          'name': ex.name,
-          'muscle_group': ex.muscleGroup,
-          'sets': ex.sets,
-          'reps': ex.reps,
-          'rest_seconds': ex.restSeconds,
-          'weight': ex.weight,
-          'position': i,
-        });
-        for (var s = 1; s <= ex.sets; s++) {
-          await txn.insert('sets', {
-            'exercise_id': exId,
-            'set_number': s,
-            'reps': _parseReps(ex.reps),
-            'weight': ex.weight,
-            'is_completed': 0,
-          });
-        }
+      await txn.insert(
+        'projection_plan',
+        {
+          'id': 1,
+          'start_weight_kg': plan.startWeightKg,
+          'goal': plan.goal.name,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      await txn.delete('projection_milestone');
+      for (final milestone in plan.milestones) {
+        await txn.insert('projection_milestone', milestone.toMap(planId: 1));
       }
     });
-  }
-
-  int _parseReps(String reps) {
-    final match = RegExp(r'\d+').firstMatch(reps);
-    return match == null ? 10 : int.parse(match.group(0)!);
   }
 }

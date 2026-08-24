@@ -1,0 +1,122 @@
+# Milestone 9 — Voice Input (Speech-to-Text) Execution Log (TDD)
+
+## Date: 2026-08-19
+## Branch: `feature/m9-voice-input`
+
+## Overview
+Implemented voice-to-text input for the mobile app wizard using the
+`speech_to_text` Flutter plugin, following a strict Red → Green → Verify TDD
+cycle driven by the Gherkin contract in
+`mobile_app/test/features/m9_voice_input.feature`.
+
+---
+
+## PHASE 1 — RED (Test-First)
+
+### Files created (test-first)
+- `mobile_app/test/voice_input_test.dart` — 6 widget test groups, one per
+  Gherkin scenario:
+  1. Requesting microphone permission on first use.
+  2. Tapping the mic starts listening and updates the UI (pulsing glow,
+     "Listening..." label, read-only field, permission caching).
+  3. Converting speech to text and populating the input field.
+  4. Handling microphone permission denial.
+  5. Handling unrecognized speech.
+  6. Handling speech recognition errors.
+
+### Confirmed failure
+`flutter test test/voice_input_test.dart` -> FAILED (compile error), expected:
+```
+Error when reading 'lib/core/mocks/mock_voice_input_service.dart': file not found
+Error when reading 'lib/core/services/voice_input_service.dart': file not found
+Error when reading 'lib/ui/molecules/wizard_voice_input_field.dart': file not found
+'VoiceInputService' isn't a type.
+Method not found: 'WizardVoiceInputField'.
+Method not found: 'MockVoiceInputService'.
+```
+The tests could not even compile because the production abstractions did not
+exist yet — the canonical RED state of TDD.
+
+---
+
+## PHASE 2 — GREEN (Implementation)
+
+### Files created (implementation)
+| File | Purpose |
+|------|---------|
+| `lib/core/services/voice_input_service.dart` | Abstract `VoiceInputService` contract: `initialize()`, `startListening(onPartial:)`, `stopListening()`, `isListening`, `status` stream, plus `VoiceInputStatus` enum (`idle, listening, done, notListening, unavailable`). |
+| `lib/core/services/speech_to_text_voice_input_service.dart` | Real adapter wrapping the `speech_to_text` 7.4.0 plugin. The ONLY class importing the plugin. Maps plugin status strings (`listening`/`done`/`notListening`) to `VoiceInputStatus`, uses `ListenMode.dictation` + `partialResults: true`. |
+| `lib/core/mocks/mock_voice_input_service.dart` | Test double implementing `VoiceInputService` (configurable `denyPermission`, `transcript`, `unrecognized`, `throwOnListen`; counts `initializeCalls` to verify permission caching). Mirrors `MockDietRepository`/`MockRoutineRepository` convention. |
+| `lib/ui/molecules/wizard_voice_input_field.dart` | `WizardVoiceInputField` stateful widget: mic `IconButton` (idle `Icons.mic_none` / listening `Icons.mic`), pulsing `ScaleTransition` glow via `AnimationController`, "Listening..." label, read-only field while listening, inline error text for the three error cases. |
+
+### Files modified
+| File | Change |
+|------|--------|
+| `mobile_app/pubspec.yaml` | Added `speech_to_text: ^7.4.0` dependency. |
+| `mobile_app/pubspec.lock` | Lockfile updated (added `speech_to_text`, `speech_to_text_platform_interface`, `speech_to_text_windows`, `json_annotation`; SDK upgrade bumped test-infra deps). |
+| `mobile_app/android/app/src/main/AndroidManifest.xml` | Added `android.permission.RECORD_AUDIO` and `android.permission.INTERNET` (required for mic + network recognizer). |
+| `mobile_app/ios/Runner/Info.plist` | Added `NSMicrophoneUsageDescription` (mandatory; iOS terminates on first mic access if missing). |
+
+### Design decisions
+- **Abstraction over plugin:** the wizard only depends on `VoiceInputService`;
+  the real `speech_to_text` platform channel is never touched in widget tests
+  (injected `MockVoiceInputService` instead). Same constructor-DI pattern as
+  `HomePage`/repositories.
+- **Permission caching:** `initialize()` is only invoked once; a second tap
+  reuses the granted state (verified by `initializeCalls == 1` in Scenario 2).
+- **Error model:** three distinct user-facing messages map to the three error
+  Gherkin scenarios (permission denied, unrecognized, recognition failed).
+- **Unrecognized/error cases keep previous value:** the field text is only
+  replaced by a non-empty transcript; errors clear the transient error text
+  but never wipe existing input.
+
+---
+
+## PHASE 3 — VERIFY
+
+### `flutter test` (full suite)
+```
+00:19 +10: All tests passed!
+```
+All 10 tests pass (6 new voice-input scenarios + 4 pre-existing widget/body-map
+tests). No regressions.
+
+### `flutter analyze`
+```
+5 issues found.
+```
+The 5 issues are all pre-existing `deprecated_member_use` *info* diagnostics in
+`lib/core/constants/muscle_vectors.dart` and
+`lib/ui/organisms/interactive_body_map.dart` — **none in M9 code**. Out of scope
+for this milestone and left untouched.
+
+### `flutter build apk --release`
+Android manifest validated as well-formed XML with `RECORD_AUDIO` present.
+Full Gradle `assembleRelease` exceeded the 10-minute tool timeout on first run
+(dependency downloads); structural validation passed. Recommended to run on a
+real device / CI for a full build.
+
+---
+
+## PHASE 4 — Documentation & Commit
+- Log file: `docs/m9_execution_changes.log` (this file).
+- Commit: `git add .` + `git commit -m "feat(m9): implement voice to text input with TDD"`.
+
+---
+
+## Gherkin contract fulfillment
+| Scenario | Test group in `test/voice_input_test.dart` | Status |
+|----------|-------------------------------------------|--------|
+| Requesting microphone permission on first use | Scenario 1 | PASS |
+| Tapping mic starts listening and updates UI | Scenario 2 | PASS |
+| Converting speech to text and populating field | Scenario 3 | PASS |
+| Handling microphone permission denial | Scenario 4 | PASS |
+| Handling unrecognized speech | Scenario 5 | PASS |
+| Handling speech recognition errors | Scenario 6 | PASS |
+
+## Environment notes
+- Project `.fvmrc` pins Flutter 3.29.0 (Dart >= 3.7). PATH Flutter 3.24.3
+  (Dart 3.5.3) does NOT satisfy `sdk: >=3.7.0`; used FVM-cached
+  Flutter 3.35.3 / Dart 3.9.2 (`C:\Users\User\fvm\versions\3.10.0`).
+- Platform files (Android/iOS) must be verified on real hardware for actual
+  microphone capture; widget tests validate UI/state only.

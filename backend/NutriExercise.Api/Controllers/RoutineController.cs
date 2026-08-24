@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NutriExercise.Core.Entities;
 using NutriExercise.Core.Interfaces;
+using NutriExercise.Infrastructure.Data;
 
 namespace NutriExercise.Api.Controllers;
 
@@ -10,11 +12,15 @@ public class RoutineController : ControllerBase
 {
     private readonly IAiService _aiService;
     private readonly IRoutineRepository _routineRepository;
+    private readonly IResearchDocumentRepository _documentRepository;
+    private readonly AppDbContext _dbContext;
 
-    public RoutineController(IAiService aiService, IRoutineRepository routineRepository)
+    public RoutineController(IAiService aiService, IRoutineRepository routineRepository, IResearchDocumentRepository documentRepository, AppDbContext dbContext)
     {
         _aiService = aiService;
         _routineRepository = routineRepository;
+        _documentRepository = documentRepository;
+        _dbContext = dbContext;
     }
 
     [HttpPost("generate")]
@@ -25,7 +31,15 @@ public class RoutineController : ControllerBase
             return BadRequest("User preferences are required.");
         }
 
-        var generatedText = await _aiService.GenerateRoutineAsync(request.UserPreferences);
+        var queryVector = await _aiService.GenerateEmbeddingAsync(request.UserPreferences);
+        var relevantDocs = await _documentRepository.SearchSimilarDocumentsAsync(queryVector);
+
+        var contextText = string.Join("\n", relevantDocs.Select(d => d.Content));
+        var augmentedPrompt =
+            $"Utilizando EXCLUSIVAMENTE este conocimiento científico:\n{contextText}\n\n" +
+            $"Genera una rutina basada en esta petición del usuario: {request.UserPreferences}";
+
+        var generatedText = await _aiService.GenerateRoutineAsync(augmentedPrompt);
 
         var routine = new Routine
         {
@@ -36,7 +50,24 @@ public class RoutineController : ControllerBase
 
         await _routineRepository.AddAsync(routine);
 
-        return Ok(routine);
+        var interaction = new AiInteraction
+        {
+            Id = Guid.NewGuid(),
+            UserPrompt = request.UserPreferences,
+            GeneratedRoutine = generatedText,
+            ModelUsed = "llama3-RAG",
+            UsedContext = contextText,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _dbContext.AiInteractions.Add(interaction);
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new
+        {
+            Routine = routine,
+            InteractionId = interaction.Id
+        });
     }
 
     [HttpGet]

@@ -16,6 +16,10 @@ public class AppDbContext : DbContext
 
     public DbSet<Diet> Diets => Set<Diet>();
 
+    public DbSet<ResearchDocument> ResearchDocuments => Set<ResearchDocument>();
+
+    public DbSet<AiInteraction> AiInteractions => Set<AiInteraction>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

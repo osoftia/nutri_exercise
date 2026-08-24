@@ -1,0 +1,90 @@
+<div class="interaction-history">
+  <app-admin-sidebar />
+
+  <div class="interaction-history__body">
+    <app-top-navbar />
+
+    <main class="interaction-history__content">
+      <header class="interaction-history__header">
+        <h1>Interaction History</h1>
+        <p>Review AI interactions and rate them to improve future results.</p>
+      </header>
+
+      @if (loading()) {
+        <div class="interaction-history__loading">Loading interactions...</div>
+      } @else if (interactions().length === 0) {
+        <div class="interaction-history__empty">No interactions found yet.</div>
+      } @else {
+        <div class="interaction-history__list">
+          @for (item of interactions(); track item.id) {
+            <article class="interaction-card">
+              <header class="interaction-card__header">
+                <div class="interaction-card__meta">
+                  <time class="interaction-card__date" [attr.datetime]="item.createdAt">
+                    {{ item.createdAt | date: 'medium' }}
+                  </time>
+                  <span class="interaction-card__model">{{ item.modelUsed }}</span>
+                </div>
+                <h2 class="interaction-card__prompt">{{ item.userPrompt }}</h2>
+              </header>
+
+              <button
+                class="interaction-card__toggle"
+                type="button"
+                (click)="toggle(item.id)"
+                [attr.aria-expanded]="isExpanded(item.id)"
+              >
+                {{ isExpanded(item.id) ? 'Hide details' : 'Show context & response' }}
+              </button>
+
+              @if (isExpanded(item.id)) {
+                <div class="interaction-card__details">
+                  <section class="interaction-card__section">
+                    <h3>Used Context</h3>
+                    <p>{{ item.usedContext }}</p>
+                  </section>
+                  <section class="interaction-card__section">
+                    <h3>Generated Routine</h3>
+                    <pre class="interaction-card__response">{{ item.generatedRoutine }}</pre>
+                  </section>
+                </div>
+              }
+
+              <footer class="interaction-card__actions">
+                @if (item.isCorrect !== null) {
+                  <span
+                    class="interaction-card__rating"
+                    [class.interaction-card__rating--correct]="item.isCorrect"
+                    [class.interaction-card__rating--incorrect]="!item.isCorrect"
+                  >
+                    Rated: {{ item.isCorrect ? 'Correct' : 'Incorrect' }}
+                  </span>
+                } @else {
+                  <span class="interaction-card__hint">Was this response correct?</span>
+                  <div class="interaction-card__buttons">
+                    <button
+                      class="interaction-card__button interaction-card__button--correct"
+                      type="button"
+                      (click)="onRate(item.id, true)"
+                      [disabled]="submittingId() === item.id"
+                    >
+                      Correct
+                    </button>
+                    <button
+                      class="interaction-card__button interaction-card__button--incorrect"
+                      type="button"
+                      (click)="onRate(item.id, false)"
+                      [disabled]="submittingId() === item.id"
+                    >
+                      Incorrect
+                    </button>
+                  </div>
+                }
+              </footer>
+            </article>
+          }
+        </div>
+      }
+    </main>
+  </div>
+</div>

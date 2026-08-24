@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using NutriExercise.Core.Interfaces;
 using NutriExercise.Infrastructure.Data;
 using NutriExercise.Infrastructure.Services;
+using Pgvector.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +38,7 @@ builder.Services.AddHttpClient("Ollama", client =>
 });
 builder.Services.AddScoped<IAiService, OllamaAiService>();
 builder.Services.AddScoped<IRoutineRepository, RoutineRepository>();
+builder.Services.AddScoped<IResearchDocumentRepository, ResearchDocumentRepository>();
 
 var app = builder.Build();
 
