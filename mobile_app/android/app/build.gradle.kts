@@ -1,13 +1,20 @@
 plugins {
     id("com.android.application")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("org.jetbrains.kotlin.android")
+    // El plugin de Flutter siempre al final
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-android {
+// Extraemos las propiedades de Flutter de forma segura antes del bloque de configuración
+val flutterMinSdk = flutter.minSdkVersion
+val flutterTargetSdk = flutter.targetSdkVersion
+val flutterVersionCode = flutter.versionCode
+val flutterVersionName = flutter.versionName
+
+configure<com.android.build.api.dsl.ApplicationExtension> {
     namespace = "com.example.nutri_mobile_app"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = "26.3.11579264"
+    compileSdk = 36
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -16,28 +23,25 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.nutri_mobile_app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        
+        // Asignamos las variables extraídas de forma limpia sin usar paréntesis
+        minSdk = flutterMinSdk
+        targetSdk = flutterTargetSdk
+        versionCode = flutterVersionCode
+        versionName = flutterVersionName
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
 }
 
-kotlin {
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     compilerOptions {
-        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 

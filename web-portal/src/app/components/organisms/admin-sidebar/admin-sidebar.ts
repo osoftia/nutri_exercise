@@ -17,6 +17,7 @@ interface NavItem {
 export class AdminSidebar {
   readonly navItems: NavItem[] = [
     { label: 'History', icon: 'history', link: '/history' },
+    { label: 'Analytics', icon: 'analytics', link: '/analytics' },
     { label: 'Routines', icon: 'workout', link: '/history' },
     { label: 'Nutrition', icon: 'nutrition', link: '/history' },
     { label: 'Schedule', icon: 'schedule', link: '/history' },

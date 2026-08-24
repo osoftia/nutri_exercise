@@ -1,0 +1,26 @@
+<div class="analytics-page">
+  <app-admin-sidebar />
+
+  <div class="analytics-page__body">
+    <app-top-navbar />
+
+    <main class="analytics-page__content">
+      @if (analytics.loading()) {
+        <div class="analytics-page__loading">
+          <mat-spinner diameter="40" />
+        </div>
+      }
+
+      <app-mobile-usage
+        [snapshot]="analytics.telemetry()"
+        [loading]="analytics.loading()"
+        (retry)="analytics.retry()"
+      />
+      <app-ai-performance
+        [performance]="analytics.aiPerformance()"
+        [distribution]="analytics.feedbackDistribution()"
+      />
+      <app-vector-inspector />
+    </main>
+  </div>
+</div>

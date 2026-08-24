@@ -34,4 +34,12 @@ describe('app routes', () => {
 
     expect(router.url).toBe('/history');
   });
+
+  it('registers a lazy route for /analytics', async () => {
+    await router.navigateByUrl('/analytics');
+
+    const route = router.routerState.root.firstChild;
+    expect(router.url).toBe('/analytics');
+    expect(route?.routeConfig?.loadComponent).toBeDefined();
+  });
 });
