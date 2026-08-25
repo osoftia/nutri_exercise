@@ -26,8 +26,6 @@ mobile_app/
 │   ├── core/                        # Domain, data, services and configuration
 │   │   ├── config/
 │   │   │   └── app_config.dart      # AppConfig: env name, mocks/API/local flags
-│   │   ├── constants/
-│   │   │   └── muscle_vectors.dart  # Muscle map geometry (paths, regions)
 │   │   ├── data/                    # Repository contracts + implementations
 │   │   │   ├── diet_repository.dart      # DietRepository (abstract)
 │   │   │   ├── routine_repository.dart   # RoutineRepository (abstract)
@@ -52,20 +50,28 @@ mobile_app/
 │   └── ui/                          # Presentation layer (atomic design)
 │       ├── atoms/                   # Smallest reusable widgets
 │       │   ├── custom_button.dart   # CustomButton (primary / ghost / text)
+│       │   ├── neumorphic_fab.dart  # NeumorphicFab (circular AI FAB)
 │       │   └── typography.dart      # AppHeading, AppText, AppCaption
 │       ├── molecules/               # Composed UI blocks
 │       │   ├── offline_ai_dialog.dart # OfflineAiDialog + helper
-│       │   └── stat_card.dart       # StatCard (metric display)
+│       │   ├── ai_chat_sheet.dart     # AiChatSheet (AI assistant chat)
+│       │   └── wizard_voice_input_field.dart
 │       ├── organisms/               # Complex, feature-specific widgets
-│       │   ├── bottom_nav_bar.dart      # Material 3 NavigationBar (5 tabs)
-│       │   ├── interactive_body_map.dart# CustomPaint muscle map (tap-to-select)
-│       │   └── routine_list.dart        # RoutineList + _RoutineTile
+│       │   └── bottom_nav_bar.dart      # Material 3 NavigationBar
 │       └── pages/
-│           └── home_page.dart       # Single dashboard screen
+│           ├── main_shell_page.dart     # Tabbed shell + AI FAB host
+│           ├── routines_page.dart
+│           ├── nutrition_page.dart
+│           ├── schedule_page.dart
+│           └── profile_page.dart
 │
-├── test/                           # Widget tests
-│   ├── interactive_body_map_test.dart
-│   └── widget_test.dart
+├── test/                           # Unit + widget tests (see Tests section)
+│   ├── ui/
+│   ├── features/
+│   ├── data/
+│   ├── state/
+│   ├── models/
+│   └── services/
 │
 ├── android/                        # Android host project (plugin receivers declared)
 ├── ios/                            # iOS host project
@@ -82,8 +88,11 @@ mobile_app/
 The app intentionally uses **no third-party state-management library**.
 State is handled with:
 
-- **`StatefulWidget` + `setState`** for local UI state (e.g. `HomePage`,
-  `InteractiveBodyMap`).
+- **`StatefulWidget` + `setState`** for local UI state (e.g. `AiChatSheet`,
+  `MainShellPage`).
+- **`ChangeNotifier` controllers** (`UserProfileController`,
+  `ScheduleController`, `NutritionController`, `ProjectionController`) consumed
+  through `ListenableBuilder` for cross-page state.
 - **`FutureBuilder` chaining** for asynchronous data loading (routines and
   menus are held as `Future`s and resolved in the build tree).
 - **Constructor-based dependency injection**: repository implementations are
@@ -117,10 +126,11 @@ State is handled with:
 - It uses **`connectivity_plus`** to detect the current connectivity state and
   exposes `ensureOnline()`, which throws `OfflineException` when the device has
   no active connection.
-- In the UI, the "Ask AI" flow calls this guard first: online requests display
-  an "AI consultation coming soon" message, while offline requests open the
-  `OfflineAiDialog`. This is a pre-flight connectivity guard for the upcoming
-  AI feature rather than an HTTP request interceptor.
+- In the UI, the **AI assistant chat** (`AiChatSheet`) calls this guard before
+  every request: offline sends open the `OfflineAiDialog`, while online sends
+  call `RoutineRepository.generateRoutine()` and render the result as an inline
+  assistant bubble. The chat is opened from a `NeumorphicFab` on
+  `MainShellPage`.
 
 ### Local Notifications
 
@@ -169,17 +179,16 @@ State is handled with:
 
 ### UI Layer
 
-- **`home_page.dart`** — the only screen; an admin dashboard that loads
-  routines and menus in `initState`, renders stat cards, the interactive body
-  map, the routine list (tap to schedule a notification), and daily menus.
-- **`interactive_body_map.dart`** — a hit-testable `CustomPaint` body map with
-  front/back silhouettes, muscle region paths, pulse-glow animation on the
-  selected region, and `muscleAt()` hit-testing. Geometry lives in
-  `core/constants/muscle_vectors.dart`.
-- **`routine_list.dart`** — weekday workout cards with focus area and
-  exercise sets/reps.
-- **Atoms / molecules** — reusable button and typography components; offline
-  AI dialog and stat cards.
+- **`main_shell_page.dart`** — the tabbed shell (`Routines`, `Nutrition`,
+  `Schedule`, `Profile`) that hosts the `NeumorphicFab` AI assistant entry.
+- **`ai_chat_sheet.dart`** — the `AiChatSheet` bottom sheet: a neumorphic chat
+  with user/assistant bubbles, a `TextEditingController` disposed in
+  `dispose()`, an online guard (`AiService.ensureOnline`), and inline results
+  from `RoutineRepository.generateRoutine`.
+- **`neumorphic_fab.dart`** — a circular `NeumorphicContainer`-based floating
+  action button with a semantic `Tooltip`.
+- **Atoms / molecules** — reusable button, typography and neumorphic surface
+  components; offline AI dialog.
 
 ---
 
@@ -196,8 +205,12 @@ State is handled with:
 
 ## Tests
 
-- **`test/widget_test.dart`** — verifies `HomePage` renders mock routines and
-  menus and that the dev config selects mocks and the dark theme scaffold.
-- **`test/interactive_body_map_test.dart`** — verifies muscle hit-testing
-  (tapping the chest region reports `chest`, toggling off returns null, empty
-  taps report no muscle).
+- **`test/widget_test.dart`** — verifies the dev config selects mocks and the
+  dark theme scaffold.
+- **`test/ui/neumorphic_fab_test.dart`** — verifies the AI FAB renders its icon
+  and tooltip and invokes its callback.
+- **`test/ui/ai_chat_sheet_test.dart`** — verifies the chat opens, ignores empty
+  sends, renders online user/assistant messages, shows the offline dialog, and
+  disposes its controller cleanly.
+- **`test/features/m17_ai_assistant_widget_test.dart`** — verifies the shell
+  FAB opens the chat and a full online ask/respond round-trip.

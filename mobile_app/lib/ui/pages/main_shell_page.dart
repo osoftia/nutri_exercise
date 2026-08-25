@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../core/data/routine_repository.dart';
 import '../../core/state/nutrition_controller.dart';
 import '../../core/state/projection_controller.dart';
 import '../../core/state/schedule_controller.dart';
 import '../../core/state/user_profile_controller.dart';
+import '../atoms/neumorphic_fab.dart';
+import '../molecules/ai_chat_sheet.dart';
 import '../organisms/bottom_nav_bar.dart';
 import 'nutrition_page.dart';
 import 'profile_page.dart';
@@ -17,12 +20,14 @@ class MainShellPage extends StatefulWidget {
     required this.scheduleController,
     required this.nutritionController,
     required this.projectionController,
+    required this.routineRepository,
   });
 
   final UserProfileController profileController;
   final ScheduleController scheduleController;
   final NutritionController nutritionController;
   final ProjectionController projectionController;
+  final RoutineRepository routineRepository;
 
   @override
   State<MainShellPage> createState() => _MainShellPageState();
@@ -42,6 +47,9 @@ class _MainShellPageState extends State<MainShellPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(child: _tabs[_currentIndex]),
+      floatingActionButton: NeumorphicFab(
+        onPressed: () => showAiChatSheet(context, widget.routineRepository),
+      ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onDestinationSelected: (index) =>

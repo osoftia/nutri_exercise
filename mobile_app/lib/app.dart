@@ -6,10 +6,12 @@ import 'core/data/local_projection_repository.dart';
 import 'core/data/nutrition_repository.dart';
 import 'core/data/profile_repository.dart';
 import 'core/data/projection_repository.dart';
+import 'core/data/routine_repository.dart';
 import 'core/data/schedule_repository.dart';
 import 'core/mocks/mock_nutrition_repository.dart';
 import 'core/mocks/mock_profile_repository.dart';
 import 'core/mocks/mock_projection_repository.dart';
+import 'core/mocks/mock_routine_repository.dart';
 import 'core/mocks/mock_schedule_repository.dart';
 import 'core/state/nutrition_controller.dart';
 import 'core/state/projection_controller.dart';
@@ -52,6 +54,10 @@ class NutriApp extends StatelessWidget {
       repository: projectionRepository,
     );
 
+    // Routine generation is mock-seeded for the AI assistant; persistence is a
+    // follow-up (mirrors the schedule/nutrition mock pattern).
+    final RoutineRepository routineRepository = MockRoutineRepository();
+
     return MaterialApp(
       title: 'NutriExercise',
       debugShowCheckedModeBanner: false,
@@ -61,6 +67,7 @@ class NutriApp extends StatelessWidget {
         scheduleController: scheduleController,
         nutritionController: nutritionController,
         projectionController: projectionController,
+        routineRepository: routineRepository,
       ),
     );
   }

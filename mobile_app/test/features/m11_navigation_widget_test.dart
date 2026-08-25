@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_nutrition_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_profile_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_projection_repository.dart';
+import 'package:nutri_mobile_app/core/mocks/mock_routine_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_schedule_repository.dart';
 import 'package:nutri_mobile_app/core/state/nutrition_controller.dart';
 import 'package:nutri_mobile_app/core/state/projection_controller.dart';
@@ -50,6 +51,7 @@ void main() {
           scheduleController: scheduleController,
           nutritionController: nutritionController,
           projectionController: projectionController,
+          routineRepository: MockRoutineRepository(),
         ),
       ),
     );
