@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { of, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 
 import { DatabaseService } from '../services/database.service';
 import { mockDbTables, mockRowsByTable, mockSemanticSearch } from '../mocks/mock-analytics.data';

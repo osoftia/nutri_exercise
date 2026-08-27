@@ -9,10 +9,10 @@ import {
   DataTable,
   DataTableColumn,
 } from '../../../components/organisms/data-table/data-table';
-import { RoutineCard } from '../../../features/dashboard/components/routine-card/routine-card';
-import { SearchFilter } from '../../../features/dashboard/components/search-filter/search-filter';
-import { DpoExport } from '../../../features/dashboard/components/dpo-export/dpo-export';
-import { AnalyticsSummary } from '../../../features/dashboard/components/analytics-summary/analytics-summary';
+import { RoutineCard } from '../../../components/organisms/routine-card/routine-card';
+import { SearchFilter } from '../../../components/molecules/search-filter/search-filter';
+import { DpoExport } from '../../../components/organisms/dpo-export/dpo-export';
+import { AnalyticsSummary } from '../../../components/organisms/analytics-summary/analytics-summary';
 import { Diet } from '../../../core/services/diet';
 import { Routine } from '../../../core/services/routine';
 import { DashboardStore } from '../../../core/stores/dashboard.store';

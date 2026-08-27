@@ -1,0 +1,96 @@
+<section class="vector-inspector" aria-label="Database and pgvector RAG inspector">
+  <h3 class="vector-inspector__heading">Database &amp; pgvector RAG Inspector</h3>
+
+  @if (store.error(); as message) {
+    <div class="vector-inspector__error">
+      <p>{{ message }}</p>
+      <button type="button" class="vector-inspector__button" (click)="onRetry()">Retry</button>
+    </div>
+  }
+
+  @if (store.tables().length > 0) {
+    <div class="vector-inspector__controls">
+      <label class="vector-inspector__field">
+        <span class="vector-inspector__overline">Select table</span>
+        <select
+          class="vector-inspector__select"
+          (change)="onTableChange($event)"
+          aria-label="Database table"
+        >
+          <option value="">Choose a table</option>
+          @for (table of store.tables(); track table.name) {
+            <option [value]="table.name">{{ table.name }} ({{ table.rowCount }} rows)</option>
+          }
+        </select>
+      </label>
+
+      <label class="vector-inspector__field">
+        <span class="vector-inspector__overline">Semantic search</span>
+        <input
+          class="vector-inspector__input"
+          type="text"
+          placeholder="e.g. push day"
+          [value]="query()"
+          (input)="onQueryInput($event)"
+        />
+      </label>
+      <button type="button" class="vector-inspector__button" (click)="onSearch()">Search</button>
+    </div>
+  }
+
+  @if (store.vectorColumns().length > 0) {
+    <div class="vector-inspector__metadata">
+      @for (column of store.vectorColumns(); track column.name) {
+        <span class="vector-inspector__chip">
+          {{ column.name }} · {{ column.dimensions }} dims
+        </span>
+      }
+    </div>
+  }
+
+  @if (store.rows().length > 0) {
+    <div class="vector-inspector__rows">
+      <h4 class="vector-inspector__subheading">Rows</h4>
+      <table class="vector-inspector__table">
+        <thead>
+          <tr>
+            @for (column of store.selectedTable()?.columns ?? []; track column) {
+              <th>{{ column }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of store.rows(); track $index) {
+            <tr>
+              @for (column of store.selectedTable()?.columns ?? []; track column) {
+                <td>{{ vectorPreview(row[column]) }}</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (store.searchResults().length > 0) {
+    <div class="vector-inspector__results">
+      <h4 class="vector-inspector__subheading">Semantic Search Results</h4>
+      <table class="vector-inspector__table">
+        <thead>
+          <tr>
+            <th>Similarity</th>
+            <th>Preview</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (match of store.searchResults(); track match.id) {
+            <tr>
+              <td>{{ (match.score * 100).toFixed(1) }}%</td>
+              <td>{{ match.preview }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

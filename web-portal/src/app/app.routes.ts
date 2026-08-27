@@ -6,7 +6,7 @@ export const routes: Routes = [
   {
     path: 'analytics',
     loadComponent: () =>
-      import('./features/analytics/pages/analytics/analytics.page').then(
+      import('./pages/analytics/analytics.page').then(
         (m) => m.AnalyticsPage,
       ),
   },
