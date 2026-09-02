@@ -19,6 +19,7 @@ class AppColors {
   static const Color success = Color(0xFF22C55E);
   static const Color warning = Color(0xFFEAB308);
   static const Color danger = Color(0xFFEF4444);
+  static const Color gold = Color(0xFFFFD700);
 
   static const Color neutralMuscle = Color(0xFF94A3B8);
 }
