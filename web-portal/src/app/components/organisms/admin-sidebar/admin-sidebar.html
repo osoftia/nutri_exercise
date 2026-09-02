@@ -1,5 +1,5 @@
 <aside class="admin-sidebar">
-  <a class="admin-sidebar__brand" routerLink="/admin-dashboard">
+  <a class="admin-sidebar__brand" routerLink="/history">
     <span class="admin-sidebar__logo">N</span>
     <span class="admin-sidebar__title">NutriExercise</span>
   </a>
@@ -10,7 +10,7 @@
         class="admin-sidebar__link"
         [routerLink]="item.link"
         routerLinkActive="admin-sidebar__link--active"
-        [attr.aria-current]="item.label === 'Dashboard' ? 'page' : null"
+        [attr.aria-current]="item.label === 'History' ? 'page' : null"
       >
         <app-icon [name]="item.icon" />
         <span>{{ item.label }}</span>

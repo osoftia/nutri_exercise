@@ -1,0 +1,37 @@
+<svg
+  class="bar-chart"
+  [attr.viewBox]="viewBoxValue"
+  role="img"
+  aria-label="Latency per generation"
+>
+  @for (block of blocks(); track block.text.label) {
+    <g class="bar-chart__group">
+      <rect
+        [attr.x]="block.track.x"
+        [attr.y]="block.track.y"
+        [attr.width]="block.track.width"
+        [attr.height]="block.track.height"
+        class="bar-chart__track"
+      ></rect>
+      <rect
+        [attr.x]="block.block.x"
+        [attr.y]="block.block.y"
+        [attr.width]="block.block.width"
+        [attr.height]="block.block.height"
+        class="bar-chart__block"
+      ></rect>
+      <text
+        [attr.x]="block.text.x"
+        [attr.y]="block.text.y"
+        text-anchor="middle"
+        class="bar-chart__label"
+      >{{ block.text.label }}</text>
+      <text
+        [attr.x]="block.text.x"
+        [attr.y]="block.text.y - 12"
+        text-anchor="middle"
+        class="bar-chart__value"
+      >{{ block.text.percent }}%</text>
+    </g>
+  }
+</svg>

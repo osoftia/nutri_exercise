@@ -1,0 +1,47 @@
+<section class="ai-performance" aria-label="AI performance analyzer">
+  <h3 class="ai-performance__heading">AI Performance Analyzer</h3>
+
+  @if (!performance()) {
+    <p class="ai-performance__empty">No AI performance data yet.</p>
+  } @else {
+    <div class="ai-performance__tiles">
+      <mat-card class="ai-performance__tile">
+        <span class="ai-performance__label">Average Latency (ms)</span>
+        <span class="ai-performance__value">{{ performance()?.averageLatencyMs }}</span>
+      </mat-card>
+      <mat-card class="ai-performance__tile">
+        <span class="ai-performance__label">Token Throughput (tok/s)</span>
+        <span class="ai-performance__value">{{ performance()?.averageTokensPerSecond }}</span>
+      </mat-card>
+      <mat-card class="ai-performance__tile">
+        <span class="ai-performance__label">Total Generations</span>
+        <span class="ai-performance__value">{{ performance()?.totalGenerations }}</span>
+      </mat-card>
+    </div>
+
+    <div class="ai-performance__row">
+      <mat-card class="ai-performance__chart">
+        <span class="ai-performance__label">Latency per generation (ms)</span>
+        <app-bar-chart [data]="latencySamples()" />
+      </mat-card>
+
+      <mat-card class="ai-performance__distribution">
+        <span class="ai-performance__label">RLHF Feedback Distribution</span>
+        <div class="ai-performance__bar">
+          <div
+            class="ai-performance__segment ai-performance__segment--positive"
+            [style.width.%]="positivePercent()"
+          ></div>
+          <div
+            class="ai-performance__segment ai-performance__segment--negative"
+            [style.width.%]="negativePercent()"
+          ></div>
+        </div>
+        <div class="ai-performance__legend">
+          <span>Positive: {{ distribution().positive }}</span>
+          <span>Negative: {{ distribution().negative }}</span>
+        </div>
+      </mat-card>
+    </div>
+  }
+</section>

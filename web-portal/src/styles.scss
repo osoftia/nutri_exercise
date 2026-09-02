@@ -1,10 +1,68 @@
-:root {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+@use './styles/design-tokens';
+@use '@angular/material' as mat;
+
+html {
   color-scheme: dark;
+}
+
+$theme: mat.define-theme(
+  (
+    color: (
+      theme-type: dark,
+      primary: mat.$blue-palette,
+      tertiary: mat.$orange-palette,
+    ),
+    typography: (
+      plain-family: 'Montserrat',
+      brand-family: 'Montserrat',
+    ),
+  )
+);
+
+:root {
+  @include mat.all-component-themes($theme);
 }
 
 body {
   margin: 0;
-  background-color: #0f172a;
-  color: #f8fafc;
+  font-family: var(--font-family);
+  background-color: var(--color-bg);
+  color: var(--color-text-high);
+}
+
+.mat-mdc-card {
+  background-color: var(--color-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-none);
+  box-shadow: none;
+}
+
+.mat-mdc-button-base,
+.mdc-button {
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.mat-mdc-raised-button:not(:disabled),
+.mat-mdc-unelevated-button:not(:disabled) {
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+}
+
+.mat-mdc-button-base:not(:disabled):hover {
+  border-color: var(--color-accent);
+  box-shadow: none;
+}
+
+.mat-mdc-button-base:not(:disabled):active {
+  border-color: var(--color-text-high);
+  box-shadow: none;
+}
+
+.mat-mdc-text-field-wrapper {
+  background-color: var(--color-bg);
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
 }

@@ -1,0 +1,17 @@
+<form class="feedback-form" [formGroup]="form" (ngSubmit)="submit()">
+  <mat-form-field appearance="outline" class="feedback-form__field">
+    <mat-label>Feedback</mat-label>
+    <textarea
+      matInput
+      formControlName="feedback"
+      rows="3"
+      placeholder="Share your feedback on this routine..."
+    ></textarea>
+    @if (form.controls['feedback'].invalid && form.controls['feedback'].touched) {
+      <mat-error>Feedback required</mat-error>
+    }
+  </mat-form-field>
+  <button mat-flat-button type="submit" [disabled]="submitting()">
+    {{ submitting() ? 'Saving...' : 'Submit Feedback' }}
+  </button>
+</form>

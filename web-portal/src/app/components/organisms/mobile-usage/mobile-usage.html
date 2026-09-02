@@ -1,0 +1,51 @@
+<section class="mobile-usage" aria-label="Mobile usage metrics">
+  <h3 class="mobile-usage__heading">Mobile Usage Metrics</h3>
+
+  @if (loading()) {
+    <div class="mobile-usage__loading">
+      <mat-spinner diameter="32" />
+    </div>
+  } @else if (!snapshot()) {
+    <div class="mobile-usage__error">
+      <p>Could not load mobile telemetry.</p>
+      <button type="button" mat-stroked-button (click)="retry.emit()">Retry</button>
+    </div>
+  } @else {
+    <div class="mobile-usage__blocks">
+      <div class="mobile-usage__block">
+        <span class="mobile-usage__overline">Active Workout Sessions</span>
+        <span class="mobile-usage__metric">{{ activeSessions() }}</span>
+      </div>
+      <div class="mobile-usage__block">
+        <span class="mobile-usage__overline">Pending Offline Sync Items</span>
+        <span class="mobile-usage__metric">{{ pendingSync() }}</span>
+      </div>
+      <div class="mobile-usage__block mobile-usage__block--accent">
+        <span class="mobile-usage__overline">Last Sync</span>
+        <span class="mobile-usage__metric mobile-usage__metric--compact">{{ lastSync() }}</span>
+      </div>
+    </div>
+
+    <h4 class="mobile-usage__subheading">Recent Telemetry Events</h4>
+    @if (events().length === 0) {
+      <p class="mobile-usage__empty">No telemetry events yet.</p>
+    } @else {
+      <table class="mobile-usage__table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (event of events(); track event.id) {
+            <tr>
+              <td>{{ event.type }}</td>
+              <td>{{ event.occurredAt }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  }
+</section>

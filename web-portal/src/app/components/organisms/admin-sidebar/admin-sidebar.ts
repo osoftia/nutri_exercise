@@ -16,11 +16,11 @@ interface NavItem {
 })
 export class AdminSidebar {
   readonly navItems: NavItem[] = [
-    { label: 'Dashboard', icon: 'dashboard', link: '/admin-dashboard' },
-    { label: 'History', icon: 'trend-up', link: '/history' },
-    { label: 'Routines', icon: 'workout', link: '/admin-dashboard' },
-    { label: 'Nutrition', icon: 'nutrition', link: '/admin-dashboard' },
-    { label: 'Schedule', icon: 'schedule', link: '/admin-dashboard' },
-    { label: 'Profile', icon: 'profile', link: '/admin-dashboard' },
+    { label: 'History', icon: 'history', link: '/history' },
+    { label: 'Analytics', icon: 'analytics', link: '/analytics' },
+    { label: 'Routines', icon: 'workout', link: '/history' },
+    { label: 'Nutrition', icon: 'nutrition', link: '/history' },
+    { label: 'Schedule', icon: 'schedule', link: '/history' },
+    { label: 'Profile', icon: 'profile', link: '/history' },
   ];
 }

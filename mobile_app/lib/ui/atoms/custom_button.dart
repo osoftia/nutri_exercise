@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 
-enum CustomButtonVariant { primary, ghost, text }
+enum CustomButtonVariant { primary, ghost, text, accent }
 
 class CustomButton extends StatelessWidget {
   const CustomButton({
@@ -54,6 +54,23 @@ class CustomButton extends StatelessWidget {
       CustomButtonVariant.text => TextButton(
         onPressed: disabled ? null : onPressed,
         style: TextButton.styleFrom(foregroundColor: AppColors.primary500),
+        child: Text(label),
+      ),
+      CustomButtonVariant.accent => ElevatedButton(
+        onPressed: disabled ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.accent,
+          foregroundColor: AppColors.textHigh,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          elevation: 8,
+          shadowColor: AppColors.accent.withValues(alpha: 0.4),
+        ),
         child: Text(label),
       ),
     };

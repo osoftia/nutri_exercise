@@ -1,15 +1,15 @@
 import { Routes } from '@angular/router';
 import { DashboardHome } from './pages/admin-dashboard/dashboard-home/dashboard-home';
-import { InteractionHistory } from './pages/interaction-history/interaction-history';
 
 export const routes: Routes = [
+  { path: 'history', component: DashboardHome },
   {
-    path: 'admin-dashboard',
-    component: DashboardHome,
+    path: 'analytics',
+    loadComponent: () =>
+      import('./pages/analytics/analytics.page').then(
+        (m) => m.AnalyticsPage,
+      ),
   },
-  {
-    path: 'history',
-    component: InteractionHistory,
-  },
-  { path: '', redirectTo: '/admin-dashboard', pathMatch: 'full' },
+  { path: 'admin-dashboard', redirectTo: '/history', pathMatch: 'full' },
+  { path: '', redirectTo: '/history', pathMatch: 'full' },
 ];

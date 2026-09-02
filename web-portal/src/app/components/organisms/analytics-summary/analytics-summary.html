@@ -1,0 +1,25 @@
+<section class="analytics-summary" aria-label="RLHF analytics summary">
+  <div class="analytics-summary__hero analytics-summary__block">
+    <span class="analytics-summary__overline">Total Routines Generated</span>
+    <span class="analytics-summary__hero-value">{{ analytics().totalRoutines }}</span>
+  </div>
+
+  <div class="analytics-summary__band analytics-summary__block">
+    <span class="analytics-summary__overline">Total Reviewed</span>
+    <span class="analytics-summary__band-value">{{ analytics().reviewedCount }}</span>
+  </div>
+
+  <div class="analytics-summary__split">
+    <div class="analytics-summary__split-tile analytics-summary__split-tile--positive">
+      <span class="analytics-summary__overline">Positive</span>
+      <span class="analytics-summary__split-value">{{ analytics().positivePercent }}%</span>
+      <span class="analytics-summary__count">{{ analytics().positiveCount }}</span>
+    </div>
+
+    <div class="analytics-summary__split-tile analytics-summary__split-tile--negative">
+      <span class="analytics-summary__overline">Negative</span>
+      <span class="analytics-summary__split-value">{{ analytics().negativePercent }}%</span>
+      <span class="analytics-summary__count">{{ analytics().negativeCount }}</span>
+    </div>
+  </div>
+</section>
