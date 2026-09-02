@@ -1,8 +1,13 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nutri_mobile_app/core/data/routine_repository.dart';
-import 'package:nutri_mobile_app/core/mocks/mock_routine_repository.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:nutri_mobile_app/core/services/ai_chat_service.dart';
+import 'package:nutri_mobile_app/core/state/ai_chat_controller.dart';
 import 'package:nutri_mobile_app/core/theme/app_theme.dart';
 import 'package:nutri_mobile_app/ui/molecules/ai_chat_sheet.dart';
 import 'package:nutri_mobile_app/ui/molecules/offline_ai_dialog.dart';
@@ -23,17 +28,19 @@ class _ThrowingConnectivity extends ConnectivityPlatform {
   }
 }
 
-class _FailingRoutineRepository extends MockRoutineRepository {
-  @override
-  Future<String> generateRoutine(String userPreferences) async {
-    throw StateError('generation failed');
-  }
-}
+AiChatController _controllerWith(MockClient client) => AiChatController(
+  service: AiChatService(baseUrl: 'http://test', client: client),
+);
+
+MockClient _okClient() => MockClient(
+  (request) async =>
+      http.Response(jsonEncode({'message': 'Here is your routine'}), 200),
+);
 
 void main() {
   Future<void> pumpSheet(
     WidgetTester tester, {
-    RoutineRepository? repository,
+    AiChatController? controller,
   }) async {
     tester.view.physicalSize = const Size(1000, 2400);
     tester.view.devicePixelRatio = 1.0;
@@ -47,7 +54,7 @@ void main() {
     );
     showAiChatSheet(
       tester.element(find.byType(Scaffold)),
-      repository ?? MockRoutineRepository(),
+      controller ?? _controllerWith(_okClient()),
     );
     await tester.pumpAndSettle();
   }
@@ -92,13 +99,37 @@ void main() {
 
       expect(find.text('Push pull 4 days'), findsOneWidget);
 
-      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
       await tester.pump();
 
-      expect(
-        find.textContaining('Mock AI routine for: Push pull 4 days'),
-        findsOneWidget,
+      expect(find.text('Here is your routine'), findsOneWidget);
+    });
+
+    testWidgets('shows a loading indicator while waiting for the reply', (
+      tester,
+    ) async {
+      final completer = Completer<http.Response>();
+      final client = MockClient((request) => completer.future);
+      await pumpSheet(tester, controller: _controllerWith(client));
+
+      await tester.enterText(
+        find.byKey(const Key('ai_chat_input')),
+        'Push pull 4 days',
       );
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byKey(const Key('ai_chat_loading')), findsOneWidget);
+
+      completer.complete(
+        http.Response(jsonEncode({'message': 'Here is your routine'}), 200),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Here is your routine'), findsOneWidget);
+      expect(find.byKey(const Key('ai_chat_loading')), findsNothing);
     });
 
     testWidgets('shows the Offline AI dialog when offline', (tester) async {
@@ -147,8 +178,10 @@ void main() {
 
       expect(find.text('Push pull 4 days'), findsOneWidget);
 
-      await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Here is your routine'), findsOneWidget);
     });
 
     testWidgets('shows an error when the connectivity check fails', (
@@ -169,8 +202,13 @@ void main() {
       expect(find.text('AI service unavailable right now.'), findsOneWidget);
     });
 
-    testWidgets('shows an error when routine generation fails', (tester) async {
-      await pumpSheet(tester, repository: _FailingRoutineRepository());
+    testWidgets('shows an error when the backend returns a 500', (
+      tester,
+    ) async {
+      final client = MockClient(
+        (request) async => http.Response('{}', 500),
+      );
+      await pumpSheet(tester, controller: _controllerWith(client));
 
       await tester.enterText(
         find.byKey(const Key('ai_chat_input')),
@@ -180,10 +218,16 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.text('Push pull 4 days'), findsOneWidget);
+
+      await tester.pump();
       await tester.pump();
 
-      expect(find.text('Could not generate the routine.'), findsOneWidget);
+      expect(
+        find.text('The assistant is unavailable right now.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('ai_chat_error')), findsOneWidget);
     });
   });
 }

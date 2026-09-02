@@ -31,4 +31,7 @@ class ApiConstants {
 
   /// Endpoint that returns the list of stored routines.
   static String get routinesPath => '/api/routine';
+
+  /// Endpoint that bridges a chat message to the local Ollama model.
+  static String get aiChatPath => '/api/ai/chat';
 }

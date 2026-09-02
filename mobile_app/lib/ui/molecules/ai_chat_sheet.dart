@@ -1,41 +1,36 @@
 import 'package:flutter/material.dart';
 
-import '../../core/data/routine_repository.dart';
 import '../../core/services/ai_interceptor.dart';
+import '../../core/state/ai_chat_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/neumorphic_fab.dart';
 import '../atoms/typography.dart';
 import 'offline_ai_dialog.dart';
 
-class _AiChatMessage {
-  const _AiChatMessage({required this.text, required this.isUser});
-
-  final String text;
-  final bool isUser;
-}
-
 /// Opens the neumorphic AI assistant chat in a modal bottom sheet.
 Future<void> showAiChatSheet(
   BuildContext context,
-  RoutineRepository repository,
+  AiChatController controller,
 ) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => AiChatSheet(repository: repository),
+    builder: (context) => AiChatSheet(controller: controller),
   );
 }
 
 /// Neumorphic chat surface for the AI assistant.
 ///
 /// Owns and disposes its [TextEditingController] in [State.dispose], so there
-/// is no controller leak when the sheet is dismissed.
+/// is no controller leak when the sheet is dismissed. Chat state lives in the
+/// injected [AiChatController], which drives the loading indicator, the
+/// assistant reply and any error copy.
 class AiChatSheet extends StatefulWidget {
-  const AiChatSheet({super.key, required this.repository});
+  const AiChatSheet({super.key, required this.controller});
 
-  final RoutineRepository repository;
+  final AiChatController controller;
 
   @override
   State<AiChatSheet> createState() => _AiChatSheetState();
@@ -43,9 +38,7 @@ class AiChatSheet extends StatefulWidget {
 
 class _AiChatSheetState extends State<AiChatSheet> {
   final TextEditingController _controller = TextEditingController();
-  final List<_AiChatMessage> _messages = [];
   late final AiService _aiService = AiService();
-  bool _loading = false;
 
   @override
   void dispose() {
@@ -55,42 +48,24 @@ class _AiChatSheetState extends State<AiChatSheet> {
 
   Future<void> _send() async {
     final text = _controller.text.trim();
-    if (text.isEmpty || _loading) return;
-
-    setState(() {
-      _messages.add(_AiChatMessage(text: text, isUser: true));
-      _loading = true;
-    });
+    if (text.isEmpty || widget.controller.isLoading) return;
     _controller.clear();
 
     try {
       await _aiService.ensureOnline();
     } on OfflineException {
       if (!mounted) return;
-      setState(() => _loading = false);
+      widget.controller.appendUserMessage(text);
       await showOfflineAiDialog(context);
       return;
     } catch (_) {
       if (!mounted) return;
-      _appendAssistant('AI service unavailable right now.');
+      widget.controller.appendUserMessage(text);
+      widget.controller.appendErrorMessage('AI service unavailable right now.');
       return;
     }
 
-    try {
-      final routine = await widget.repository.generateRoutine(text);
-      if (!mounted) return;
-      _appendAssistant(routine);
-    } catch (_) {
-      if (!mounted) return;
-      _appendAssistant('Could not generate the routine.');
-    }
-  }
-
-  void _appendAssistant(String text) {
-    setState(() {
-      _messages.add(_AiChatMessage(text: text, isUser: false));
-      _loading = false;
-    });
+    await widget.controller.send(text);
   }
 
   @override
@@ -104,40 +79,63 @@ class _AiChatSheetState extends State<AiChatSheet> {
         borderRadius: AppRadius.lg,
         child: SafeArea(
           top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeader(),
-              Flexible(
-                child: _messages.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.all(AppSpacing.xl),
-                        child: AppText('Ask me to build a workout routine.'),
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.lg,
-                        ),
-                        itemCount: _messages.length,
-                        itemBuilder: (context, index) =>
-                            _buildBubble(_messages[index], index),
-                      ),
-              ),
-              if (_loading)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  child: Center(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2.4),
-                    ),
+          child: ListenableBuilder(
+            listenable: widget.controller,
+            builder: (context, _) {
+              final messages = widget.controller.messages;
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildHeader(),
+                  Flexible(
+                    child: messages.isEmpty
+                        ? const Padding(
+                            padding: EdgeInsets.all(AppSpacing.xl),
+                            child: AppText(
+                              'Ask me to build a workout routine.',
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.lg,
+                            ),
+                            itemCount: messages.length,
+                            itemBuilder: (context, index) =>
+                                _buildBubble(messages[index], index),
+                          ),
                   ),
-                ),
-              _buildInputRow(),
-            ],
+                  if (widget.controller.isLoading)
+                    const Padding(
+                      key: Key('ai_chat_loading'),
+                      padding: EdgeInsets.symmetric(
+                        vertical: AppSpacing.md,
+                      ),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2.4),
+                        ),
+                      ),
+                    ),
+                  if (widget.controller.errorMessage != null)
+                    Padding(
+                      key: const Key('ai_chat_error'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.sm,
+                      ),
+                      child: AppText(
+                        widget.controller.errorMessage!,
+                        style: const TextStyle(color: AppColors.danger),
+                      ),
+                    ),
+                  _buildInputRow(),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -167,7 +165,7 @@ class _AiChatSheetState extends State<AiChatSheet> {
     );
   }
 
-  Widget _buildBubble(_AiChatMessage message, int index) {
+  Widget _buildBubble(AiChatMessage message, int index) {
     return Align(
       alignment: message.isUser
           ? Alignment.centerRight

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 
 import 'core/config/app_config.dart';
+import 'core/constants/api_constants.dart';
 import 'core/data/local_profile_repository.dart';
 import 'core/data/local_projection_repository.dart';
 import 'core/data/nutrition_repository.dart';
 import 'core/data/profile_repository.dart';
 import 'core/data/projection_repository.dart';
-import 'core/data/routine_repository.dart';
 import 'core/data/schedule_repository.dart';
 import 'core/mocks/mock_nutrition_repository.dart';
 import 'core/mocks/mock_profile_repository.dart';
 import 'core/mocks/mock_projection_repository.dart';
-import 'core/mocks/mock_routine_repository.dart';
 import 'core/mocks/mock_schedule_repository.dart';
+import 'core/services/ai_chat_service.dart';
+import 'core/state/ai_chat_controller.dart';
 import 'core/state/nutrition_controller.dart';
 import 'core/state/projection_controller.dart';
 import 'core/state/schedule_controller.dart';
@@ -54,9 +55,11 @@ class NutriApp extends StatelessWidget {
       repository: projectionRepository,
     );
 
-    // Routine generation is mock-seeded for the AI assistant; persistence is a
-    // follow-up (mirrors the schedule/nutrition mock pattern).
-    final RoutineRepository routineRepository = MockRoutineRepository();
+    // The AI assistant reaches the C# .NET API (and, through it, local
+    // Ollama) over HTTP. See ApiConstants.baseUrl for the host/port rules.
+    final aiChatController = AiChatController(
+      service: AiChatService(baseUrl: ApiConstants.baseUrl),
+    );
 
     return MaterialApp(
       title: 'NutriExercise',
@@ -67,7 +70,7 @@ class NutriApp extends StatelessWidget {
         scheduleController: scheduleController,
         nutritionController: nutritionController,
         projectionController: projectionController,
-        routineRepository: routineRepository,
+        aiChatController: aiChatController,
       ),
     );
   }
