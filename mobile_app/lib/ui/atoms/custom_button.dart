@@ -69,7 +69,7 @@ class CustomButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           elevation: 8,
-          shadowColor: AppColors.accent.withValues(alpha: 0.4),
+          shadowColor: AppColors.accent.withOpacity(0.4),
         ),
         child: Text(label),
       ),

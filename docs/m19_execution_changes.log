@@ -1,0 +1,155 @@
+# M19 Execution Changes Log — Tamagotchi Interactive Avatar
+
+> **Milestone:** 19 — Gamified "Tamagotchi-style" interactive avatar
+> **Branch:** `feature/m19-tamagotchi-avatar`
+> **Contract:** `mobile_app/test/features/m19_tamagotchi_avatar.feature`
+> **Plan:** `docs/milestone_19_plan.md`
+> **Role:** @Coder (strict TDD per `.opencode.md`)
+
+## 1. Summary
+
+Implemented the gamified tamagotchi avatar: a `MuscleTamagotchiState` model that
+tracks a normalised `0.0..1.0` mass value for four muscle groups (Core, Arms,
+Chest, Legs) with **growth** (completing routines) and **decay** (inactivity),
+plus a tier-based heatmap colour mapping, and refactored `InteractiveBodyMap` to
+render each muscle at a size proportional to its mass and a colour derived from
+its tier.
+
+## 2. Git / baseline note
+
+The workspace's `main` had diverged from `origin/main` (the local branch was a
+stale pre-M1…M16 snapshot). The tamagotchi target files (`InteractiveBodyMap`,
+`muscle_vectors.dart`, `muscle_group_map.dart`) only exist on `origin/main`, so
+this feature was branched from `origin/main`:
+
+```
+git checkout -b feature/m19-tamagotchi-avatar origin/main
+```
+
+While establishing a clean baseline, two pre-existing breakages on `origin/main`
+had to be corrected so the code could resolve at all:
+
+1. **Missing `provider` dependency** — 10 files import `package:provider` but it
+   was absent from `pubspec.yaml` (the original cause of the CI error
+   "Target of URI doesn't exist"). Added `provider: ^6.1.2`.
+2. **`InteractiveBodyMap.activeRegions`** — `MuscleGroupVisualizer` passes
+   `activeRegions:` to `InteractiveBodyMap`, but the parameter did not exist
+   (compile error). Added the parameter (and used it for an accent highlight).
+
+These are documented here because they are bundled into this commit but are
+strictly baseline repairs, not M19 logic.
+
+## 3. Files created
+
+### `mobile_app/lib/core/state/muscle_tamagotchi_state.dart`
+The domain model. A `ChangeNotifier` (matching the existing controller
+convention, no third-party state library):
+
+- `enum MuscleTamagotchiGroup { core, arms, chest, legs }`
+- `enum MuscleTier { c, b, a, s }`
+- `MuscleTamagotchiState` holds a `Map<MuscleTamagotchiGroup, double>` of mass
+  values, seeded to `baseline` (`0.5`), each clamped to `[0.0, 1.0]`.
+- `massOf(group)`, `tierOf(group)`, `applyGrowth(groups)`, `applyDecay(elapsed)`.
+
+**Growth** (`applyGrowth`): adds `growthDelta` (default `0.08`) to the targeted
+groups only, clamped at `1.0`. Untargeted groups are untouched.
+
+**Decay** (`applyDecay`): reduces every group by `decayPerDay` (default `0.05`)
+scaled to the elapsed duration, clamped at `0.0`.
+
+**Tiers** (`tierOf`) thresholds (from the plan §2):
+`c < 0.33`, `b [0.33, 0.66)`, `a [0.66, 0.9)`, `s >= 0.9`.
+
+> Simplification note: the plan mentioned per-group last-activity timestamps so
+> that *only inactive* groups decay. The Gherkin contract only asserts that
+> decay reduces mass and clamps at `0.0`, so a uniform `applyDecay(elapsed)` is
+> implemented; per-group timestamps are a follow-up (persistence).
+
+### `mobile_app/lib/core/constants/tamagotchi_groups.dart`
+Group↔region wiring and the heatmap palette:
+
+- `tamagotchiGroupToRegions` — maps the four groups to the visual region ids
+  from `muscle_vectors.dart`:
+  - `core` → `abs`, `back`
+  - `arms` → `arms`, `shoulders`
+  - `chest` → `chest`
+  - `legs` → `legs`
+- `tamagotchiGroupForRegion(id)` — reverse lookup (nullable).
+- `tierColor(tier)` — heatmap colour: `c`→Red `0xFFEF4444`, `b`→Yellow
+  `0xFFEAB308`, `a`→Green `0xFF22C55E`, `s`→Gold `0xFFFFD700`. (Colours are
+  kept self-contained here for unit-testability; they mirror
+  `AppColors.danger/warning/success` + the new `AppColors.gold`.)
+
+## 4. Files modified
+
+### `mobile_app/lib/core/theme/app_theme.dart`
+Added `static const Color gold = Color(0xFFFFD700);` alongside the existing
+`danger`/`warning`/`success` palette.
+
+### `mobile_app/lib/ui/organisms/interactive_body_map.dart`
+Refactored to render size from mass and colour from tier (Option A — dynamic
+`CustomPaint` paths, per plan §4):
+
+- Added `activeRegions` (baseline repair) and `tamagotchiState` parameters.
+- `scaleForMass(mass) = 1.0 + 0.5 * (mass - baseline)` — a public pure function
+  so mass `0.5` renders unchanged, `1.0` bulges and `0.0` shrinks.
+- `_scaleNormalizedPath(path, scale)` scales a normalised region path around its
+  own bounding-box centroid (`translate→scale→translate`), so each muscle
+  "bulges" in place without drifting.
+- `_regionPath(region, size)` computes the scale from the owning group's mass and
+  returns the scaled screen path.
+- `_regionColor(region)` resolves the owning group's tier and returns
+  `tierColor(tier)` (falls back to `AppColors.neutralMuscle` when no state is
+  supplied, preserving prior behaviour).
+- The state is observed (`addListener` → `setState`) so mutating it repaints;
+  `shouldRepaint` also compares a `revision` counter for the mutable state.
+
+### `mobile_app/pubspec.yaml`
+Added `provider: ^6.1.2` (baseline repair, see §2).
+
+## 5. Tests
+
+### `mobile_app/test/state/muscle_tamagotchi_state_test.dart` (14 tests)
+Covers baseline `0.5`, initial-mass clamping, growth (targeted-only, delta
+math, `1.0` clamp, notify), decay (reduction, time scaling, `0.0` clamp,
+notify) and all four tier thresholds.
+
+### `mobile_app/test/constants/tamagotchi_groups_test.dart` (9 tests)
+Covers the group→region map, the reverse lookup, and each tier→colour mapping.
+
+**Result:** `flutter test test/state/... test/constants/...` → **23/23 pass**.
+
+## 6. Gherkin contract fulfilment
+
+| Scenario | Fulfilled by |
+|----------|--------------|
+| Avatar shows Core/Arms/Chest/Legs | `MuscleTamagotchiGroup` enum + `tamagotchiGroupToRegions` |
+| Fresh avatar baseline `0.5` | `MuscleTamagotchiState.baseline` default seeding |
+| Completing a routine grows targeted group | `applyGrowth(groups)` |
+| Growth clamped at `1.0` | `.clamp(0.0, 1.0)` in `applyGrowth` |
+| Mass decays when inactive | `applyDecay(elapsed)` |
+| Decay clamped at `0.0` | `.clamp(0.0, 1.0)` in `applyDecay` |
+| Size scales with mass | `scaleForMass` + centroid-scaling in `InteractiveBodyMap` |
+| Colour reflects tier (Red/Yellow/Green/Gold) | `tierOf` + `tierColor` |
+| State persists across sessions | *deferred* — no repository wired this milestone |
+
+The persistence scenario is intentionally deferred: the plan lists a
+`TamagotchiRepository` (SQLite) as new work but the coder task scope was the
+state model + heatmap + `InteractiveBodyMap` refactor.
+
+## 7. Verification status
+
+- `flutter test` (M19 unit tests): **23/23 passing**.
+- `flutter analyze`: M19 files are clean (zero issues on
+  `muscle_tamagotchi_state.dart`, `tamagotchi_groups.dart`,
+  `interactive_body_map.dart`).
+- **Known pre-existing baseline issues (not introduced by M19):** `flutter
+  analyze` still reports 26 issues on `origin/main` code unrelated to this
+  milestone — 5 missing `DatabaseHelper` methods
+  (`getExercisesForRoutine`/`saveWorkoutDay`/`clearAll` in
+  `local_routine_repository.dart`) and 21 Flutter-SDK version mismatches
+  (`withValues` / `CardThemeData`) because the project targets Flutter `3.38.3`
+  (per `.github/workflows/mobile_ci.yml`) while the local SDK is `3.24.3`.
+  These block a full-suite `flutter test --coverage` and a global clean
+  `flutter analyze`, and should be addressed in a dedicated baseline-fix
+  milestone (or by running the local environment on Flutter `3.38.3`).

@@ -105,6 +105,39 @@ class DatabaseHelper {
     return db.query('routines', orderBy: 'id');
   }
 
+  /// Returns the exercises of [routineId] by decoding its `exercises_json`.
+  Future<List<Map<String, Object?>>> getExercisesForRoutine(
+    int routineId,
+  ) async {
+    final db = await database;
+    final rows = await db.query(
+      'routines',
+      where: 'id = ?',
+      whereArgs: [routineId],
+    );
+    if (rows.isEmpty) return const [];
+    final raw = rows.first['exercises_json'] as String?;
+    if (raw == null || raw.isEmpty) return const [];
+    final decoded = jsonDecode(raw) as List<dynamic>;
+    return decoded
+        .map((exercise) => Map<String, Object?>.from(exercise as Map))
+        .toList();
+  }
+
+  /// Saves (upserts) a workout day and its exercises.
+  ///
+  /// [isGenerated] is accepted for API compatibility but is not persisted
+  /// (the `routines` table has no generated flag).
+  Future<void> saveWorkoutDay(WorkoutDay day, {bool isGenerated = false}) {
+    return upsertRoutine(day);
+  }
+
+  /// Removes every routine row.
+  Future<void> clearAll() async {
+    final db = await database;
+    await db.delete('routines');
+  }
+
   Future<List<Map<String, Object?>>> getDiets() async {
     final db = await database;
     return db.query('diets', orderBy: 'id');

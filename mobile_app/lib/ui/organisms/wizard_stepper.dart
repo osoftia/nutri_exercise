@@ -96,7 +96,7 @@ class _StepItem extends StatelessWidget {
               boxShadow: isActive
                   ? [
                       BoxShadow(
-                        color: AppColors.primary300.withValues(alpha: 0.6),
+                        color: AppColors.primary300.withOpacity(0.6),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),

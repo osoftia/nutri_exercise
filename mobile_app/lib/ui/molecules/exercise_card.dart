@@ -34,7 +34,7 @@ class ExerciseCard extends StatelessWidget {
           boxShadow: isHighlighted
               ? [
                   BoxShadow(
-                    color: AppColors.primary500.withValues(alpha: 0.15),
+                    color: AppColors.primary500.withOpacity(0.15),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -49,7 +49,7 @@ class ExerciseCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.primary500.withValues(alpha: 0.12),
+                  color: AppColors.primary500.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: const Icon(
@@ -76,7 +76,7 @@ class ExerciseCard extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.18),
+                        color: AppColors.accent.withOpacity(0.18),
                         borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
                       child: Text(
@@ -133,7 +133,7 @@ class _MetricPill extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(color: color.withValues(alpha: 0.30)),
+        border: Border.all(color: color.withOpacity(0.30)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
