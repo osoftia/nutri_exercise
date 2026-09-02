@@ -24,7 +24,7 @@ class WizardStepDays extends StatelessWidget {
           border: Border.all(color: AppColors.surface700, width: 1),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary500.withValues(alpha: 0.05),
+              color: AppColors.primary500.withOpacity(0.05),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),

@@ -25,7 +25,7 @@ class NutriApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ProfileRepository profileRepository = config.useMocks
+    final ProfileRepository profileRepository = config.useMockApi
         ? MockProfileRepository()
         : LocalProfileRepository();
     final profileController = UserProfileController(
@@ -45,7 +45,7 @@ class NutriApp extends StatelessWidget {
     );
 
     // Long-term body projection plan is SQLite-backed (or mock-seeded in tests).
-    final ProjectionRepository projectionRepository = config.useMocks
+    final ProjectionRepository projectionRepository = config.useMockApi
         ? MockProjectionRepository()
         : LocalProjectionRepository();
     final projectionController = ProjectionController(

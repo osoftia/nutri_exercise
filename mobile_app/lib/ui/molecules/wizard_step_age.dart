@@ -61,8 +61,8 @@ class _WizardStepAgeState extends State<WizardStepAge> {
           boxShadow: [
             BoxShadow(
               color: _focused
-                  ? AppColors.primary500.withValues(alpha: 0.08)
-                  : AppColors.primary500.withValues(alpha: 0.05),
+                  ? AppColors.primary500.withOpacity(0.08)
+                  : AppColors.primary500.withOpacity(0.05),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),

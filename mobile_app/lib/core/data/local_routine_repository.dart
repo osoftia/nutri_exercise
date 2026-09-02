@@ -24,10 +24,10 @@ class LocalRoutineRepository implements RoutineRepository {
         exercises.add(Exercise(
           id: exId,
           name: exRow['name'] as String,
-          muscleGroup: exRow['muscle_group'] as String,
+          muscleGroup: exRow['muscleGroup'] as String,
           sets: exRow['sets'] as int,
           reps: exRow['reps'] as String,
-          restSeconds: exRow['rest_seconds'] as int,
+          restSeconds: exRow['restSeconds'] as int,
           weight: exRow['weight'] as String?,
         ));
       }

@@ -6,15 +6,13 @@ import 'environment_config.dart';
 /// Prefer [EnvironmentConfig.fromFlavor] in new code.
 class AppConfig extends EnvironmentConfig {
   const AppConfig({
-    required String name,
+    required super.name,
     bool? useMocks,
     bool? useMockApi,
-    bool useLocalDatabase = false,
+    super.useLocalDatabase,
     String apiUrl = '',
   }) : super(
-          name: name,
           useMockApi: useMockApi ?? useMocks ?? false,
-          useLocalDatabase: useLocalDatabase,
           apiBaseUrl: apiUrl,
         );
 

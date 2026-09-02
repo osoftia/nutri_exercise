@@ -31,7 +31,7 @@ class SelectionTile extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: selected
-              ? AppColors.primary500.withValues(alpha: 0.12)
+              ? AppColors.primary500.withOpacity(0.12)
               : AppColors.surface900,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(
@@ -41,7 +41,7 @@ class SelectionTile extends StatelessWidget {
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: AppColors.primary500.withValues(alpha: 0.25),
+                    color: AppColors.primary500.withOpacity(0.25),
                     blurRadius: 16,
                   ),
                 ]
