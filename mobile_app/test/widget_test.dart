@@ -50,7 +50,7 @@ void main() {
 
     expect(find.text('Admin Dashboard'), findsOneWidget);
     expect(find.text('Weekly Routines'), findsOneWidget);
-    expect(find.text('Monday'), findsOneWidget);
+    expect(find.text('Muscle Map'), findsOneWidget);
     expect(find.text('Daily Menus'), findsOneWidget);
     expect(find.text('2026-08-07'), findsOneWidget);
   });

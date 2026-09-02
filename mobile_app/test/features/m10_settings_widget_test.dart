@@ -136,6 +136,8 @@ void main() {
       await tester.pumpWidget(wrap(prefs: prefs));
       await tester.pumpAndSettle();
 
+      await tester.ensureVisible(find.byKey(const Key('toggle_food_alerts')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('toggle_food_alerts')));
       await tester.pumpAndSettle();
 
@@ -149,6 +151,10 @@ void main() {
       await tester.pumpWidget(wrap(prefs: prefs));
       await tester.pumpAndSettle();
 
+      await tester.ensureVisible(
+        find.byKey(const Key('toggle_daily_intake_reminders')),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('toggle_daily_intake_reminders')));
       await tester.pumpAndSettle();
 
@@ -164,6 +170,8 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('toggle_exercise_alerts')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('toggle_food_alerts')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('toggle_food_alerts')));
       await tester.pumpAndSettle();
