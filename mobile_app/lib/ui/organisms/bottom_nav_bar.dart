@@ -25,7 +25,7 @@ class BottomNavBar extends StatelessWidget {
         selectedIndex: currentIndex,
         onDestinationSelected: onDestinationSelected,
         backgroundColor: Colors.transparent,
-        indicatorColor: AppColors.primary500.withOpacity(0.2),
+        indicatorColor: AppColors.primary500.withValues(alpha: 0.2),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.fitness_center),

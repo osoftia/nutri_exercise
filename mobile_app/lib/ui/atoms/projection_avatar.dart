@@ -25,7 +25,7 @@ class ProjectionAvatarPainter extends CustomPainter {
 
     final fill = Paint()
       ..style = PaintingStyle.fill
-      ..color = AppColors.primary500.withOpacity(0.35);
+      ..color = AppColors.primary500.withValues(alpha: 0.35);
     final stroke = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2

@@ -187,8 +187,8 @@ class _BodyMapPainter extends CustomPainter {
         path,
         Paint()
           ..style = PaintingStyle.fill
-          ..color = _regionColor(region).withOpacity(
-            isSelected ? 0.0 : (hasSelection ? 0.12 : 0.35),
+          ..color = _regionColor(region).withValues(
+            alpha: isSelected ? 0.0 : (hasSelection ? 0.12 : 0.35),
           ),
       );
       if (!isSelected) {
@@ -200,7 +200,7 @@ class _BodyMapPainter extends CustomPainter {
             ..strokeWidth = isActive ? 2.0 : 1.4
             ..color = isActive
                 ? AppColors.accent
-                : AppColors.neutralMuscle.withOpacity(0.55),
+                : AppColors.neutralMuscle.withValues(alpha: 0.55),
         );
       }
     }
@@ -212,14 +212,14 @@ class _BodyMapPainter extends CustomPainter {
         canvas.drawPath(
           path,
           Paint()
-            ..color = AppColors.primary500.withOpacity(0.25 + 0.30 * glow)
+            ..color = AppColors.primary500.withValues(alpha: 0.25 + 0.30 * glow)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
         );
         canvas.drawPath(
           path,
           Paint()
             ..style = PaintingStyle.fill
-            ..color = AppColors.primary500.withOpacity(0.60),
+            ..color = AppColors.primary500.withValues(alpha: 0.60),
         );
         canvas.drawPath(
           path,
@@ -260,14 +260,14 @@ class _BodyMapPainter extends CustomPainter {
       path.shift(box.topLeft),
       Paint()
         ..style = PaintingStyle.fill
-        ..color = AppColors.surface800.withOpacity(0.55),
+        ..color = AppColors.surface800.withValues(alpha: 0.55),
     );
     canvas.drawPath(
       path.shift(box.topLeft),
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2
-        ..color = AppColors.textLow.withOpacity(0.45),
+        ..color = AppColors.textLow.withValues(alpha: 0.45),
     );
   }
 

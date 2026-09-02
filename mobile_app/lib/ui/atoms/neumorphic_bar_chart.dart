@@ -38,7 +38,7 @@ class NeumorphicBarChart extends StatelessWidget {
                       key: Key('weekly_bar_$i'),
                       height: (values[i] / safeMax) * 100,
                       decoration: BoxDecoration(
-                        color: AppColors.primary500.withOpacity(0.6),
+                        color: AppColors.primary500.withValues(alpha: 0.6),
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(AppRadius.sm),
                         ),

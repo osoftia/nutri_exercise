@@ -21,7 +21,7 @@ class WizardStepConfirm extends StatelessWidget {
           border: Border.all(color: AppColors.surface700, width: 1),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary500.withOpacity(0.05),
+              color: AppColors.primary500.withValues(alpha: 0.05),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -130,13 +130,13 @@ class _GenerateButton extends StatelessWidget {
           gradient: LinearGradient(
             colors: [
               AppColors.accent,
-              AppColors.accent.withOpacity(0.85),
+              AppColors.accent.withValues(alpha: 0.85),
             ],
           ),
           borderRadius: BorderRadius.circular(AppRadius.md),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accent.withOpacity(0.40),
+              color: AppColors.accent.withValues(alpha: 0.40),
               blurRadius: 24,
               spreadRadius: -4,
               offset: const Offset(0, 8),

@@ -155,7 +155,7 @@ class _SchedulePageState extends State<SchedulePage> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.primary500.withOpacity(0.3)
+                ? AppColors.primary500.withValues(alpha: 0.3)
                 : AppColors.surface900,
             borderRadius: BorderRadius.circular(AppRadius.sm),
             border: isSelected
