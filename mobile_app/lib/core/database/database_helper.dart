@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../models/daily_log.dart';
 import '../models/diet_models.dart';
 import '../models/projection_models.dart';
 import '../models/routine_models.dart';
@@ -15,7 +16,7 @@ class DatabaseHelper {
   DatabaseHelper({Database? database}) : _databaseOverride = database;
 
   static const String _dbName = 'nutri_exercise.db';
-  static const int _dbVersion = 2;
+  static const int _dbVersion = 3;
 
   final Database? _databaseOverride;
   Database? _database;
@@ -70,12 +71,28 @@ class DatabaseHelper {
         goal TEXT NOT NULL
       )
     ''');
+    await db.execute('''
+      CREATE TABLE daily_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL UNIQUE,
+        text TEXT NOT NULL
+      )
+    ''');
     await _createProjectionTables(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createProjectionTables(db);
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE daily_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          date TEXT NOT NULL UNIQUE,
+          text TEXT NOT NULL
+        )
+      ''');
     }
   }
 
@@ -178,6 +195,28 @@ class DatabaseHelper {
       'pref_key': key,
       'enabled': enabled ? 1 : 0,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  /// Returns the daily summary row for [date], or `null` when none is saved.
+  Future<Map<String, Object?>?> getDailyLog(String date) async {
+    final db = await database;
+    final rows = await db.query(
+      'daily_logs',
+      where: 'date = ?',
+      whereArgs: [date],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Upserts the daily summary for [log.date] (one row per date).
+  Future<void> upsertDailyLog(DailyLog log) async {
+    final db = await database;
+    await db.insert(
+      'daily_logs',
+      {'date': log.date, 'text': log.text},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<void> deleteRoutine(int id) async {

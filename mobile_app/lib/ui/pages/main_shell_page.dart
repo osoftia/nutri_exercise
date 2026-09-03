@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../core/state/ai_chat_controller.dart';
+import '../../core/state/daily_log_controller.dart';
+import '../../core/state/notification_navigation_controller.dart';
 import '../../core/state/nutrition_controller.dart';
 import '../../core/state/projection_controller.dart';
 import '../../core/state/schedule_controller.dart';
 import '../../core/state/user_profile_controller.dart';
 import '../atoms/neumorphic_fab.dart';
 import '../molecules/ai_chat_sheet.dart';
+import '../molecules/daily_log_sheet.dart';
 import '../organisms/bottom_nav_bar.dart';
 import 'nutrition_page.dart';
 import 'profile_page.dart';
@@ -21,6 +24,8 @@ class MainShellPage extends StatefulWidget {
     required this.nutritionController,
     required this.projectionController,
     required this.aiChatController,
+    required this.notificationNav,
+    required this.dailyLogController,
   });
 
   final UserProfileController profileController;
@@ -28,6 +33,8 @@ class MainShellPage extends StatefulWidget {
   final NutritionController nutritionController;
   final ProjectionController projectionController;
   final AiChatController aiChatController;
+  final NotificationNavigationController notificationNav;
+  final DailyLogController dailyLogController;
 
   @override
   State<MainShellPage> createState() => _MainShellPageState();
@@ -42,6 +49,33 @@ class _MainShellPageState extends State<MainShellPage> {
     SchedulePage(controller: widget.scheduleController),
     ProfilePage(controller: widget.profileController),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    widget.notificationNav.addListener(_onNotificationAction);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingAction());
+  }
+
+  @override
+  void dispose() {
+    widget.notificationNav.removeListener(_onNotificationAction);
+    super.dispose();
+  }
+
+  void _onNotificationAction() {
+    final action = widget.notificationNav.pending;
+    if (action == NotificationAction.openDailyLog) {
+      widget.notificationNav.consume();
+      showDailyLogSheet(context, widget.dailyLogController);
+    }
+  }
+
+  void _handlePendingAction() {
+    if (widget.notificationNav.pending == NotificationAction.openDailyLog) {
+      _onNotificationAction();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

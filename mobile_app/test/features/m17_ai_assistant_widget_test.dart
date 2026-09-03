@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:nutri_mobile_app/core/mocks/mock_daily_log_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_nutrition_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_profile_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_projection_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_schedule_repository.dart';
 import 'package:nutri_mobile_app/core/services/ai_chat_service.dart';
 import 'package:nutri_mobile_app/core/state/ai_chat_controller.dart';
+import 'package:nutri_mobile_app/core/state/daily_log_controller.dart';
+import 'package:nutri_mobile_app/core/state/notification_navigation_controller.dart';
 import 'package:nutri_mobile_app/core/state/nutrition_controller.dart';
 import 'package:nutri_mobile_app/core/state/projection_controller.dart';
 import 'package:nutri_mobile_app/core/state/schedule_controller.dart';
@@ -73,6 +76,10 @@ void main() {
                 );
               }),
             ),
+          ),
+          notificationNav: NotificationNavigationController(),
+          dailyLogController: DailyLogController(
+            repository: MockDailyLogRepository(),
           ),
         ),
       ),
