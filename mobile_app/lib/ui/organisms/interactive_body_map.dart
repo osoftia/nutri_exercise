@@ -26,9 +26,9 @@ Path _scaleNormalizedPath(Path path, double scale) {
   final cy = bounds.center.dy;
   return path.transform(
     (Matrix4.identity()
-          ..translate(cx, cy)
-          ..scale(scale, scale, 1.0)
-          ..translate(-cx, -cy))
+          ..translateByDouble(cx, cy, 0.0, 1.0)
+          ..scaleByDouble(scale, scale, 1.0, 1.0)
+          ..translateByDouble(-cx, -cy, 0.0, 1.0))
         .storage,
   );
 }
@@ -147,7 +147,9 @@ Path _screenPath(MuscleRegion region, Size size, {double scale = 1.0}) {
   final box = _figureBox(region.view, size);
   final normalized = _scaleNormalizedPath(region.normalizedPath, scale);
   final scaled = normalized.transform(
-    (Matrix4.identity()..scale(box.width, box.height, 1.0)).storage,
+    (Matrix4.identity()
+        ..scaleByDouble(box.width, box.height, 1.0, 1.0))
+        .storage,
   );
   return scaled.shift(box.topLeft);
 }
@@ -254,7 +256,9 @@ class _BodyMapPainter extends CustomPainter {
     final box = _figureBox(view, size);
     final source = view == MuscleView.front ? frontSilhouette : backSilhouette;
     final path = source.transform(
-      (Matrix4.identity()..scale(box.width, box.height, 1.0)).storage,
+      (Matrix4.identity()
+          ..scaleByDouble(box.width, box.height, 1.0, 1.0))
+          .storage,
     );
     canvas.drawPath(
       path.shift(box.topLeft),

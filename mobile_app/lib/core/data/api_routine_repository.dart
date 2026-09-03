@@ -51,11 +51,11 @@ class ApiRoutineRepository implements RoutineRepository {
           .get(Uri.parse('$baseUrl${ApiConstants.routinesPath}'))
           .timeout(timeout);
       if (response.statusCode != 200) {
-        return _fallback.getWeeklyRoutine();
+        return await _fallback.getWeeklyRoutine();
       }
       final data = jsonDecode(response.body);
       if (data is! List<dynamic>) {
-        return _fallback.getWeeklyRoutine();
+        return await _fallback.getWeeklyRoutine();
       }
       return data
           .map((routine) => _mapRoutine(routine as Map<String, dynamic>))
@@ -83,7 +83,7 @@ class ApiRoutineRepository implements RoutineRepository {
         );
       }
       if (response.statusCode != 200) {
-        return _fallback.generateRoutine(userPreferences);
+        return await _fallback.generateRoutine(userPreferences);
       }
 
       final body = jsonDecode(response.body);

@@ -124,7 +124,7 @@ class AppTheme {
       ),
       fontFamily: fontFamily,
       textTheme: GoogleFonts.montserratTextTheme(baseTextTheme),
-      cardTheme: const CardTheme(
+      cardTheme: const CardThemeData(
         color: AppColors.surface800,
         elevation: 0,
         shape: RoundedRectangleBorder(

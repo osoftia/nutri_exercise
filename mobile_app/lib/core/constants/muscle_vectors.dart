@@ -21,9 +21,9 @@ class MuscleRegion {
 Path _mirror(Path path) {
   return path.transform(
     (Matrix4.identity()
-          ..translate(0.5, 0.0, 0.0)
-          ..scale(-1.0, 1.0, 1.0)
-          ..translate(-0.5, 0.0, 0.0))
+          ..translateByDouble(0.5, 0.0, 0.0, 1.0)
+          ..scaleByDouble(-1.0, 1.0, 1.0, 1.0)
+          ..translateByDouble(-0.5, 0.0, 0.0, 1.0))
         .storage,
   );
 }
