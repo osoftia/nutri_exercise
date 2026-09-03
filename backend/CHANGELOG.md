@@ -19,6 +19,11 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 
 
 
+
+## [2026-09-03]
+
+- \`b8219d0\` feat(backend): implement JSONL dataset export endpoint for LLM fine-tuning
+
 ## [2026-08-14]
 
 - \`c1928df\` feat(backend): implement RLHF tracking fields, interaction history, and feedback endpoints
