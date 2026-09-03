@@ -1,12 +1,12 @@
-name: Backend CI
+name: Backend CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
     paths:
       - 'backend/**'
   pull_request:
-    branches: [main]
+    branches: [ "main" ]
     paths:
       - 'backend/**'
 
@@ -15,30 +15,33 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend
+        working-directory: ./backend
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
 
-      - name: Restore dependencies
-        run: dotnet restore
+    - name: Restore dependencies
+      run: dotnet restore
 
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
 
-      - name: Run tests
-        run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
+    - name: Run BDD & Unit Tests
+      run: dotnet test --no-build --configuration Release --verbosity normal
 
-      - name: Upload coverage reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-coverage
-          path: backend/**/coverage.cobertura.xml
-          retention-days: 7
+    - name: Publish Production Artifact
+      if: github.ref == 'refs/heads/main'
+      run: dotnet publish NutriExercise.Api/NutriExercise.Api.csproj -c Release -o ./publish /p:UseAppHost=false
+
+    - name: Upload Artifact
+      if: github.ref == 'refs/heads/main'
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-production-build
+        path: ./backend/publish/
