@@ -10,15 +10,15 @@ public class AppDbContext : DbContext
     {
     }
 
-    public DbSet<User> Users => Set<User>();
+    public virtual DbSet<User> Users => Set<User>();
 
-    public DbSet<Routine> Routines => Set<Routine>();
+    public virtual DbSet<Routine> Routines => Set<Routine>();
 
-    public DbSet<Diet> Diets => Set<Diet>();
+    public virtual DbSet<Diet> Diets => Set<Diet>();
 
-    public DbSet<ResearchDocument> ResearchDocuments => Set<ResearchDocument>();
+    public virtual DbSet<ResearchDocument> ResearchDocuments => Set<ResearchDocument>();
 
-    public DbSet<AiInteraction> AiInteractions => Set<AiInteraction>();
+    public virtual DbSet<AiInteraction> AiInteractions => Set<AiInteraction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

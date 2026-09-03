@@ -20,6 +20,11 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 
 
 
+
+## [2026-09-03]
+
+- \`1b1acea\` feat(backend): implement daily log parser with Gherkin BDD and ignore auto-generated feature files
+
 ## [2026-09-03]
 
 - \`b8219d0\` feat(backend): implement JSONL dataset export endpoint for LLM fine-tuning

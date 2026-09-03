@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutriExercise.Infrastructur
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutriExercise.Tests", "NutriExercise.Tests\NutriExercise.Tests.csproj", "{BAA87176-E43D-4A0B-B303-3B8AEB8DC698}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutriExercise.Specs", "NutriExercise.Specs\NutriExercise.Specs.csproj", "{732FF851-0E4B-422D-BCB5-EAF4CB703E3A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{BAA87176-E43D-4A0B-B303-3B8AEB8DC698}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BAA87176-E43D-4A0B-B303-3B8AEB8DC698}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BAA87176-E43D-4A0B-B303-3B8AEB8DC698}.Release|Any CPU.Build.0 = Release|Any CPU
+		{732FF851-0E4B-422D-BCB5-EAF4CB703E3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{732FF851-0E4B-422D-BCB5-EAF4CB703E3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{732FF851-0E4B-422D-BCB5-EAF4CB703E3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{732FF851-0E4B-422D-BCB5-EAF4CB703E3A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
