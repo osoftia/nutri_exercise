@@ -40,6 +40,33 @@ public class InteractionController : ControllerBase
 
         return Ok();
     }
+
+    [HttpGet("export-dataset")]
+    public async Task<IActionResult> ExportDataset()
+    {
+        var interactions = await _dbContext.AiInteractions
+            .Where(i => i.IsCorrect == true)
+            .OrderBy(i => i.CreatedAt)
+            .ToListAsync();
+
+        var dataset = interactions.Select(i => new
+        {
+            instruction = $"Genera una rutina de ejercicios basada en esta petición: {i.UserPrompt}",
+            context = i.UsedContext,
+            response = i.GeneratedRoutine
+        });
+
+        var jsonlString = string.Join(
+            "\n",
+            dataset.Select(d => System.Text.Json.JsonSerializer.Serialize(d))
+        );
+
+        return File(
+            System.Text.Encoding.UTF8.GetBytes(jsonlString),
+            "application/json-lines",
+            "nutri_dataset.jsonl"
+        );
+    }
 }
 
 public class FeedbackRequest
