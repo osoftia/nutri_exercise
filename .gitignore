@@ -41,3 +41,6 @@ npm-debug.log*
 
 # Prompt files
 PROMPT*
+
+# Reqnroll auto-generated code-behind
+**/*.feature.cs

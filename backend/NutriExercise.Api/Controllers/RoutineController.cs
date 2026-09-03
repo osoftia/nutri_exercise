@@ -35,9 +35,26 @@ public class RoutineController : ControllerBase
         var relevantDocs = await _documentRepository.SearchSimilarDocumentsAsync(queryVector);
 
         var contextText = string.Join("\n", relevantDocs.Select(d => d.Content));
-        var augmentedPrompt =
-            $"Utilizando EXCLUSIVAMENTE este conocimiento científico:\n{contextText}\n\n" +
-            $"Genera una rutina basada en esta petición del usuario: {request.UserPreferences}";
+        var augmentedPrompt = $@"Utilizando EXCLUSIVAMENTE este conocimiento científico:
+{contextText}
+
+Genera una rutina basada en esta petición del usuario: {request.UserPreferences}
+
+REGLA ESTRICTA: Tu respuesta DEBE ser un objeto JSON válido con la siguiente estructura exacta y sin ningún texto adicional antes o después:
+{{
+  ""routineName"": ""Nombre motivador de la rutina"",
+  ""summary"": ""Resumen de la estrategia basada en el contexto"",
+  ""exercises"": [
+    {{
+      ""name"": ""Nombre del ejercicio"",
+      ""sets"": 4,
+      ""reps"": ""8-12"",
+      ""rest"": ""90 segundos"",
+      ""notes"": ""Notas de técnica""
+    }}
+  ],
+  ""nutritionAdvice"": ""Consejo nutricional clave""
+}}";
 
         var generatedText = await _aiService.GenerateRoutineAsync(augmentedPrompt);
 
