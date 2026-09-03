@@ -162,7 +162,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildGoalField() {
     return DropdownButtonFormField<FitnessGoal>(
       key: const Key('profile_goal_field'),
-      initialValue: _goal,
+      // ignore: deprecated_member_use
+      value: _goal,
       decoration: const InputDecoration(labelText: 'Fitness Goal'),
       items: FitnessGoal.values
           .map(
