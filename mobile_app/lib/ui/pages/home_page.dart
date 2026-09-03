@@ -6,6 +6,7 @@ import '../../core/constants/muscle_group_map.dart';
 import '../../core/data/diet_repository.dart';
 import '../../core/data/routine_repository.dart';
 import '../../core/models/diet_models.dart';
+import '../../core/state/muscle_tamagotchi_state.dart';
 import '../../core/providers/environment_provider.dart';
 import '../../core/providers/routine_provider.dart';
 import '../../core/providers/wizard_provider.dart';
@@ -33,11 +34,22 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<List<DailyMenu>> _menus;
+  final MuscleTamagotchiState _tamagotchi = MuscleTamagotchiState();
 
   @override
   void initState() {
     super.initState();
     _menus = widget.dietRepository.getDailyMenus();
+  }
+
+  @override
+  void dispose() {
+    _tamagotchi.dispose();
+    super.dispose();
+  }
+
+  void _simulateCoreWorkout() {
+    _tamagotchi.applyGrowth([MuscleTamagotchiGroup.core]);
   }
 
   void _launchWizard() {
@@ -132,7 +144,12 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: AppSpacing.xxl),
         const AppHeading('Muscle Map'),
         const SizedBox(height: AppSpacing.md),
-        const MuscleGroupVisualizer(),
+        MuscleGroupVisualizer(tamagotchiState: _tamagotchi),
+        const SizedBox(height: AppSpacing.sm),
+        CustomButton(
+          label: 'Simulate Workout (Core)',
+          onPressed: _simulateCoreWorkout,
+        ),
         const SizedBox(height: AppSpacing.xxl),
         const AppHeading('Exercises'),
         const SizedBox(height: AppSpacing.md),

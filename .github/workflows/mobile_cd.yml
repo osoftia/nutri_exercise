@@ -70,11 +70,11 @@ jobs:
         run: flutter pub get
 
       - name: Build APK (release)
-        run: flutter build apk --release
+        run: flutter build apk --release --split-per-abi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: mobile_app/build/app/outputs/flutter-apk/app-release.apk
+          path: mobile_app/build/app/outputs/flutter-apk/*-release.apk
           retention-days: 30

@@ -3,13 +3,19 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/muscle_vectors.dart';
 import '../../core/providers/routine_provider.dart';
+import '../../core/state/muscle_tamagotchi_state.dart';
 import '../../core/theme/app_theme.dart';
 import 'interactive_body_map.dart';
 
 class MuscleGroupVisualizer extends StatelessWidget {
-  const MuscleGroupVisualizer({super.key, this.onMuscleTap});
+  const MuscleGroupVisualizer({
+    super.key,
+    this.onMuscleTap,
+    this.tamagotchiState,
+  });
 
   final ValueChanged<String?>? onMuscleTap;
+  final MuscleTamagotchiState? tamagotchiState;
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +25,7 @@ class MuscleGroupVisualizer extends StatelessWidget {
         InteractiveBodyMap(
           activeRegions: provider.activeMuscleRegions,
           selectedMuscle: provider.selectedMuscleRegion,
+          tamagotchiState: tamagotchiState,
           onMuscleSelected: (id) {
             provider.selectMuscleRegion(id);
             onMuscleTap?.call(id);
