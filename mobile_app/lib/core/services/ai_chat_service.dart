@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../constants/api_constants.dart';
@@ -21,6 +23,14 @@ class AiChatTimeoutException implements Exception {
 
   @override
   String toString() => 'The assistant is taking too long.';
+}
+
+/// The backend could not be reached (connection refused / no network).
+class AiChatNetworkException implements Exception {
+  const AiChatNetworkException();
+
+  @override
+  String toString() => 'The assistant is unreachable.';
 }
 
 /// The backend responded with a non-success HTTP status.
@@ -75,8 +85,15 @@ class AiChatService {
             }),
           )
           .timeout(timeout);
-    } on TimeoutException {
+    } on TimeoutException catch (e) {
+      debugPrint('API Error: $e');
       throw const AiChatTimeoutException();
+    } on SocketException catch (e) {
+      debugPrint('API Error: $e');
+      throw const AiChatNetworkException();
+    } catch (e) {
+      debugPrint('API Error: $e');
+      throw const AiChatNetworkException();
     }
 
     if (response.statusCode != 200) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/state/ai_chat_controller.dart';
 import '../../core/state/daily_log_controller.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/state/notification_navigation_controller.dart';
 import '../../core/state/nutrition_controller.dart';
 import '../../core/state/projection_controller.dart';
@@ -81,8 +82,25 @@ class _MainShellPageState extends State<MainShellPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(child: _tabs[_currentIndex]),
-      floatingActionButton: NeumorphicFab(
-        onPressed: () => showAiChatSheet(context, widget.aiChatController),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            key: const Key('daily_log_fab'),
+            onPressed: () =>
+                showDailyLogSheet(context, widget.dailyLogController),
+            backgroundColor: AppColors.primary500,
+            foregroundColor: AppColors.textHigh,
+            icon: const Icon(Icons.edit_note),
+            label: const Text('Daily Log'),
+            tooltip: 'Daily Log',
+          ),
+          const SizedBox(height: AppSpacing.md),
+          NeumorphicFab(
+            onPressed: () => showAiChatSheet(context, widget.aiChatController),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,

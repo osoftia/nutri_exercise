@@ -1,7 +1,3 @@
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
-
 /// Central configuration for the NutriExercise backend API.
 class ApiConstants {
   ApiConstants._();
@@ -13,22 +9,16 @@ class ApiConstants {
   /// `flutter run --dart-define=API_BASE_URL=http://192.168.1.10:5039`.
   static const String _dartDefine = String.fromEnvironment('API_BASE_URL');
 
-  /// Base URL of the C# backend.
+  /// Base URL of the C# backend (the Mac hosting the backend + Ollama on the
+  /// LAN, port 5039).
   ///
-  /// Milestone 5 targets the Mac hosting the backend + Ollama on the LAN.
-  /// Set the Mac's local IP at build/run time, e.g.:
-  /// `flutter run --dart-define=API_BASE_URL=http://192.168.1.42:5039`.
-  ///
-  /// Fallbacks when no override is provided:
-  /// - Android emulators reach the host machine through `10.0.2.2`.
-  /// - iOS simulators and web run on `localhost`.
-  /// - A physical device should pass its Mac host via `--dart-define=API_BASE_URL`.
+  /// The default points at the Mac's LAN IP. Override at build/run time when
+  /// the Mac's IP changes or when testing on an emulator, e.g.:
+  /// `flutter run --dart-define=API_BASE_URL=http://192.168.1.6:5039`
+  /// (Android emulators reach the host through `10.0.2.2`).
   static String get baseUrl {
     if (_dartDefine.isNotEmpty) return _dartDefine;
-    if (!kIsWeb && Platform.isAndroid) {
-      return 'http://192.168.1.2:$defaultPort';
-    }
-    return 'http://localhost:$defaultPort';
+    return 'http://192.168.1.6:$defaultPort';
   }
 
   /// Endpoint that generates (and persists) an AI workout routine.
@@ -39,4 +29,8 @@ class ApiConstants {
 
   /// Endpoint that bridges a chat message to the local Ollama model.
   static String get aiChatPath => '/api/ai/chat';
+
+  /// Endpoint that parses a free-text daily log into structured
+  /// nutrition/workout data (calories, macros, muscle groups).
+  static String get logParsePath => '/api/log/parse';
 }
