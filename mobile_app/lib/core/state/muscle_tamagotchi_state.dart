@@ -33,8 +33,37 @@ class MuscleTamagotchiState extends ChangeNotifier {
 
   final Map<MuscleTamagotchiGroup, double> _mass = {};
 
+  double _coreFullness = 0.0;
+  bool _coreBloating = false;
+
   /// Current mass of [group], always within `[0.0, 1.0]`.
   double massOf(MuscleTamagotchiGroup group) => _mass[group] ?? baseline;
+
+  /// Calories-driven core fullness (`0..1`), raised each time nutrition is
+  /// logged and clipped at `1.0`. Drives the permanent (settled) core scale.
+  double get coreFullness => _coreFullness;
+
+  /// Whether the core is currently mid-bloat (transient) after eating.
+  bool get coreIsBloating => _coreBloating;
+
+  /// Fires the "just ate" reaction: temporarily bloats the core and raises its
+  /// permanent fullness in proportion to [calories].
+  void applyNutrition(int calories) {
+    final gain = calories / 2000;
+    _coreFullness = (_coreFullness + gain).clamp(0.0, 1.0);
+    _coreBloating = true;
+    notifyListeners();
+  }
+
+  /// Ends the transient bloat; the increased fullness (permanent size) remains.
+  void settleCore() {
+    if (!_coreBloating) return;
+    _coreBloating = false;
+    notifyListeners();
+  }
+
+  /// The permanent core scale derived from [coreFullness] (never below `1.0`).
+  double settledCoreScale() => 1.0 + 0.4 * _coreFullness;
 
   /// Tier derived from [group]'s mass.
   MuscleTier tierOf(MuscleTamagotchiGroup group) {

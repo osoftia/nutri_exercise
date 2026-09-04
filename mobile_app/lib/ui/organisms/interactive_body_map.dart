@@ -11,6 +11,11 @@ const double _kPadFactor = 0.03;
 const double _kAspectRatio = 1.6;
 const double _kMassScale = 0.5;
 const Duration _kGlowDuration = Duration(milliseconds: 300);
+const Duration _kBloatDuration = Duration(milliseconds: 700);
+const double _kBloatOvershoot = 0.35;
+
+/// The red tint applied to the Core region while it is bloating.
+const Color _kCoreBloatColor = Color(0xFFEF4444);
 
 /// Size factor applied to a muscle region for a given mass.
 ///
@@ -36,6 +41,23 @@ Path _scaleNormalizedPath(Path path, double scale) {
   );
 }
 
+/// Stretches [path] horizontally around its centre (non-uniform scale).
+Path _scaleNormalizedPathX(Path path, double scale) {
+  if (scale == 1.0) return path;
+  final bounds = path.getBounds();
+  final cx = bounds.center.dx;
+  return path.transform(
+    (Matrix4.identity()
+          // ignore: deprecated_member_use
+          ..translate(cx, 0.0, 0.0)
+          // ignore: deprecated_member_use
+          ..scale(scale, 1.0, 1.0)
+          // ignore: deprecated_member_use
+          ..translate(-cx, 0.0, 0.0))
+        .storage,
+  );
+}
+
 class InteractiveBodyMap extends StatefulWidget {
   const InteractiveBodyMap({
     super.key,
@@ -43,6 +65,7 @@ class InteractiveBodyMap extends StatefulWidget {
     this.onMuscleSelected,
     this.activeRegions = const {},
     this.tamagotchiState,
+    this.bodyWidthFactor = 1.0,
   });
 
   final String? selectedMuscle;
@@ -50,15 +73,21 @@ class InteractiveBodyMap extends StatefulWidget {
   final Set<String> activeRegions;
   final MuscleTamagotchiState? tamagotchiState;
 
+  /// Baseline body width factor (from the user's BMI); `1.0` is neutral.
+  final double bodyWidthFactor;
+
   @override
   State<InteractiveBodyMap> createState() => _InteractiveBodyMapState();
 }
 
 class _InteractiveBodyMapState extends State<InteractiveBodyMap>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late String? _selected;
   late final AnimationController _glowController;
+  late final AnimationController _bloatController;
   double _glow = 0;
+  double _bloat = 0;
+  bool _coreBloating = false;
   MuscleTamagotchiState? _tamagotchiState;
   int _revision = 0;
 
@@ -71,6 +100,15 @@ class _InteractiveBodyMapState extends State<InteractiveBodyMap>
     _glowController.addListener(() {
       setState(() => _glow = _glowController.value);
     });
+    _bloatController = AnimationController(vsync: this, duration: _kBloatDuration)
+      ..addListener(() {
+        setState(() => _bloat = _bloatController.value);
+      })
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          _tamagotchiState?.settleCore();
+        }
+      });
     _listenToTamagotchi();
   }
 
@@ -78,9 +116,24 @@ class _InteractiveBodyMapState extends State<InteractiveBodyMap>
     _tamagotchiState?.removeListener(_onTamagotchiChanged);
     _tamagotchiState = widget.tamagotchiState;
     _tamagotchiState?.addListener(_onTamagotchiChanged);
+    _syncBloat();
   }
 
-  void _onTamagotchiChanged() => setState(() => _revision++);
+  void _onTamagotchiChanged() {
+    setState(() => _revision++);
+    _syncBloat();
+  }
+
+  void _syncBloat() {
+    final bloat = _tamagotchiState?.coreIsBloating ?? false;
+    if (bloat && !_coreBloating) {
+      _bloatController.forward(from: 0.0);
+    }
+    _coreBloating = bloat;
+    if (!bloat) {
+      _bloat = 0;
+    }
+  }
 
   @override
   void didUpdateWidget(InteractiveBodyMap oldWidget) {
@@ -97,6 +150,7 @@ class _InteractiveBodyMapState extends State<InteractiveBodyMap>
   void dispose() {
     _tamagotchiState?.removeListener(_onTamagotchiChanged);
     _glowController.dispose();
+    _bloatController.dispose();
     super.dispose();
   }
 
@@ -127,6 +181,9 @@ class _InteractiveBodyMapState extends State<InteractiveBodyMap>
                 activeRegions: widget.activeRegions,
                 tamagotchiState: _tamagotchiState,
                 revision: _revision,
+                bodyWidthFactor: widget.bodyWidthFactor,
+                coreBloating: _coreBloating,
+                bloat: _bloat,
               ),
             ),
           );
@@ -146,10 +203,16 @@ Rect _figureBox(MuscleView view, Size size) {
       : Rect.fromLTWH(left + side + pad, top, side, side);
 }
 
-Path _screenPath(MuscleRegion region, Size size, {double scale = 1.0}) {
+Path _screenPath(
+  MuscleRegion region,
+  Size size, {
+  double scale = 1.0,
+  double widthFactor = 1.0,
+}) {
   final box = _figureBox(region.view, size);
   final normalized = _scaleNormalizedPath(region.normalizedPath, scale);
-  final scaled = normalized.transform(
+  final widthAdjusted = _scaleNormalizedPathX(normalized, widthFactor);
+  final scaled = widthAdjusted.transform(
       (Matrix4.identity()
           // ignore: deprecated_member_use
           ..scale(box.width, box.height, 1.0))
@@ -172,6 +235,9 @@ class _BodyMapPainter extends CustomPainter {
     required this.activeRegions,
     required this.tamagotchiState,
     required this.revision,
+    required this.bodyWidthFactor,
+    required this.coreBloating,
+    required this.bloat,
   });
 
   final String? selectedMuscle;
@@ -179,6 +245,9 @@ class _BodyMapPainter extends CustomPainter {
   final Set<String> activeRegions;
   final MuscleTamagotchiState? tamagotchiState;
   final int revision;
+  final double bodyWidthFactor;
+  final bool coreBloating;
+  final double bloat;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -241,25 +310,53 @@ class _BodyMapPainter extends CustomPainter {
   }
 
   Path _regionPath(MuscleRegion region, Size size) {
-    if (tamagotchiState == null) return _screenPath(region, size);
+    if (tamagotchiState == null) {
+      return _screenPath(region, size, widthFactor: bodyWidthFactor);
+    }
     final group = tamagotchiGroupForRegion(region.id);
     final mass = group == null
         ? MuscleTamagotchiState.baseline
         : tamagotchiState!.massOf(group);
-    return _screenPath(region, size, scale: scaleForMass(mass));
+    final scale = _regionScale(region, mass);
+    return _screenPath(
+      region,
+      size,
+      scale: scale,
+      widthFactor: bodyWidthFactor,
+    );
+  }
+
+  /// The render scale for [region]: the core region bloats (overshoots its
+  /// settled scale while [coreBloating]) then settles at its permanent,
+  /// fullness-proportional size; every other region uses a plain mass scale.
+  double _regionScale(MuscleRegion region, double mass) {
+    final base = scaleForMass(mass);
+    if (tamagotchiGroupForRegion(region.id) != MuscleTamagotchiGroup.core) {
+      return base;
+    }
+    final settled = tamagotchiState!.settledCoreScale();
+    if (coreBloating) {
+      final overshoot = settled * (1.0 + _kBloatOvershoot * (1.0 - bloat));
+      return overshoot;
+    }
+    return settled;
   }
 
   Color _regionColor(MuscleRegion region) {
     if (tamagotchiState == null) return AppColors.neutralMuscle;
     final group = tamagotchiGroupForRegion(region.id);
     if (group == null) return AppColors.neutralMuscle;
+    if (group == MuscleTamagotchiGroup.core && coreBloating) {
+      return _kCoreBloatColor;
+    }
     return tierColor(tamagotchiState!.tierOf(group));
   }
 
   void _paintSilhouette(Canvas canvas, Size size, MuscleView view) {
     final box = _figureBox(view, size);
     final source = view == MuscleView.front ? frontSilhouette : backSilhouette;
-    final path = source.transform(
+    final widthAdjusted = _scaleNormalizedPathX(source, bodyWidthFactor);
+    final path = widthAdjusted.transform(
       (Matrix4.identity()
           // ignore: deprecated_member_use
         ..scale(box.width, box.height, 1.0))
@@ -308,6 +405,9 @@ class _BodyMapPainter extends CustomPainter {
     return oldDelegate.selectedMuscle != selectedMuscle ||
         oldDelegate.glow != glow ||
         oldDelegate.activeRegions != activeRegions ||
-        oldDelegate.revision != revision;
+        oldDelegate.revision != revision ||
+        oldDelegate.bodyWidthFactor != bodyWidthFactor ||
+        oldDelegate.coreBloating != coreBloating ||
+        oldDelegate.bloat != bloat;
   }
 }

@@ -12,10 +12,14 @@ class MuscleGroupVisualizer extends StatelessWidget {
     super.key,
     this.onMuscleTap,
     this.tamagotchiState,
+    this.bodyWidthFactor = 1.0,
   });
 
   final ValueChanged<String?>? onMuscleTap;
   final MuscleTamagotchiState? tamagotchiState;
+
+  /// Baseline body width factor (from BMI) forwarded to the avatar.
+  final double bodyWidthFactor;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +30,7 @@ class MuscleGroupVisualizer extends StatelessWidget {
           activeRegions: provider.activeMuscleRegions,
           selectedMuscle: provider.selectedMuscleRegion,
           tamagotchiState: tamagotchiState,
+          bodyWidthFactor: bodyWidthFactor,
           onMuscleSelected: (id) {
             provider.selectMuscleRegion(id);
             onMuscleTap?.call(id);
