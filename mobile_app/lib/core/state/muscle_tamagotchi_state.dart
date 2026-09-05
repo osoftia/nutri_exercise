@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 /// The four gamified muscle groups of the tamagotchi avatar.
 enum MuscleTamagotchiGroup { core, arms, chest, legs }
@@ -35,6 +36,23 @@ class MuscleTamagotchiState extends ChangeNotifier {
 
   double _coreFullness = 0.0;
   bool _coreBloating = false;
+
+  /// Per-region color overrides keyed by region id (e.g. `chest`).
+  /// Applied by the body map before falling back to tier colors.
+  Map<String, Color> regionColorOverrides = {};
+
+  /// Replaces the active color overrides and notifies listeners.
+  void setOverrides(Map<String, Color> overrides) {
+    regionColorOverrides = Map<String, Color>.from(overrides);
+    notifyListeners();
+  }
+
+  /// Clears all color overrides and notifies listeners.
+  void clearOverrides() {
+    if (regionColorOverrides.isEmpty) return;
+    regionColorOverrides = {};
+    notifyListeners();
+  }
 
   /// Current mass of [group], always within `[0.0, 1.0]`.
   double massOf(MuscleTamagotchiGroup group) => _mass[group] ?? baseline;

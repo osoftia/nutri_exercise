@@ -349,6 +349,9 @@ class _BodyMapPainter extends CustomPainter {
     if (group == MuscleTamagotchiGroup.core && coreBloating) {
       return _kCoreBloatColor;
     }
+    if (tamagotchiState!.regionColorOverrides.containsKey(region.id)) {
+      return tamagotchiState!.regionColorOverrides[region.id]!;
+    }
     return tierColor(tamagotchiState!.tierOf(group));
   }
 
