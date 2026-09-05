@@ -3,22 +3,22 @@ import 'package:flutter/foundation.dart';
 import '../data/daily_log_repository.dart';
 import '../models/daily_log.dart';
 import '../models/log_parse_response.dart';
-import '../services/log_parse_service.dart';
+import '../services/smart_logger.dart';
 
 /// Owns the current day's free-text summary and notifies listeners on changes.
 ///
-/// When a [LogParseService] is provided, [submit] also sends the text to the
-/// backend AI parser (`POST /api/log/parse`) so the UI can surface the parsed
-/// calories/macros after a successful save.
+/// When a [SmartLogger] is provided, [submit] resolves the text through the
+/// cache-first logger (local SQLite cache → backend AI parser) and persists the
+/// parsed result alongside the raw text.
 class DailyLogController extends ChangeNotifier {
   DailyLogController({
     required DailyLogRepository repository,
-    LogParseService? parseService,
+    SmartLogger? smartLogger,
   }) : _repository = repository,
-       _parseService = parseService;
+       _smartLogger = smartLogger;
 
   final DailyLogRepository _repository;
-  final LogParseService? _parseService;
+  final SmartLogger? _smartLogger;
 
   String _date = DailyLog.dateKey(DateTime.now());
   String _text = '';
@@ -36,7 +36,7 @@ class DailyLogController extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
-  /// Whether a backend parse request is in flight.
+  /// Whether a parse request is in flight.
   bool get isParsing => _isParsing;
 
   String? get errorMessage => _errorMessage;
@@ -63,6 +63,9 @@ class DailyLogController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Returns the most recent distinct raw texts for autocomplete suggestions.
+  Future<List<String>> loadSuggestions() => _repository.getAllTexts();
+
   /// Persists a trimmed summary for the current date.
   ///
   /// Returns `false` when [text] is empty (and nothing is saved), otherwise
@@ -82,8 +85,8 @@ class DailyLogController extends ChangeNotifier {
     return true;
   }
 
-  /// Persists the summary and, when a parser is configured, sends it to the
-  /// backend for AI analysis.
+  /// Persists the summary and, when a [SmartLogger] is configured, resolves it
+  /// through the cache-first logger (local cache → backend AI parser).
   ///
   /// Returns `false` for empty input (nothing saved). On parse failure the
   /// summary is still saved locally and [parseError] is populated so the UI can
@@ -97,20 +100,27 @@ class DailyLogController extends ChangeNotifier {
     _parseResult = null;
     notifyListeners();
 
-    final saved = await save(trimmed);
-
-    final parseService = _parseService;
-    if (parseService != null) {
+    final smartLogger = _smartLogger;
+    if (smartLogger != null) {
       try {
-        _parseResult = await parseService.parse(trimmed);
+        final parsed = await smartLogger.parse(trimmed);
+        _parseResult = parsed;
+        await _repository.saveWithParse(
+          DailyLog(date: _date, text: trimmed),
+          parsed,
+        );
+        _text = trimmed;
       } catch (_) {
         _parseError =
             'Could not reach the AI analysis service. Your log was saved.';
+        await save(trimmed);
       }
+    } else {
+      await save(trimmed);
     }
 
     _isParsing = false;
     notifyListeners();
-    return saved;
+    return _parseResult != null || _smartLogger == null;
   }
 }

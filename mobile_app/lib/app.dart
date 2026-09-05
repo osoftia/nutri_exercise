@@ -18,6 +18,7 @@ import 'core/mocks/mock_schedule_repository.dart';
 import 'core/services/ai_chat_service.dart';
 import 'core/services/log_parse_service.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/smart_logger.dart';
 import 'core/state/ai_chat_controller.dart';
 import 'core/state/daily_log_controller.dart';
 import 'core/state/notification_navigation_controller.dart';
@@ -49,9 +50,13 @@ class _NutriAppState extends State<NutriApp> {
   void initState() {
     super.initState();
     configureLocalTimeZone();
+    final dailyLogRepository = _dailyLogRepository();
     _dailyLogController = DailyLogController(
-      repository: _dailyLogRepository(),
-      parseService: LogParseService(baseUrl: ApiConstants.baseUrl),
+      repository: dailyLogRepository,
+      smartLogger: SmartLogger(
+        repository: dailyLogRepository,
+        parseService: LogParseService(baseUrl: ApiConstants.baseUrl),
+      ),
     );
     _notificationService = NotificationService(
       onTap: (_) => _notificationNav.requestDailyLog(),

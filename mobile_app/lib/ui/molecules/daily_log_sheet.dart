@@ -7,37 +7,51 @@ import '../atoms/custom_button.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
 
-/// Opens the daily check-in summary sheet as a modal bottom sheet.
+/// Opens the daily check-in summary sheet as a modal bottom sheet, fetching
+/// historical suggestions for the autocomplete input.
 Future<void> showDailyLogSheet(
   BuildContext context,
   DailyLogController controller,
-) {
+) async {
+  final suggestions = await controller.loadSuggestions();
+  if (!context.mounted) return;
+
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => DailyLogSheet(controller: controller),
+    builder: (context) => DailyLogSheet(
+      controller: controller,
+      suggestions: suggestions,
+    ),
   );
 }
 
 /// Neumorphic text-input surface for the daily "what did you eat and train"
 /// summary.
 ///
-/// Owns and disposes its [TextEditingController] in [State.dispose]. Submitting
-/// persists the summary through the injected [DailyLogController] and, when a
-/// parser is configured, requests an AI analysis whose calories/macros are
-/// shown in a success [SnackBar].
+/// The input is an [Autocomplete] backed by [suggestions] (historical logs).
+/// Submitting persists the summary through the injected [DailyLogController]
+/// and, when a parser is configured, resolves it through the cache-first
+/// [SmartLogger] whose calories/macros are shown in a success [SnackBar].
 class DailyLogSheet extends StatefulWidget {
-  const DailyLogSheet({super.key, required this.controller});
+  const DailyLogSheet({
+    super.key,
+    required this.controller,
+    this.suggestions = const [],
+  });
 
   final DailyLogController controller;
+
+  /// Historical raw texts used for autocomplete suggestions.
+  final List<String> suggestions;
 
   @override
   State<DailyLogSheet> createState() => _DailyLogSheetState();
 }
 
 class _DailyLogSheetState extends State<DailyLogSheet> {
-  final TextEditingController _controller = TextEditingController();
+  TextEditingController? _fieldController;
 
   @override
   void initState() {
@@ -45,23 +59,19 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
     _load();
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   Future<void> _load() async {
     await widget.controller.load();
     if (!mounted) return;
-    _controller.text = widget.controller.text;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _fieldController?.text = widget.controller.text;
+    });
   }
 
   Future<void> _submit() async {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
 
-    final saved = await widget.controller.submit(_controller.text);
+    final saved = await widget.controller.submit(_fieldController?.text ?? '');
     if (!saved || !mounted) return;
 
     final result = widget.controller.parseResult;
@@ -112,15 +122,40 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
                     const SizedBox(height: AppSpacing.xs),
                     const AppCaption('What did you eat and train today?'),
                     const SizedBox(height: AppSpacing.lg),
-                    TextField(
-                      key: const Key('daily_log_input'),
-                      controller: _controller,
-                      maxLines: 5,
-                      textInputAction: TextInputAction.newline,
-                      decoration: const InputDecoration(
-                        hintText: 'Type your summary…',
-                        border: OutlineInputBorder(),
-                      ),
+                    Autocomplete<String>(
+                      optionsBuilder: (TextEditingValue value) {
+                        if (value.text.isEmpty) {
+                          return const Iterable<String>.empty();
+                        }
+                        final query = value.text.toLowerCase();
+                        return widget.suggestions
+                            .where(
+                              (s) => s.toLowerCase().contains(query),
+                            )
+                            .toList();
+                      },
+                      onSelected: (String selection) {
+                        _fieldController?.text = selection;
+                      },
+                      fieldViewBuilder: (
+                        context,
+                        textController,
+                        focusNode,
+                        onSubmitted,
+                      ) {
+                        _fieldController = textController;
+                        return TextField(
+                          key: const Key('daily_log_input'),
+                          controller: textController,
+                          focusNode: focusNode,
+                          maxLines: 5,
+                          textInputAction: TextInputAction.newline,
+                          decoration: const InputDecoration(
+                            hintText: 'Type your summary…',
+                            border: OutlineInputBorder(),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     Row(

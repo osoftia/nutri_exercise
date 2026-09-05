@@ -22,11 +22,14 @@ class UserProfile {
   });
 
   /// Blank profile used to pre-fill a fresh form (nothing saved yet).
+  ///
+  /// Defaults to a sensible 60 kg / 1.70 m so BMI calculations and the avatar
+  /// baseline are valid before the user saves their own profile.
   static const UserProfile empty = UserProfile(
     name: '',
     age: 0,
-    weightKg: 0,
-    heightCm: 0,
+    weightKg: 60,
+    heightCm: 170,
     goal: FitnessGoal.muscleGain,
   );
 

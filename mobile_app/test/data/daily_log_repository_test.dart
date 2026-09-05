@@ -22,7 +22,8 @@ void main() {
             CREATE TABLE daily_logs (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               date TEXT NOT NULL UNIQUE,
-              text TEXT NOT NULL
+              text TEXT NOT NULL,
+              parsed_json TEXT
             )
           ''');
         },

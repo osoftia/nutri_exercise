@@ -54,6 +54,14 @@ void main() {
             )
           ''');
           await db.execute('''
+            CREATE TABLE daily_logs (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              date TEXT NOT NULL UNIQUE,
+              text TEXT NOT NULL,
+              parsed_json TEXT
+            )
+          ''');
+          await db.execute('''
             CREATE TABLE projection_plan (
               id INTEGER PRIMARY KEY CHECK (id = 1),
               start_weight_kg REAL NOT NULL,

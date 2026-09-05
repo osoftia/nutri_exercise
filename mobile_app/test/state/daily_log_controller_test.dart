@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_daily_log_repository.dart';
 import 'package:nutri_mobile_app/core/services/log_parse_service.dart';
+import 'package:nutri_mobile_app/core/services/smart_logger.dart';
 import 'package:nutri_mobile_app/core/state/daily_log_controller.dart';
 
 void main() {
@@ -59,11 +60,18 @@ void main() {
       client: MockClient((_) async => http.Response(body, status)),
     );
 
+    SmartLogger smartLogger(MockDailyLogRepository repo, String body, int status) =>
+        SmartLogger(
+          repository: repo,
+          parseService: parseService(body, status),
+        );
+
     test('parses and saves, exposing the parsed result', () async {
       final repo = MockDailyLogRepository();
       final controller = DailyLogController(
         repository: repo,
-        parseService: parseService(
+        smartLogger: smartLogger(
+          repo,
           jsonEncode({
             'calories': 400,
             'macros': {'protein': 30, 'carbs': 20, 'fat': 10},
@@ -86,7 +94,7 @@ void main() {
       final repo = MockDailyLogRepository();
       final controller = DailyLogController(
         repository: repo,
-        parseService: parseService('boom', 500),
+        smartLogger: smartLogger(repo, 'boom', 500),
       );
       await controller.load(date: '2026-09-03');
 
@@ -102,7 +110,7 @@ void main() {
       final repo = MockDailyLogRepository();
       final controller = DailyLogController(
         repository: repo,
-        parseService: parseService('{}', 200),
+        smartLogger: smartLogger(repo, '{}', 200),
       );
       await controller.load(date: '2026-09-03');
 

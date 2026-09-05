@@ -49,6 +49,16 @@ class LogParseResponse {
     );
   }
 
+  /// Serializes back to the JSON shape produced by [fromJson] so parsed results
+  /// can be cached in SQLite.
+  Map<String, dynamic> toJson() => {
+    'calories': calories,
+    'protein': protein,
+    'carbs': carbs,
+    'fat': fat,
+    'muscleGroups': muscleGroups,
+  };
+
   static int? _readInt(dynamic value) {
     if (value is int) return value;
     if (value is num) return value.toInt();

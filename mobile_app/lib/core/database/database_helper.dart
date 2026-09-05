@@ -16,7 +16,7 @@ class DatabaseHelper {
   DatabaseHelper({Database? database}) : _databaseOverride = database;
 
   static const String _dbName = 'nutri_exercise.db';
-  static const int _dbVersion = 3;
+  static const int _dbVersion = 4;
 
   final Database? _databaseOverride;
   Database? _database;
@@ -75,7 +75,8 @@ class DatabaseHelper {
       CREATE TABLE daily_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL UNIQUE,
-        text TEXT NOT NULL
+        text TEXT NOT NULL,
+        parsed_json TEXT
       )
     ''');
     await _createProjectionTables(db);
@@ -93,6 +94,11 @@ class DatabaseHelper {
           text TEXT NOT NULL
         )
       ''');
+    }
+    if (oldVersion < 4) {
+      await db.execute(
+        'ALTER TABLE daily_logs ADD COLUMN parsed_json TEXT',
+      );
     }
   }
 
@@ -209,14 +215,44 @@ class DatabaseHelper {
     return rows.isEmpty ? null : rows.first;
   }
 
-  /// Upserts the daily summary for [log.date] (one row per date).
-  Future<void> upsertDailyLog(DailyLog log) async {
+  /// Upserts the daily summary for [log.date] (one row per date), optionally
+  /// storing the AI-parsed JSON alongside the raw text.
+  Future<void> upsertDailyLog(DailyLog log, {String? parsedJson}) async {
     final db = await database;
     await db.insert(
       'daily_logs',
-      {'date': log.date, 'text': log.text},
+      {
+        'date': log.date,
+        'text': log.text,
+        if (parsedJson != null) 'parsed_json': parsedJson,
+      },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  /// Returns the row whose raw text exactly matches [text], or `null`.
+  Future<Map<String, Object?>?> getDailyLogByText(String text) async {
+    final db = await database;
+    final rows = await db.query(
+      'daily_logs',
+      where: 'text = ?',
+      whereArgs: [text],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Returns the most recent distinct raw texts (for autocomplete suggestions).
+  Future<List<String>> getAllDailyLogTexts() async {
+    final db = await database;
+    final rows = await db.query(
+      'daily_logs',
+      columns: ['text'],
+      distinct: true,
+      orderBy: 'id DESC',
+      limit: 50,
+    );
+    return rows.map((row) => row['text'] as String).toList();
   }
 
   Future<void> deleteRoutine(int id) async {
