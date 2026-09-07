@@ -79,6 +79,14 @@ class _HomePageState extends State<HomePage> {
     _tamagotchi.applyNutrition(meal.calories);
   }
 
+  /// Logs a default quick meal into the nutrition totals and applies the
+  /// resulting core bloat to the tamagotchi. Used by the "Quick Add" button.
+  void _quickAdd() {
+    const meal = LogParseResponse(calories: 650, protein: 45, fat: 18);
+    _nutrition.add(meal);
+    _tamagotchi.applyNutrition(meal.calories);
+  }
+
   void _launchWizard() {
     context.read<RoutineWizardProvider>().reset();
     Navigator.of(context).push(
@@ -194,6 +202,18 @@ class _HomePageState extends State<HomePage> {
             _ProfileInfoCard(
               profile: widget.profile,
               onEdit: _navigateToProfile,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: CustomButton(
+                key: const Key('quick_add_button'),
+                label: 'Quick Add',
+                onPressed: _quickAdd,
+              ),
             ),
           ],
         ),
