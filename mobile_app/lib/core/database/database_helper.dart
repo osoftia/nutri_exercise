@@ -6,8 +6,10 @@ import 'package:sqflite/sqflite.dart';
 import '../models/daily_entry.dart';
 import '../models/daily_log.dart';
 import '../models/diet_models.dart';
+import '../models/meal_action.dart';
 import '../models/projection_models.dart';
 import '../models/routine_models.dart';
+import '../models/tamagotchi_progress.dart';
 import '../models/user_profile.dart';
 
 /// Local SQLite storage for offline-first persistence of routines and diets.
@@ -17,7 +19,7 @@ class DatabaseHelper {
   DatabaseHelper({Database? database}) : _databaseOverride = database;
 
   static const String _dbName = 'nutri_exercise.db';
-  static const int _dbVersion = 5;
+  static const int _dbVersion = 6;
 
   final Database? _databaseOverride;
   Database? _database;
@@ -82,6 +84,7 @@ class DatabaseHelper {
     ''');
     await _createProjectionTables(db);
     await _createDailyEntryTable(db);
+    await _createNotificationHistoryTables(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -105,6 +108,28 @@ class DatabaseHelper {
     if (oldVersion < 5) {
       await _createDailyEntryTable(db);
     }
+    if (oldVersion < 6) {
+      await _createNotificationHistoryTables(db);
+    }
+  }
+
+  Future<void> _createNotificationHistoryTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS tamagotchi_progress (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        core_fullness REAL NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS meal_actions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        meal TEXT NOT NULL,
+        time_of_day TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    ''');
   }
 
   Future<void> _createDailyEntryTable(Database db) async {
@@ -339,6 +364,50 @@ class DatabaseHelper {
   Future<void> deleteDailyEntry(String date) async {
     final db = await database;
     await db.delete('daily_entries', where: 'date = ?', whereArgs: [date]);
+  }
+
+  /// Returns the single tamagotchi progress row, or `null` when none is saved.
+  Future<Map<String, Object?>?> getTamagotchiProgress() async {
+    final db = await database;
+    final rows = await db.query(
+      'tamagotchi_progress',
+      where: 'id = 1',
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Upserts the single tamagotchi progress row.
+  Future<void> upsertTamagotchiProgress(TamagotchiProgress progress) async {
+    final db = await database;
+    await db.insert(
+      'tamagotchi_progress',
+      progress.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Persists a meal quick-logged from a notification action.
+  Future<void> insertMealAction(MealAction action) async {
+    final db = await database;
+    await db.insert('meal_actions', action.toMap());
+  }
+
+  /// Returns every meal logged for [date], newest first.
+  Future<List<Map<String, Object?>>> getMealActionsByDate(String date) async {
+    final db = await database;
+    return db.query(
+      'meal_actions',
+      where: 'date = ?',
+      whereArgs: [date],
+      orderBy: 'id DESC',
+    );
+  }
+
+  /// Returns every logged meal, newest first.
+  Future<List<Map<String, Object?>>> getAllMealActions() async {
+    final db = await database;
+    return db.query('meal_actions', orderBy: 'id DESC');
   }
 
   Future<void> deleteDiet(int id) async {

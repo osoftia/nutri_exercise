@@ -66,8 +66,7 @@ class MuscleTamagotchiState extends ChangeNotifier {
   /// Fires the "just ate" reaction: temporarily bloats the core and raises its
   /// permanent fullness in proportion to [calories].
   void applyNutrition(int calories) {
-    final gain = calories / 2000;
-    _coreFullness = (_coreFullness + gain).clamp(0.0, 1.0);
+    _coreFullness = coreFullnessAfterNutrition(_coreFullness, calories);
     _coreBloating = true;
     notifyListeners();
   }
@@ -82,6 +81,19 @@ class MuscleTamagotchiState extends ChangeNotifier {
   /// Slimming applied to [coreFullness] per logged exercise.
   static const double slimmingPerExercise = 0.15;
 
+  /// Pure, background-isolate-safe bloat math: returns the core fullness after
+  /// consuming [calories], clipped to `[0.0, 1.0]`.
+  static double coreFullnessAfterNutrition(double current, int calories) =>
+      (current + calories / 2000).clamp(0.0, 1.0);
+
+  /// Pure, background-isolate-safe slimming math: returns the core fullness
+  /// after training, clipped to `[0.0, 1.0]`.
+  static double coreFullnessAfterSlimming(
+    double current, {
+    double amount = slimmingPerExercise,
+  }) =>
+      (current - amount).clamp(0.0, 1.0);
+
   /// Applies the "slimming" effect of logging an exercise: reduces the
   /// permanent core fullness (and clears any transient bloat), so the core's
   /// settled scale/width shrinks, counteracting the expansion from eating.
@@ -89,7 +101,7 @@ class MuscleTamagotchiState extends ChangeNotifier {
   /// [amount] defaults to [slimmingPerExercise] and is clipped to keep
   /// [coreFullness] within `[0.0, 1.0]`.
   void applySlimming({double amount = slimmingPerExercise}) {
-    _coreFullness = (_coreFullness - amount).clamp(0.0, 1.0);
+    _coreFullness = coreFullnessAfterSlimming(_coreFullness, amount: amount);
     _coreBloating = false;
     notifyListeners();
   }

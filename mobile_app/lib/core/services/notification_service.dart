@@ -5,6 +5,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../constants/meal_presets.dart';
 import '../data/daily_log_repository.dart';
 import 'local_notification_scheduler.dart';
+import 'notification_background_handler.dart';
 
 /// Configures the timezone database and pins [tz.local] to a fixed-offset
 /// location derived from the device's current UTC offset.
@@ -106,6 +107,8 @@ class NotificationService {
       settings,
       onDidReceiveNotificationResponse:
           _onTap == null ? null : _handleResponse,
+      onDidReceiveBackgroundNotificationResponse:
+          onDidReceiveBackgroundNotificationResponse,
     );
     await _requestAndroidPermissions();
     _initialized = true;
