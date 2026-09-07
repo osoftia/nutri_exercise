@@ -7,7 +7,7 @@ void main() {
       final activation = ExerciseMuscleMapper.activationFor('Bench Press');
 
       expect(activation.primaryRegions, contains('chest'));
-      expect(activation.secondaryRegions, contains('arms'));
+      expect(activation.secondaryRegions, contains('upper_arms'));
       expect(activation.secondaryRegions, contains('shoulders'));
     });
 
@@ -24,14 +24,25 @@ void main() {
       expect(activation.secondaryRegions, isEmpty);
     });
 
+    test('leg exercises resolve to the finer thighs/calves regions', () {
+      final squat = ExerciseMuscleMapper.activationFor('Squat');
+      final deadlift = ExerciseMuscleMapper.activationFor('Deadlift');
+
+      expect(squat.primaryRegions, contains('thighs'));
+      expect(deadlift.primaryRegions, contains('thighs'));
+      expect(deadlift.primaryRegions, contains('calves'));
+    });
+
     test('only emits known muscle vector region ids', () {
       const knownIds = {
         'chest',
         'abs',
-        'arms',
-        'legs',
         'shoulders',
         'back',
+        'upper_arms',
+        'forearms',
+        'thighs',
+        'calves',
       };
 
       for (final name in ExerciseMuscleMapper.knownExercises) {

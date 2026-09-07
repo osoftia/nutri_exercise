@@ -1,10 +1,10 @@
 const Map<String, String> muscleGroupToRegion = {
   'Chest': 'chest',
-  'Triceps': 'arms',
-  'Biceps': 'arms',
+  'Triceps': 'upper_arms',
+  'Biceps': 'upper_arms',
   'Shoulders': 'shoulders',
   'Back': 'back',
-  'Legs': 'legs',
-  'Hamstrings': 'legs',
+  'Legs': 'thighs',
+  'Hamstrings': 'thighs',
   'Core': 'abs',
 };

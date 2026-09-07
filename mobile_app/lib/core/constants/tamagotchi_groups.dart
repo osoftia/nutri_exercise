@@ -6,9 +6,9 @@ import '../state/muscle_tamagotchi_state.dart';
 /// `muscle_vectors.dart`) it drives.
 const Map<MuscleTamagotchiGroup, List<String>> tamagotchiGroupToRegions = {
   MuscleTamagotchiGroup.core: ['abs', 'back'],
-  MuscleTamagotchiGroup.arms: ['arms', 'shoulders'],
+  MuscleTamagotchiGroup.arms: ['upper_arms', 'forearms', 'shoulders'],
   MuscleTamagotchiGroup.chest: ['chest'],
-  MuscleTamagotchiGroup.legs: ['legs'],
+  MuscleTamagotchiGroup.legs: ['thighs', 'calves'],
 };
 
 /// Reverse lookup: the tamagotchi group that owns [regionId], if any.

@@ -54,14 +54,22 @@ Path _frontSilhouette() {
     ..close();
 }
 
-Path _leftArm() {
+Path _leftUpperArm() {
   return Path()
     ..moveTo(0.34, 0.18)
-    ..quadraticBezierTo(0.18, 0.22, 0.21, 0.42)
-    ..quadraticBezierTo(0.22, 0.52, 0.27, 0.58)
+    ..quadraticBezierTo(0.18, 0.22, 0.20, 0.36)
+    ..lineTo(0.28, 0.37)
+    ..quadraticBezierTo(0.30, 0.26, 0.38, 0.22)
+    ..close();
+}
+
+Path _leftForearm() {
+  return Path()
+    ..moveTo(0.20, 0.36)
+    ..quadraticBezierTo(0.22, 0.48, 0.27, 0.58)
     ..lineTo(0.30, 0.55)
-    ..quadraticBezierTo(0.27, 0.45, 0.29, 0.36)
-    ..quadraticBezierTo(0.31, 0.25, 0.38, 0.22)
+    ..lineTo(0.27, 0.45)
+    ..lineTo(0.29, 0.36)
     ..close();
 }
 
@@ -83,14 +91,21 @@ Path _abs() {
     ..close();
 }
 
-Path _leftLeg() {
+Path _leftThigh() {
   return Path()
     ..moveTo(0.50, 0.66)
-    ..quadraticBezierTo(0.42, 0.66, 0.38, 0.70)
+    ..lineTo(0.42, 0.66)
+    ..lineTo(0.39, 0.80)
+    ..lineTo(0.48, 0.80)
+    ..close();
+}
+
+Path _leftCalf() {
+  return Path()
+    ..moveTo(0.48, 0.80)
+    ..lineTo(0.39, 0.80)
     ..lineTo(0.36, 0.93)
     ..lineTo(0.46, 0.93)
-    ..lineTo(0.47, 0.70)
-    ..quadraticBezierTo(0.49, 0.67, 0.50, 0.66)
     ..close();
 }
 
@@ -145,8 +160,10 @@ List<MuscleRegion> _buildRegions() {
       normalizedPath: _abs(),
     ),
   );
-  addPair('arms', 'Arms', MuscleView.front, _leftArm());
-  addPair('legs', 'Legs', MuscleView.front, _leftLeg());
+  addPair('upper_arms', 'Upper Arms', MuscleView.front, _leftUpperArm());
+  addPair('forearms', 'Forearms', MuscleView.front, _leftForearm());
+  addPair('thighs', 'Thighs', MuscleView.front, _leftThigh());
+  addPair('calves', 'Calves', MuscleView.front, _leftCalf());
   regions.add(
     MuscleRegion(
       id: 'shoulders',
@@ -155,8 +172,10 @@ List<MuscleRegion> _buildRegions() {
       normalizedPath: _shoulders(),
     ),
   );
-  addPair('arms', 'Arms', MuscleView.back, _leftArm());
-  addPair('legs', 'Legs', MuscleView.back, _leftLeg());
+  addPair('upper_arms', 'Upper Arms', MuscleView.back, _leftUpperArm());
+  addPair('forearms', 'Forearms', MuscleView.back, _leftForearm());
+  addPair('thighs', 'Thighs', MuscleView.back, _leftThigh());
+  addPair('calves', 'Calves', MuscleView.back, _leftCalf());
   regions.add(
     MuscleRegion(
       id: 'back',

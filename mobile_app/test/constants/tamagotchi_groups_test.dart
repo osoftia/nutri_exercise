@@ -16,11 +16,11 @@ void main() {
       );
       expect(
         tamagotchiGroupToRegions[MuscleTamagotchiGroup.arms],
-        containsAll(['arms', 'shoulders']),
+        containsAll(['upper_arms', 'forearms', 'shoulders']),
       );
       expect(
         tamagotchiGroupToRegions[MuscleTamagotchiGroup.legs],
-        ['legs'],
+        containsAll(['thighs', 'calves']),
       );
     });
 
@@ -38,6 +38,13 @@ void main() {
       expect(tamagotchiGroupForRegion('abs'), MuscleTamagotchiGroup.core);
       expect(tamagotchiGroupForRegion('back'), MuscleTamagotchiGroup.core);
       expect(tamagotchiGroupForRegion('shoulders'), MuscleTamagotchiGroup.arms);
+      expect(
+        tamagotchiGroupForRegion('upper_arms'),
+        MuscleTamagotchiGroup.arms,
+      );
+      expect(tamagotchiGroupForRegion('forearms'), MuscleTamagotchiGroup.arms);
+      expect(tamagotchiGroupForRegion('thighs'), MuscleTamagotchiGroup.legs);
+      expect(tamagotchiGroupForRegion('calves'), MuscleTamagotchiGroup.legs);
     });
 
     test('returns null for an unknown region', () {

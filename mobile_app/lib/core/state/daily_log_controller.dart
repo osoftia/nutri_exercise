@@ -100,6 +100,7 @@ class DailyLogController extends ChangeNotifier {
     _parseResult = null;
     notifyListeners();
 
+    var saved = false;
     final smartLogger = _smartLogger;
     if (smartLogger != null) {
       try {
@@ -110,17 +111,18 @@ class DailyLogController extends ChangeNotifier {
           parsed,
         );
         _text = trimmed;
+        saved = true;
       } catch (_) {
         _parseError =
             'Could not reach the AI analysis service. Your log was saved.';
-        await save(trimmed);
+        saved = await save(trimmed);
       }
     } else {
-      await save(trimmed);
+      saved = await save(trimmed);
     }
 
     _isParsing = false;
     notifyListeners();
-    return _parseResult != null || _smartLogger == null;
+    return saved;
   }
 }
