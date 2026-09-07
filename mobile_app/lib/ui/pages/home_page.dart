@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/config/environment_config.dart';
 import '../../core/constants/muscle_group_map.dart';
+import '../../core/constants/tamagotchi_groups.dart';
 import '../../core/data/diet_repository.dart';
 import '../../core/data/routine_repository.dart';
 import '../../core/models/diet_models.dart';
@@ -248,7 +249,20 @@ class _HomePageState extends State<HomePage> {
                   muscleGroupToRegion[exercise.muscleGroup] ==
                       provider.selectedMuscleRegion,
               isLogged: provider.isExerciseLogged(exercise.name),
-              onLog: () => provider.toggleExerciseLog(exercise.name),
+              onLog: () {
+                provider.toggleExerciseLog(exercise.name);
+                if (provider.isExerciseLogged(exercise.name)) {
+                  final regionId =
+                      muscleGroupToRegion[exercise.muscleGroup];
+                  final group = regionId == null
+                      ? null
+                      : tamagotchiGroupForRegion(regionId);
+                  if (group != null) {
+                    _tamagotchi.applyGrowth([group]);
+                  }
+                  _tamagotchi.applySlimming();
+                }
+              },
               onTap: () {
                 final regionId =
                     muscleGroupToRegion[exercise.muscleGroup];

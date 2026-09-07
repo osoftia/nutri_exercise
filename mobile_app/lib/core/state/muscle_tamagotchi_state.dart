@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// The four gamified muscle groups of the tamagotchi avatar.
@@ -76,6 +75,21 @@ class MuscleTamagotchiState extends ChangeNotifier {
   /// Ends the transient bloat; the increased fullness (permanent size) remains.
   void settleCore() {
     if (!_coreBloating) return;
+    _coreBloating = false;
+    notifyListeners();
+  }
+
+  /// Slimming applied to [coreFullness] per logged exercise.
+  static const double slimmingPerExercise = 0.15;
+
+  /// Applies the "slimming" effect of logging an exercise: reduces the
+  /// permanent core fullness (and clears any transient bloat), so the core's
+  /// settled scale/width shrinks, counteracting the expansion from eating.
+  ///
+  /// [amount] defaults to [slimmingPerExercise] and is clipped to keep
+  /// [coreFullness] within `[0.0, 1.0]`.
+  void applySlimming({double amount = slimmingPerExercise}) {
+    _coreFullness = (_coreFullness - amount).clamp(0.0, 1.0);
     _coreBloating = false;
     notifyListeners();
   }
