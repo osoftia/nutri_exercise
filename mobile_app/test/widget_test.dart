@@ -58,6 +58,10 @@ void main() {
   testWidgets('NutriApp dev config uses mocks and applies theme', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(1000, 6000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
     await tester.pumpWidget(
       NutriApp(config: const AppConfig(name: 'dev', useMocks: true)),
     );

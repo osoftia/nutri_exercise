@@ -10,9 +10,11 @@ import '../../core/state/projection_controller.dart';
 import '../../core/state/schedule_controller.dart';
 import '../../core/state/user_profile_controller.dart';
 import '../atoms/neumorphic_fab.dart';
+import '../atoms/typography.dart';
 import '../molecules/ai_chat_sheet.dart';
 import '../molecules/daily_log_sheet.dart';
 import '../organisms/bottom_nav_bar.dart';
+import '../organisms/calendar_history_dialog.dart';
 import 'nutrition_page.dart';
 import 'profile_page.dart';
 import 'routines_page.dart';
@@ -87,6 +89,24 @@ class _MainShellPageState extends State<MainShellPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const AppHeading('NutriExercise', size: AppHeadingSize.h3),
+        actions: [
+          if (widget.dailyEntryRepository != null)
+            IconButton(
+              key: const Key('history_action'),
+              icon: const Icon(
+                Icons.calendar_month_outlined,
+                color: AppColors.textMedium,
+              ),
+              tooltip: 'History',
+              onPressed: () => showCalendarHistoryDialog(
+                context,
+                repository: widget.dailyEntryRepository!,
+              ),
+            ),
+        ],
+      ),
       body: SafeArea(child: _tabs[_currentIndex]),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/config/environment_config.dart';
 import '../../core/constants/muscle_group_map.dart';
 import '../../core/constants/tamagotchi_groups.dart';
+import '../../core/data/daily_entry_repository.dart';
 import '../../core/data/diet_repository.dart';
 import '../../core/data/routine_repository.dart';
 import '../../core/models/diet_models.dart';
@@ -21,6 +22,7 @@ import '../atoms/typography.dart';
 import '../molecules/daily_totals_card.dart';
 import '../molecules/exercise_card.dart';
 import '../organisms/bottom_nav_bar.dart';
+import '../organisms/calendar_history_dialog.dart';
 import '../organisms/muscle_group_visualizer.dart';
 import 'wizard_page.dart';
 
@@ -30,6 +32,7 @@ class HomePage extends StatefulWidget {
     required this.dietRepository,
     required this.routineRepository,
     this.profile,
+    this.dailyEntryRepository,
   });
 
   final DietRepository dietRepository;
@@ -37,6 +40,9 @@ class HomePage extends StatefulWidget {
 
   /// The user's profile; drives the avatar's baseline width via BMI.
   final UserProfile? profile;
+
+  /// Optional SQLite-backed history; enables the AppBar History action.
+  final DailyEntryRepository? dailyEntryRepository;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -108,6 +114,19 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const AppHeading('Admin Dashboard', size: AppHeadingSize.h2),
         actions: [
+          if (widget.dailyEntryRepository != null)
+            IconButton(
+              key: const Key('history_action'),
+              icon: const Icon(
+                Icons.calendar_month_outlined,
+                color: AppColors.textMedium,
+              ),
+              tooltip: 'History',
+              onPressed: () => showCalendarHistoryDialog(
+                context,
+                repository: widget.dailyEntryRepository!,
+              ),
+            ),
           PopupMenuButton<Flavor>(
             icon: const Icon(
               Icons.settings_outlined,
