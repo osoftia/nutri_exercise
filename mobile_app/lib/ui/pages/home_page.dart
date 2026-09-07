@@ -17,6 +17,7 @@ import '../../core/providers/environment_provider.dart';
 import '../../core/providers/routine_provider.dart';
 import '../../core/providers/wizard_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/exercise_muscle_mapper.dart';
 import '../atoms/custom_button.dart';
 import '../atoms/typography.dart';
 import '../molecules/daily_totals_card.dart';
@@ -288,6 +289,9 @@ class _HomePageState extends State<HomePage> {
                 if (regionId != null) {
                   provider.selectMuscleRegion(regionId);
                 }
+                _tamagotchi.setOverrides(
+                  ExerciseMuscleMapper.getColorsForExercise(exercise.name),
+                );
               },
             ),
         const SizedBox(height: AppSpacing.xxl),
