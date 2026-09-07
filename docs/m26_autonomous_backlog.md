@@ -1,0 +1,6 @@
+# M26 Autonomous Backlog
+
+- [x] Task 1: OS Permissions - Fix the notification system initialization. Request `POST_NOTIFICATIONS` for Android 13+ and exact alarm permissions. Ensure the plugin is correctly initialized in `main.dart`.
+- [x] Task 2: History Query - Update `DailyLogRepository` to include a method `Future<List<String>> getTopMealsForTimeOfDay(String timeOfDay)`. It should query the DB for the 3 most frequent meals. If there's no history, use defaults: Breakfast ("Huevos con arepa", "Avena", "Frutas"), Lunch ("Pechuga con arroz", "Pescado", "Carne asada"), Dinner ("Ensalada", "Sopa", "Huevos cocidos").
+- [x] Task 3: Interactive Scheduling - Update `NotificationService` to schedule daily reminders (e.g., Breakfast at 8 AM, Lunch at 1 PM, Dinner at 7 PM). Use `flutter_local_notifications` to inject the 3 dynamic meals as Notification Actions (buttons) in the payload.
+- [x] Task 4: Background Execution - Implement `onDidReceiveBackgroundNotificationResponse` (pragma: isolate). When a notification button is pressed, it must silently write the meal to SQLite, trigger the tamagotchi slimming/bloat math via state or repository, and clear the notification, without requiring the user to open the app fully.
