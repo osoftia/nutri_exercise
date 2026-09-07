@@ -33,9 +33,18 @@ import 'core/theme/app_theme.dart';
 import 'ui/pages/main_shell_page.dart';
 
 class NutriApp extends StatefulWidget {
-  const NutriApp({super.key, required this.config});
+  const NutriApp({
+    super.key,
+    required this.config,
+    this.notificationService,
+  });
 
   final AppConfig config;
+
+  /// A pre-initialized notification service (e.g. created in `main` so OS
+  /// permissions are requested before the UI runs). When `null`, the app
+  /// creates and initializes its own.
+  final NotificationService? notificationService;
 
   @override
   State<NutriApp> createState() => _NutriAppState();
@@ -61,9 +70,9 @@ class _NutriAppState extends State<NutriApp> {
         parseService: LogParseService(baseUrl: ApiConstants.baseUrl),
       ),
     );
-    _notificationService = NotificationService(
-      onTap: (_) => _notificationNav.requestDailyLog(),
-    );
+    _notificationService =
+        widget.notificationService ?? NotificationService();
+    _notificationService.setOnTap((_) => _notificationNav.requestDailyLog());
     _bootstrapNotifications();
   }
 

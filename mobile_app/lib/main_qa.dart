@@ -5,8 +5,8 @@ import 'core/config/app_config.dart';
 
 void main() {
   runApp(
-    const NutriApp(
-      config: AppConfig(
+    NutriApp(
+      config: const AppConfig(
         name: 'qa',
         useMocks: false,
         apiUrl: 'https://qa-api.example.com',

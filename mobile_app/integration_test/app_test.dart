@@ -25,7 +25,7 @@ void main() {
   ) async {
     // Boot the full application (dev config, mock-backed repositories).
     await tester.pumpWidget(
-      const NutriApp(config: AppConfig(name: 'dev', useMocks: true)),
+      NutriApp(config: const AppConfig(name: 'dev', useMocks: true)),
     );
     await tester.pumpAndSettle();
 

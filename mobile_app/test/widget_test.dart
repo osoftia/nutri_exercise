@@ -59,7 +59,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const NutriApp(config: AppConfig(name: 'dev', useMocks: true)),
+      NutriApp(config: const AppConfig(name: 'dev', useMocks: true)),
     );
 
     await tester.pumpAndSettle();

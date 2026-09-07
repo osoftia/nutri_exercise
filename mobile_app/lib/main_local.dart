@@ -5,8 +5,12 @@ import 'core/config/app_config.dart';
 
 void main() {
   runApp(
-    const NutriApp(
-      config: AppConfig(name: 'local', useMocks: false, useLocalDatabase: true),
+    NutriApp(
+      config: const AppConfig(
+        name: 'local',
+        useMocks: false,
+        useLocalDatabase: true,
+      ),
     ),
   );
 }

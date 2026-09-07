@@ -57,7 +57,7 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _plugin;
   late final NotificationScheduler _scheduler;
-  final void Function(String? payload)? _onTap;
+  void Function(String? payload)? _onTap;
   bool _initialized = false;
 
   Future<void> initialize() async {
@@ -80,7 +80,26 @@ class NotificationService {
       onDidReceiveNotificationResponse:
           _onTap == null ? null : _handleResponse,
     );
+    await _requestAndroidPermissions();
     _initialized = true;
+  }
+
+  /// Requests the Android runtime permissions the interactive reminders need:
+  /// `POST_NOTIFICATIONS` (Android 13+) and exact-alarm scheduling.
+  Future<void> _requestAndroidPermissions() async {
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (android == null) return;
+    await android.requestNotificationsPermission();
+    await android.requestExactAlarmsPermission();
+  }
+
+  /// Replaces the notification-tap handler (used when the service is created
+  /// before the app owns a navigation controller).
+  void setOnTap(void Function(String? payload)? onTap) {
+    _onTap = onTap;
   }
 
   void _handleResponse(NotificationResponse response) {
