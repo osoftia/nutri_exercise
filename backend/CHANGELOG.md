@@ -21,6 +21,11 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 
 
 
+
+## [2026-09-07]
+
+- \`206acb5\` fix(backend): skip HTTPS redirection in Development to avoid port warning
+
 ## [2026-09-03]
 
 - \`1b1acea\` feat(backend): implement daily log parser with Gherkin BDD and ignore auto-generated feature files
