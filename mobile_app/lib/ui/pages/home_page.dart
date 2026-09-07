@@ -247,6 +247,8 @@ class _HomePageState extends State<HomePage> {
               isHighlighted: provider.selectedMuscleRegion != null &&
                   muscleGroupToRegion[exercise.muscleGroup] ==
                       provider.selectedMuscleRegion,
+              isLogged: provider.isExerciseLogged(exercise.name),
+              onLog: () => provider.toggleExerciseLog(exercise.name),
               onTap: () {
                 final regionId =
                     muscleGroupToRegion[exercise.muscleGroup];

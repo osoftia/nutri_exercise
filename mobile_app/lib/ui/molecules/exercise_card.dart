@@ -8,12 +8,20 @@ class ExerciseCard extends StatelessWidget {
     super.key,
     required this.exercise,
     this.isHighlighted = false,
+    this.isLogged = false,
     this.onTap,
+    this.onLog,
   });
 
   final Exercise exercise;
   final bool isHighlighted;
+
+  /// Whether the exercise has been logged as completed for the day.
+  final bool isLogged;
   final VoidCallback? onTap;
+
+  /// Called when the user taps the log toggle control.
+  final VoidCallback? onLog;
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +112,16 @@ class ExerciseCard extends StatelessWidget {
                     color: AppColors.textLow,
                   ),
                 ],
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              IconButton(
+                key: Key('log_exercise_${exercise.name}'),
+                tooltip: isLogged ? 'Logged' : 'Log exercise',
+                onPressed: onLog,
+                icon: Icon(
+                  isLogged ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: isLogged ? AppColors.success : AppColors.textLow,
+                ),
               ),
             ],
           ),

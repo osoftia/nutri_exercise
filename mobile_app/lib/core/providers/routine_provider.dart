@@ -15,12 +15,26 @@ class RoutineProvider extends ChangeNotifier {
   String? _selectedMuscleRegion;
   RoutineStatus _status = RoutineStatus.idle;
   String? _error;
+  final Set<String> _loggedExercises = {};
 
   List<WorkoutDay> get routine => _routine;
   WorkoutDay? get selectedDay => _selectedDay;
   String? get selectedMuscleRegion => _selectedMuscleRegion;
   RoutineStatus get status => _status;
   String? get error => _error;
+
+  /// Names of the exercises the user has logged as completed today.
+  Set<String> get loggedExercises => Set.unmodifiable(_loggedExercises);
+
+  bool isExerciseLogged(String name) => _loggedExercises.contains(name);
+
+  /// Toggles the logged state of the exercise named [name] and notifies.
+  void toggleExerciseLog(String name) {
+    if (!_loggedExercises.add(name)) {
+      _loggedExercises.remove(name);
+    }
+    notifyListeners();
+  }
 
   List<Exercise> get selectedDayExercises =>
       _selectedDay?.exercises ?? const [];
