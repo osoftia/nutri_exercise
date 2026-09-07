@@ -73,6 +73,7 @@ class _NutriAppState extends State<NutriApp> {
     _notificationService =
         widget.notificationService ?? NotificationService();
     _notificationService.setOnTap((_) => _notificationNav.requestDailyLog());
+    _notificationService.setDailyLogRepository(_dailyLogRepository());
     _bootstrapNotifications();
   }
 
@@ -89,6 +90,7 @@ class _NutriAppState extends State<NutriApp> {
       await _notificationService.initialize();
       if (widget.config.enableNotifications) {
         await _notificationService.scheduleDailyReminder();
+        await _notificationService.scheduleDailyMealReminders();
       }
       final launch = await _notificationService.launchDetails();
       if (launch != null && launch.didNotificationLaunchApp) {

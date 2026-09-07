@@ -2,6 +2,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../constants/meal_presets.dart';
+import '../data/daily_log_repository.dart';
 import 'local_notification_scheduler.dart';
 
 /// Configures the timezone database and pins [tz.local] to a fixed-offset
@@ -35,8 +37,10 @@ class NotificationService {
     FlutterLocalNotificationsPlugin? plugin,
     NotificationScheduler? scheduler,
     void Function(String? payload)? onTap,
+    DailyLogRepository? dailyLogRepository,
   }) : _plugin = plugin ?? FlutterLocalNotificationsPlugin(),
-       _onTap = onTap {
+       _onTap = onTap,
+       _dailyLogRepository = dailyLogRepository {
     _scheduler = scheduler ?? FlutterLocalNotificationScheduler(_plugin);
   }
 
@@ -55,9 +59,32 @@ class NotificationService {
   /// Stable id used for the daily reminder so rescheduling replaces it.
   static const int dailyReminderId = 2001;
 
+  /// Stable ids for the three interactive meal reminders.
+  static const int breakfastReminderId = 3101;
+  static const int lunchReminderId = 3102;
+  static const int dinnerReminderId = 3103;
+
+  static const List<({int id, String timeOfDay, String title, int hour, int minute})>
+  mealSlots = [
+    (id: breakfastReminderId, timeOfDay: 'breakfast', title: 'Breakfast', hour: 8, minute: 0),
+    (id: lunchReminderId, timeOfDay: 'lunch', title: 'Lunch', hour: 13, minute: 0),
+    (id: dinnerReminderId, timeOfDay: 'dinner', title: 'Dinner', hour: 19, minute: 0),
+  ];
+
+  /// The notification action id used for a meal quick-log button.
+  static String mealActionId(String mealName) => 'meal:$mealName';
+
+  /// Extracts the meal name from a [NotificationResponse.actionId], or `null`
+  /// when the action was not a meal button.
+  static String? mealNameFromActionId(String? actionId) {
+    if (actionId == null || !actionId.startsWith('meal:')) return null;
+    return actionId.substring('meal:'.length);
+  }
+
   final FlutterLocalNotificationsPlugin _plugin;
   late final NotificationScheduler _scheduler;
   void Function(String? payload)? _onTap;
+  DailyLogRepository? _dailyLogRepository;
   bool _initialized = false;
 
   Future<void> initialize() async {
@@ -100,6 +127,12 @@ class NotificationService {
   /// before the app owns a navigation controller).
   void setOnTap(void Function(String? payload)? onTap) {
     _onTap = onTap;
+  }
+
+  /// Replaces the meal-history repository used for the interactive action
+  /// buttons (set once the app has built its repositories).
+  void setDailyLogRepository(DailyLogRepository? repository) {
+    _dailyLogRepository = repository;
   }
 
   void _handleResponse(NotificationResponse response) {
@@ -167,6 +200,61 @@ class NotificationService {
   /// Returns whether the app was launched by tapping a notification.
   Future<NotificationAppLaunchDetails?> launchDetails() =>
       _plugin.getNotificationAppLaunchDetails();
+
+  /// Schedules the three interactive daily meal reminders (Breakfast 8 AM,
+  /// Lunch 1 PM, Dinner 7 PM). Each reminder injects its top 3 meals for the
+  /// slot as notification action buttons.
+  Future<void> scheduleDailyMealReminders() async {
+    await initialize();
+    for (final slot in mealSlots) {
+      await _scheduleMealReminder(slot);
+    }
+  }
+
+  Future<void> _scheduleMealReminder(
+    ({int id, String timeOfDay, String title, int hour, int minute}) slot,
+  ) async {
+    final meals = await _mealsFor(slot.timeOfDay);
+    final scheduled = nextDailyOccurrence(
+      tz.TZDateTime.now(tz.local),
+      hour: slot.hour,
+      minute: slot.minute,
+    );
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _dailyChannelId,
+        _dailyChannelName,
+        channelDescription: _dailyChannelDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        actions: [
+          for (final meal in meals)
+            AndroidNotificationAction(mealActionId(meal), meal),
+        ],
+      ),
+      iOS: DarwinNotificationDetails(),
+      macOS: DarwinNotificationDetails(),
+    );
+    await _scheduler.cancel(slot.id);
+    await _scheduler.zonedSchedule(
+      slot.id,
+      slot.title,
+      'Time for ${slot.title.toLowerCase()}',
+      scheduled,
+      details,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: slot.timeOfDay,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  Future<List<String>> _mealsFor(String timeOfDay) async {
+    final repo = _dailyLogRepository;
+    if (repo == null) {
+      return defaultMealsByTimeOfDay[timeOfDay] ?? const [];
+    }
+    return repo.getTopMealsForTimeOfDay(timeOfDay);
+  }
 
   /// The next [hour]:[minute] wall-clock occurrence at or after [now], rolling
   /// to tomorrow when [now] is already past that time.
