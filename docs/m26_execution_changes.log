@@ -1,0 +1,37 @@
+# M26 Execution Changes Log — Interactive & Dynamic Notifications
+
+Autonomous sprint following the M25 loop pattern: per task → branch → spec → TDD red/green → analyze/test → merge → backlog check-off. All work merged to `main` via fast-forward.
+
+## Task 1: OS Permissions
+- `lib/core/services/notification_service.dart` — `initialize()` now requests the Android runtime permissions through `resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()`: `requestNotificationsPermission()` (POST_NOTIFICATIONS on Android 13+) and `requestExactAlarmsPermission()`. Added `setOnTap(...)` so the service can be constructed in `main.dart` before the app owns the navigation controller.
+- `lib/main.dart` — now `async`, calls `WidgetsFlutterBinding.ensureInitialized()`, `configureLocalTimeZone()`, creates and initializes a `NotificationService` before `runApp`, and injects it into `NutriApp`.
+- `lib/app.dart` — `NutriApp` accepts an optional pre-initialized `notificationService` (reuses it; still wires `setOnTap` → `requestDailyLog` and `setDailyLogRepository`).
+- `lib/main_dev.dart`, `main_qa.dart`, `main_prod.dart`, `main_local.dart`, `integration_test/app_test.dart`, `test/widget_test.dart` — dropped `const` on `NutriApp` (constructor now non-const).
+- `android/app/src/main/AndroidManifest.xml` — declared `SCHEDULE_EXACT_ALARM` and the `ActionBroadcastReceiver` (required for notification action buttons).
+- Tests: `test/services/notification_permissions_test.dart` — registers an `AndroidFlutterLocalNotificationsPlugin` subclass fake and asserts both permission requests fire exactly once across repeated `initialize()`.
+
+## Task 2: History Query
+- `lib/core/constants/meal_presets.dart` — `defaultMealsByTimeOfDay` (breakfast: Huevos con arepa/Avena/Frutas; lunch: Pechuga con arroz/Pescado/Carne asada; dinner: Ensalada/Sopa/Huevos cocidos).
+- `lib/core/data/daily_log_repository.dart` — new abstract `Future<List<String>> getTopMealsForTimeOfDay(String timeOfDay)`.
+- `lib/core/database/database_helper.dart` — `getTopMealsByType(mealType, limit)` decodes each `diets.meals_json`, filters by `mealType`, and ranks names by frequency.
+- `lib/core/data/local_daily_log_repository.dart` — queries the DB; returns the presets when the query is empty.
+- `lib/core/mocks/mock_daily_log_repository.dart` — returns a configurable `topMeals` seed or the presets.
+- Tests: `test/data/top_meals_repository_test.dart` (presets, frequency ranking, per-slot filtering, mock behavior).
+
+## Task 3: Interactive Scheduling
+- `lib/core/services/notification_service.dart` — added `mealSlots` (breakfast 08:00, lunch 13:00, dinner 19:00), stable ids 3101/3102/3103, `scheduleDailyMealReminders()`, `_scheduleMealReminder(...)`, `_mealsFor(...)`, static `mealActionId` / `mealNameFromActionId`. Each reminder cancels its previous id, injects its 3 meals as `AndroidNotificationAction`s (`id: 'meal:<name>'`), carries the slot in `payload`, and repeats daily (`DateTimeComponents.time`).
+- `lib/core/services/notification_service.dart` — `setDailyLogRepository(...)` and `dailyLogRepository` param.
+- `lib/app.dart` — `_bootstrapNotifications()` now also calls `scheduleDailyMealReminders()`.
+- Tests: `test/services/notification_meal_scheduling_test.dart` (3 reminders at 8/13/19, cancel-before-reschedule, default vs history actions, payload slot, action-id round-trip).
+
+## Task 4: Background Execution
+- `lib/core/services/notification_background_handler.dart` — top-level `onDidReceiveBackgroundNotificationResponse` with `@pragma('vm:entry-point')` (required for the background isolate), delegating to `@visibleForTesting handleNotificationResponse(...)` with injectable repos/plugin. It parses the meal from the action id, logs a `MealAction` to SQLite, applies the tamagotchi bloat math to the persisted core progress, and clears the notification (best-effort).
+- `lib/core/state/muscle_tamagotchi_state.dart` — added pure, isolate-safe statics `coreFullnessAfterNutrition(current, calories)` and `coreFullnessAfterSlimming(current, {amount})`; `applyNutrition`/`applySlimming` now delegate to them.
+- New persistence: `MealAction` + `TamagotchiProgress` models; `MealActionRepository` / `LocalMealActionRepository` / `MockMealActionRepository`; `TamagotchiProgressRepository` / `LocalTamagotchiProgressRepository` / `MockTamagotchiProgressRepository`.
+- `lib/core/database/database_helper.dart` — schema v6: `tamagotchi_progress` (single row) and `meal_actions` tables + `getTamagotchiProgress` / `upsertTamagotchiProgress` / `insertMealAction` / `getMealActionsByDate` / `getAllMealActions`.
+- `lib/core/services/notification_service.dart` — `initialize()` now registers `onDidReceiveBackgroundNotificationResponse`.
+- Tests: `test/services/notification_background_handler_test.dart` (meal action persists meal + increases fullness + cancels notification; non-meal action no-op; pure math clamps), `test/data/notification_history_repositories_test.dart` (SQLite round-trips), existing tamagotchi tests still green.
+
+## Verification
+- `flutter analyze`: No issues found (0 warnings/errors).
+- `flutter test`: 318/318 passing (baseline 296 before M26).
