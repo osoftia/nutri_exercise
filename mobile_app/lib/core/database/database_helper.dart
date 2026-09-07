@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../models/daily_entry.dart';
 import '../models/daily_log.dart';
 import '../models/diet_models.dart';
 import '../models/projection_models.dart';
@@ -16,7 +17,7 @@ class DatabaseHelper {
   DatabaseHelper({Database? database}) : _databaseOverride = database;
 
   static const String _dbName = 'nutri_exercise.db';
-  static const int _dbVersion = 4;
+  static const int _dbVersion = 5;
 
   final Database? _databaseOverride;
   Database? _database;
@@ -80,6 +81,7 @@ class DatabaseHelper {
       )
     ''');
     await _createProjectionTables(db);
+    await _createDailyEntryTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -100,6 +102,22 @@ class DatabaseHelper {
         'ALTER TABLE daily_logs ADD COLUMN parsed_json TEXT',
       );
     }
+    if (oldVersion < 5) {
+      await _createDailyEntryTable(db);
+    }
+  }
+
+  Future<void> _createDailyEntryTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS daily_entries (
+        date TEXT PRIMARY KEY,
+        calories INTEGER NOT NULL,
+        protein INTEGER NOT NULL,
+        carbs INTEGER NOT NULL,
+        fat INTEGER NOT NULL,
+        exercises_json TEXT NOT NULL
+      )
+    ''');
   }
 
   Future<void> _createProjectionTables(Database db) async {
@@ -258,6 +276,40 @@ class DatabaseHelper {
   Future<void> deleteRoutine(int id) async {
     final db = await database;
     await db.delete('routines', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Returns the daily entry row for [date], or `null` when none is saved.
+  Future<Map<String, Object?>?> getDailyEntry(String date) async {
+    final db = await database;
+    final rows = await db.query(
+      'daily_entries',
+      where: 'date = ?',
+      whereArgs: [date],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Returns every daily entry row ordered by date.
+  Future<List<Map<String, Object?>>> getAllDailyEntries() async {
+    final db = await database;
+    return db.query('daily_entries', orderBy: 'date');
+  }
+
+  /// Upserts the daily entry for [entry.date] (one row per date).
+  Future<void> upsertDailyEntry(DailyEntry entry) async {
+    final db = await database;
+    await db.insert(
+      'daily_entries',
+      entry.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Removes the daily entry row for [date], if any.
+  Future<void> deleteDailyEntry(String date) async {
+    final db = await database;
+    await db.delete('daily_entries', where: 'date = ?', whereArgs: [date]);
   }
 
   Future<void> deleteDiet(int id) async {

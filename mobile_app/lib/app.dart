@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'core/config/app_config.dart';
 import 'core/constants/api_constants.dart';
+import 'core/data/daily_entry_repository.dart';
 import 'core/data/daily_log_repository.dart';
+import 'core/data/local_daily_entry_repository.dart';
 import 'core/data/local_daily_log_repository.dart';
 import 'core/data/local_profile_repository.dart';
 import 'core/data/local_projection_repository.dart';
@@ -10,6 +12,7 @@ import 'core/data/nutrition_repository.dart';
 import 'core/data/profile_repository.dart';
 import 'core/data/projection_repository.dart';
 import 'core/data/schedule_repository.dart';
+import 'core/mocks/mock_daily_entry_repository.dart';
 import 'core/mocks/mock_daily_log_repository.dart';
 import 'core/mocks/mock_nutrition_repository.dart';
 import 'core/mocks/mock_profile_repository.dart';
@@ -67,6 +70,10 @@ class _NutriAppState extends State<NutriApp> {
   DailyLogRepository _dailyLogRepository() => widget.config.useMockApi
       ? MockDailyLogRepository()
       : LocalDailyLogRepository();
+
+  DailyEntryRepository _dailyEntryRepository() => widget.config.useMockApi
+      ? MockDailyEntryRepository()
+      : LocalDailyEntryRepository();
 
   Future<void> _bootstrapNotifications() async {
     try {
@@ -132,6 +139,7 @@ class _NutriAppState extends State<NutriApp> {
         aiChatController: aiChatController,
         notificationNav: _notificationNav,
         dailyLogController: _dailyLogController,
+        dailyEntryRepository: _dailyEntryRepository(),
       ),
     );
   }

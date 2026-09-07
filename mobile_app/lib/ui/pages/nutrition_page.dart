@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/data/daily_entry_repository.dart';
 import '../../core/models/food_entry.dart';
 import '../../core/state/nutrition_controller.dart';
 import '../../core/theme/app_theme.dart';
@@ -9,11 +10,19 @@ import '../atoms/neumorphic_bar_chart.dart';
 import '../atoms/neumorphic_circular_progress.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
+import '../organisms/calendar_history_dialog.dart';
 
 class NutritionPage extends StatefulWidget {
-  const NutritionPage({super.key, required this.controller});
+  const NutritionPage({
+    super.key,
+    required this.controller,
+    this.dailyEntryRepository,
+  });
 
   final NutritionController controller;
+
+  /// Optional SQLite-backed history; enables the Calendar History button.
+  final DailyEntryRepository? dailyEntryRepository;
 
   @override
   State<NutritionPage> createState() => _NutritionPageState();
@@ -93,7 +102,22 @@ class _NutritionPageState extends State<NutritionPage> {
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           children: [
-            const AppHeading('Nutrition', size: AppHeadingSize.h2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const AppHeading('Nutrition', size: AppHeadingSize.h2),
+                if (widget.dailyEntryRepository != null)
+                  CustomButton(
+                    key: const Key('history_button'),
+                    label: 'History',
+                    variant: CustomButtonVariant.ghost,
+                    onPressed: () => showCalendarHistoryDialog(
+                      context,
+                      repository: widget.dailyEntryRepository!,
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.lg),
             NeumorphicContainer(
               child: Row(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/data/daily_entry_repository.dart';
 import '../../core/state/ai_chat_controller.dart';
 import '../../core/state/daily_log_controller.dart';
 import '../../core/theme/app_theme.dart';
@@ -27,6 +28,7 @@ class MainShellPage extends StatefulWidget {
     required this.aiChatController,
     required this.notificationNav,
     required this.dailyLogController,
+    this.dailyEntryRepository,
   });
 
   final UserProfileController profileController;
@@ -36,6 +38,7 @@ class MainShellPage extends StatefulWidget {
   final AiChatController aiChatController;
   final NotificationNavigationController notificationNav;
   final DailyLogController dailyLogController;
+  final DailyEntryRepository? dailyEntryRepository;
 
   @override
   State<MainShellPage> createState() => _MainShellPageState();
@@ -46,7 +49,10 @@ class _MainShellPageState extends State<MainShellPage> {
 
   late final List<Widget> _tabs = [
     RoutinesPage(controller: widget.projectionController),
-    NutritionPage(controller: widget.nutritionController),
+    NutritionPage(
+      controller: widget.nutritionController,
+      dailyEntryRepository: widget.dailyEntryRepository,
+    ),
     SchedulePage(controller: widget.scheduleController),
     ProfilePage(controller: widget.profileController),
   ];
