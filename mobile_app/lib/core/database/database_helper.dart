@@ -208,6 +208,35 @@ class DatabaseHelper {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  /// Returns the most frequent meal names whose `mealType` matches
+  /// [mealType] (e.g. `lunch`), ordered by frequency, up to [limit].
+  ///
+  /// Meal names are decoded from the `meals_json` column of the `diets` table.
+  Future<List<String>> getTopMealsByType(
+    String mealType, {
+    int limit = 3,
+  }) async {
+    final db = await database;
+    final rows = await db.query('diets', columns: ['meals_json']);
+    final frequencies = <String, int>{};
+    for (final row in rows) {
+      final raw = row['meals_json'] as String?;
+      if (raw == null || raw.isEmpty) continue;
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) continue;
+      for (final meal in decoded) {
+        if (meal is! Map) continue;
+        if (meal['mealType'] != mealType) continue;
+        final name = meal['name'] as String?;
+        if (name == null || name.isEmpty) continue;
+        frequencies[name] = (frequencies[name] ?? 0) + 1;
+      }
+    }
+    final ranked = frequencies.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return ranked.take(limit).map((entry) => entry.key).toList();
+  }
+
   Future<List<Map<String, Object?>>> getNotificationPrefs() async {
     final db = await database;
     return db.query('notification_prefs');

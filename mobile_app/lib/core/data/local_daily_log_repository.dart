@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../constants/meal_presets.dart';
 import '../database/database_helper.dart';
 import '../models/daily_log.dart';
 import '../models/log_parse_response.dart';
@@ -46,5 +47,12 @@ class LocalDailyLogRepository implements DailyLogRepository {
   @override
   Future<List<String>> getAllTexts() async {
     return _databaseHelper.getAllDailyLogTexts();
+  }
+
+  @override
+  Future<List<String>> getTopMealsForTimeOfDay(String timeOfDay) async {
+    final top = await _databaseHelper.getTopMealsByType(timeOfDay);
+    if (top.isNotEmpty) return top;
+    return defaultMealsByTimeOfDay[timeOfDay] ?? const [];
   }
 }

@@ -18,4 +18,9 @@ abstract interface class DailyLogRepository {
 
   /// Returns the most recent distinct raw texts (for autocomplete).
   Future<List<String>> getAllTexts();
+
+  /// Returns the 3 most frequent meal names for [timeOfDay]
+  /// (`breakfast` | `lunch` | `dinner`), falling back to the meal presets when
+  /// there is no history.
+  Future<List<String>> getTopMealsForTimeOfDay(String timeOfDay);
 }

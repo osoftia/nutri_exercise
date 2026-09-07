@@ -1,10 +1,12 @@
+import '../constants/meal_presets.dart';
 import '../data/daily_log_repository.dart';
 import '../models/daily_log.dart';
 import '../models/log_parse_response.dart';
 
 /// In-memory test double for [DailyLogRepository].
 class MockDailyLogRepository implements DailyLogRepository {
-  MockDailyLogRepository({Map<String, String>? seed}) {
+  MockDailyLogRepository({Map<String, String>? seed, this.topMeals = const {}})
+    : _store = {} {
     if (seed != null) {
       for (final entry in seed.entries) {
         _store[entry.key] = DailyLog(date: entry.key, text: entry.value);
@@ -12,8 +14,11 @@ class MockDailyLogRepository implements DailyLogRepository {
     }
   }
 
-  final Map<String, DailyLog> _store = {};
+  final Map<String, DailyLog> _store;
   final Map<String, LogParseResponse> _parsedByText = {};
+
+  /// Optional per-slot meal seeds that override the defaults.
+  final Map<String, List<String>> topMeals;
 
   @override
   Future<DailyLog?> getByDate(String date) async => _store[date];
@@ -36,4 +41,11 @@ class MockDailyLogRepository implements DailyLogRepository {
   @override
   Future<List<String>> getAllTexts() async =>
       _store.values.map((log) => log.text).toList();
+
+  @override
+  Future<List<String>> getTopMealsForTimeOfDay(String timeOfDay) async {
+    final custom = topMeals[timeOfDay];
+    if (custom != null && custom.isNotEmpty) return custom;
+    return defaultMealsByTimeOfDay[timeOfDay] ?? const [];
+  }
 }
