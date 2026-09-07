@@ -15,6 +15,7 @@ import '../molecules/ai_chat_sheet.dart';
 import '../molecules/daily_log_sheet.dart';
 import '../organisms/bottom_nav_bar.dart';
 import '../organisms/calendar_history_dialog.dart';
+import '../organisms/weekly_stats_sheet.dart';
 import 'nutrition_page.dart';
 import 'profile_page.dart';
 import 'routines_page.dart';
@@ -92,7 +93,19 @@ class _MainShellPageState extends State<MainShellPage> {
       appBar: AppBar(
         title: const AppHeading('NutriExercise', size: AppHeadingSize.h3),
         actions: [
-          if (widget.dailyEntryRepository != null)
+          if (widget.dailyEntryRepository != null) ...[
+            IconButton(
+              key: const Key('weekly_stats_action'),
+              icon: const Icon(
+                Icons.bar_chart_outlined,
+                color: AppColors.textMedium,
+              ),
+              tooltip: 'Weekly Stats',
+              onPressed: () => showWeeklyStatsSheet(
+                context,
+                repository: widget.dailyEntryRepository!,
+              ),
+            ),
             IconButton(
               key: const Key('history_action'),
               icon: const Icon(
@@ -105,6 +118,7 @@ class _MainShellPageState extends State<MainShellPage> {
                 repository: widget.dailyEntryRepository!,
               ),
             ),
+          ],
         ],
       ),
       body: SafeArea(child: _tabs[_currentIndex]),
