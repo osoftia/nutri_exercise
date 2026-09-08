@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
+import '../../core/services/notification_service.dart';
 import '../../core/state/ai_chat_controller.dart';
 import '../../core/state/daily_log_controller.dart';
 import '../../core/theme/app_theme.dart';
@@ -32,6 +33,7 @@ class MainShellPage extends StatefulWidget {
     required this.notificationNav,
     required this.dailyLogController,
     this.dailyEntryRepository,
+    this.notificationService,
   });
 
   final UserProfileController profileController;
@@ -42,6 +44,7 @@ class MainShellPage extends StatefulWidget {
   final NotificationNavigationController notificationNav;
   final DailyLogController dailyLogController;
   final DailyEntryRepository? dailyEntryRepository;
+  final NotificationService? notificationService;
 
   @override
   State<MainShellPage> createState() => _MainShellPageState();
@@ -55,6 +58,7 @@ class _MainShellPageState extends State<MainShellPage> {
     NutritionPage(
       controller: widget.nutritionController,
       dailyEntryRepository: widget.dailyEntryRepository,
+      notificationService: widget.notificationService,
     ),
     SchedulePage(controller: widget.scheduleController),
     ProfilePage(controller: widget.profileController),

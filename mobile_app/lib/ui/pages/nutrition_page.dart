@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
 import '../../core/models/food_entry.dart';
+import '../../core/services/notification_service.dart';
 import '../../core/state/nutrition_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/custom_button.dart';
@@ -17,12 +18,16 @@ class NutritionPage extends StatefulWidget {
     super.key,
     required this.controller,
     this.dailyEntryRepository,
+    this.notificationService,
   });
 
   final NutritionController controller;
 
   /// Optional SQLite-backed history; enables the Calendar History button.
   final DailyEntryRepository? dailyEntryRepository;
+
+  /// Optional notification service; enables reactive meal notifications.
+  final NotificationService? notificationService;
 
   @override
   State<NutritionPage> createState() => _NutritionPageState();
@@ -31,6 +36,7 @@ class NutritionPage extends StatefulWidget {
 class _NutritionPageState extends State<NutritionPage> {
   final _nameController = TextEditingController();
   final _caloriesController = TextEditingController();
+  bool _reactiveEnabled = true;
 
   static const List<FoodEntry> _quickAdds = [
     FoodEntry(
@@ -87,9 +93,36 @@ class _NutritionPageState extends State<NutritionPage> {
     final name = _nameController.text.trim();
     final calories = int.tryParse(_caloriesController.text.trim());
     if (name.isEmpty || calories == null) return;
-    widget.controller.logFood(FoodEntry(name: name, calories: calories));
+    _logFood(FoodEntry(name: name, calories: calories));
     _nameController.clear();
     _caloriesController.clear();
+  }
+
+  /// Logs [entry] and, when reactive notifications are enabled, fires an
+  /// immediate meal-logged notification.
+  void _logFood(FoodEntry entry) {
+    widget.controller.logFood(entry);
+    _maybeNotifyReactive();
+  }
+
+  Future<void> _maybeNotifyReactive() async {
+    final service = widget.notificationService;
+    final repository = widget.dailyEntryRepository;
+    if (!_reactiveEnabled || service == null || repository == null) return;
+    await service.showReactiveMealNotification(
+      repository: repository,
+      recovered: widget.controller.consumedCalories,
+    );
+  }
+
+  Future<void> _testNotifications() async {
+    final service = widget.notificationService;
+    final repository = widget.dailyEntryRepository;
+    if (service == null || repository == null) return;
+    await service.showReactiveMealNotification(
+      repository: repository,
+      recovered: widget.controller.consumedCalories,
+    );
   }
 
   @override
@@ -132,6 +165,40 @@ class _NutritionPageState extends State<NutritionPage> {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
+            if (widget.notificationService != null &&
+                widget.dailyEntryRepository != null) ...[
+              NeumorphicContainer(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SwitchListTile(
+                      key: const Key('reactive_notifications_toggle'),
+                      title: const AppText('Reactive meal notifications'),
+                      subtitle: const AppCaption(
+                        'Notify right after logging a meal',
+                      ),
+                      value: _reactiveEnabled,
+                      onChanged: (value) =>
+                          setState(() => _reactiveEnabled = value),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: AppSpacing.md,
+                        right: AppSpacing.md,
+                        bottom: AppSpacing.md,
+                      ),
+                      child: CustomButton(
+                        key: const Key('test_notifications_button'),
+                        label: 'Test Notifications',
+                        variant: CustomButtonVariant.ghost,
+                        onPressed: _testNotifications,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
             NeumorphicContainer(
               child: DynamicAvatar(morph: c.morphFactor),
             ),
@@ -199,7 +266,7 @@ class _NutritionPageState extends State<NutritionPage> {
                     key: Key('quick_add_${entry.name}'),
                     label: entry.name,
                     variant: CustomButtonVariant.ghost,
-                    onPressed: () => widget.controller.logFood(entry),
+                    onPressed: () => _logFood(entry),
                   ),
               ],
             ),

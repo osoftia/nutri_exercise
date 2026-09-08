@@ -151,6 +151,7 @@ class _NutriAppState extends State<NutriApp> {
         notificationNav: _notificationNav,
         dailyLogController: _dailyLogController,
         dailyEntryRepository: _dailyEntryRepository(),
+        notificationService: _notificationService,
       ),
     );
   }

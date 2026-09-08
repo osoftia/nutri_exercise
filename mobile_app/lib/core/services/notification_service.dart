@@ -3,7 +3,10 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../constants/meal_presets.dart';
+import '../data/daily_entry_repository.dart';
 import '../data/daily_log_repository.dart';
+import '../models/daily_entry.dart';
+import '../utils/weekly_stats.dart';
 import 'local_notification_scheduler.dart';
 import 'notification_background_handler.dart';
 
@@ -64,6 +67,9 @@ class NotificationService {
   static const int breakfastReminderId = 3101;
   static const int lunchReminderId = 3102;
   static const int dinnerReminderId = 3103;
+
+  /// Stable id for the immediate "meal logged" reactive notification.
+  static const int mealLoggedNotificationId = 4001;
 
   static const List<({int id, String timeOfDay, String title, int hour, int minute})>
   mealSlots = [
@@ -257,6 +263,58 @@ class NotificationService {
       return defaultMealsByTimeOfDay[timeOfDay] ?? const [];
     }
     return repo.getTopMealsForTimeOfDay(timeOfDay);
+  }
+
+  /// Builds the reactive body shown right after a meal is logged: a reminder
+  /// when nothing has been trained today, otherwise a recovered-vs-burned
+  /// summary based on the day's logged exercises.
+  Future<String> mealLoggedNotificationBody({
+    required DailyEntryRepository repository,
+    required int recovered,
+  }) async {
+    final today = DailyEntry.dateKey(DateTime.now());
+    final entry = await repository.getByDate(today);
+    final exercises = entry?.exercises ?? const [];
+    if (exercises.isEmpty) return 'Remember to do your routine!';
+    final burned = exercises.length * caloriesBurnedPerExercise;
+    return "You've recovered $recovered of the $burned calories you burned!";
+  }
+
+  /// Shows an immediate "meal logged" notification with [body].
+  Future<void> showMealLoggedNotification({required String body}) async {
+    await initialize();
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _dailyChannelId,
+        _dailyChannelName,
+        channelDescription: _dailyChannelDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+      macOS: DarwinNotificationDetails(),
+    );
+    await _plugin.show(mealLoggedNotificationId, 'Meal logged', body, details);
+  }
+
+  /// Reactive notification triggered right after logging a meal.
+  ///
+  /// Uses [repository] to check today's logged exercises and [recovered] as
+  /// the calories consumed so far. Failures are swallowed so notification
+  /// issues never break meal logging.
+  Future<void> showReactiveMealNotification({
+    required DailyEntryRepository repository,
+    required int recovered,
+  }) async {
+    try {
+      final body = await mealLoggedNotificationBody(
+        repository: repository,
+        recovered: recovered,
+      );
+      await showMealLoggedNotification(body: body);
+    } catch (_) {
+      // Notifications are non-critical.
+    }
   }
 
   /// The next [hour]:[minute] wall-clock occurrence at or after [now], rolling
