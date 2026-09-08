@@ -49,7 +49,7 @@ Future<void> _pumpHome(WidgetTester tester) async {
 }
 
 MuscleTamagotchiState? _bodyMapTamagotchi(WidgetTester tester) {
-  final bodyMap = find.byType(InteractiveBodyMap);
+  final bodyMap = find.byType(InteractiveBodyMap).first;
   final customPaint = tester.widget<CustomPaint>(
     find.descendant(of: bodyMap, matching: find.byType(CustomPaint)),
   );
@@ -63,7 +63,7 @@ void main() {
   ) async {
     await _pumpHome(tester);
 
-    expect(find.byType(InteractiveBodyMap), findsOneWidget);
+    expect(find.byType(InteractiveBodyMap), findsWidgets);
     expect(find.text('Upper Arms'), findsOneWidget);
   });
 

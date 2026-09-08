@@ -5,6 +5,7 @@ import '../../core/config/environment_config.dart';
 import '../../core/constants/muscle_group_map.dart';
 import '../../core/constants/tamagotchi_groups.dart';
 import '../../core/data/daily_entry_repository.dart';
+import '../../core/data/daily_log_repository.dart';
 import '../../core/data/diet_repository.dart';
 import '../../core/data/routine_repository.dart';
 import '../../core/models/diet_models.dart';
@@ -17,6 +18,7 @@ import '../../core/providers/environment_provider.dart';
 import '../../core/providers/routine_provider.dart';
 import '../../core/providers/wizard_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/services/share_progress_controller.dart';
 import '../../core/utils/exercise_muscle_mapper.dart';
 import '../atoms/custom_button.dart';
 import '../atoms/typography.dart';
@@ -25,6 +27,7 @@ import '../molecules/exercise_card.dart';
 import '../organisms/bottom_nav_bar.dart';
 import '../organisms/calendar_history_dialog.dart';
 import '../organisms/muscle_group_visualizer.dart';
+import '../organisms/social_share_card.dart';
 import 'wizard_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -34,6 +37,8 @@ class HomePage extends StatefulWidget {
     required this.routineRepository,
     this.profile,
     this.dailyEntryRepository,
+    this.dailyLogRepository,
+    this.shareController,
   });
 
   final DietRepository dietRepository;
@@ -45,6 +50,12 @@ class HomePage extends StatefulWidget {
   /// Optional SQLite-backed history; enables the AppBar History action.
   final DailyEntryRepository? dailyEntryRepository;
 
+  /// Optional streak source for the share card.
+  final DailyLogRepository? dailyLogRepository;
+
+  /// Optional share orchestrator (injectable for tests).
+  final ShareProgressController? shareController;
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -53,11 +64,18 @@ class _HomePageState extends State<HomePage> {
   late Future<List<DailyMenu>> _menus;
   final MuscleTamagotchiState _tamagotchi = MuscleTamagotchiState();
   final DailyNutritionState _nutrition = DailyNutritionState();
+  final GlobalKey _shareCardKey = GlobalKey();
+  late final ShareProgressController _shareController;
+  int _streak = 0;
 
   @override
   void initState() {
     super.initState();
     _menus = widget.dietRepository.getDailyMenus();
+    _shareController = widget.shareController ?? ShareProgressController();
+    widget.dailyLogRepository?.currentStreak().then((streak) {
+      if (mounted) setState(() => _streak = streak);
+    });
   }
 
   @override
@@ -109,6 +127,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  /// Captures the hidden [SocialShareCard] and opens the native share sheet.
+  Future<void> _shareProgress() async {
+    try {
+      await _shareController.shareCard(
+        _shareCardKey,
+        text: '🔥 $_streak días de racha en NutriExercise',
+      );
+    } catch (_) {
+      // Sharing is non-critical; never crash the dashboard.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<RoutineProvider>();
@@ -116,6 +146,15 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const AppHeading('Admin Dashboard', size: AppHeadingSize.h2),
         actions: [
+          IconButton(
+            key: const Key('share_progress_button'),
+            icon: const Icon(
+              Icons.ios_share,
+              color: AppColors.textMedium,
+            ),
+            tooltip: 'Share Progress',
+            onPressed: _shareProgress,
+          ),
           if (widget.dailyEntryRepository != null)
             IconButton(
               key: const Key('history_action'),
@@ -144,7 +183,12 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: _buildBody(provider),
+      body: Stack(
+        children: [
+          Positioned.fill(child: _buildBody(provider)),
+          _buildHiddenShareCard(),
+        ],
+      ),
       bottomNavigationBar: const BottomNavBar(currentIndex: 0),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.accent,
@@ -167,6 +211,30 @@ class _HomePageState extends State<HomePage> {
       );
     }
     return _buildContent(provider);
+  }
+
+  /// The hidden [SocialShareCard] used for image capture. Painted at full
+  /// opacity behind an [Opacity] layer so its RepaintBoundary rasterizes
+  /// cleanly while staying invisible to the user.
+  Widget _buildHiddenShareCard() {
+    return Positioned(
+      top: 0,
+      left: 0,
+      child: IgnorePointer(
+        child: Opacity(
+          opacity: 0,
+          child: SizedBox(
+            width: SocialShareCard.width,
+            height: SocialShareCard.height,
+            child: SocialShareCard(
+              repaintKey: _shareCardKey,
+              tamagotchiState: _tamagotchi,
+              streak: _streak,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildContent(RoutineProvider provider) {

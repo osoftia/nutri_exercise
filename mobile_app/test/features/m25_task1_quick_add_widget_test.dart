@@ -49,7 +49,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
 
     final quickAdd = find.byKey(const Key('quick_add_button'));
-    final bodyMap = find.byType(InteractiveBodyMap);
+    final bodyMap = find.byType(InteractiveBodyMap).first;
 
     expect(quickAdd, findsOneWidget);
     expect(bodyMap, findsOneWidget);
