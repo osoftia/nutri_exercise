@@ -58,6 +58,36 @@ Path _scaleNormalizedPathX(Path path, double scale) {
   );
 }
 
+/// Render scale for the core region from its settled scale and bloat state.
+///
+/// While bloating, the scale overshoots from `settled * (1 + overshoot)` down
+/// to exactly `settled` as the animation value `bloatT` goes 0 → 1; when not
+/// bloating, the region renders at its settled scale.
+double coreRenderScale({
+  required double settledScale,
+  required bool bloating,
+  required double bloatT,
+}) {
+  if (!bloating) return settledScale;
+  return settledScale * (1.0 + _kBloatOvershoot * (1.0 - bloatT));
+}
+
+/// Whether a tamagotchi change should (re)start the bloat animation.
+///
+/// Restarts when a bloat begins, and on every further fullness increase while
+/// bloating, so successive meal logs retrigger the overshoot in real-time
+/// instead of being swallowed by an already-running animation.
+bool shouldRestartBloat({
+  required bool bloating,
+  required double fullness,
+  required double lastFullness,
+  required bool wasBloating,
+}) {
+  if (!bloating) return false;
+  if (!wasBloating) return true;
+  return fullness > lastFullness;
+}
+
 class InteractiveBodyMap extends StatefulWidget {
   const InteractiveBodyMap({
     super.key,
@@ -93,6 +123,7 @@ class _InteractiveBodyMapState extends State<InteractiveBodyMap>
   double _glow = 0;
   double _bloat = 0;
   bool _coreBloating = false;
+  double _lastFullness = 0.0;
   MuscleTamagotchiState? _tamagotchiState;
   int _revision = 0;
 
@@ -132,11 +163,19 @@ class _InteractiveBodyMapState extends State<InteractiveBodyMap>
   }
 
   void _syncBloat() {
-    final bloat = _tamagotchiState?.coreIsBloating ?? false;
-    if (bloat && !_coreBloating) {
+    final state = _tamagotchiState;
+    final bloat = state?.coreIsBloating ?? false;
+    final fullness = state?.coreFullness ?? 0.0;
+    if (shouldRestartBloat(
+      bloating: bloat,
+      fullness: fullness,
+      lastFullness: _lastFullness,
+      wasBloating: _coreBloating,
+    )) {
       _bloatController.forward(from: 0.0);
     }
     _coreBloating = bloat;
+    _lastFullness = fullness;
     if (!bloat) {
       _bloat = 0;
     }
@@ -341,12 +380,11 @@ class _BodyMapPainter extends CustomPainter {
     if (tamagotchiGroupForRegion(region.id) != MuscleTamagotchiGroup.core) {
       return base;
     }
-    final settled = tamagotchiState!.settledCoreScale();
-    if (coreBloating) {
-      final overshoot = settled * (1.0 + _kBloatOvershoot * (1.0 - bloat));
-      return overshoot;
-    }
-    return settled;
+    return coreRenderScale(
+      settledScale: tamagotchiState!.settledCoreScale(),
+      bloating: coreBloating,
+      bloatT: bloat,
+    );
   }
 
   Color _regionColor(MuscleRegion region) {
