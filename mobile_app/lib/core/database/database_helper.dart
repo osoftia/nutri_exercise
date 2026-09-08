@@ -19,7 +19,7 @@ class DatabaseHelper {
   DatabaseHelper({Database? database}) : _databaseOverride = database;
 
   static const String _dbName = 'nutri_exercise.db';
-  static const int _dbVersion = 7;
+  static const int _dbVersion = 8;
 
   final Database? _databaseOverride;
   Database? _database;
@@ -117,6 +117,12 @@ class DatabaseHelper {
         'INTEGER NOT NULL DEFAULT 0',
       );
     }
+    if (oldVersion < 8) {
+      await db.execute(
+        'ALTER TABLE daily_entries ADD COLUMN burned '
+        'INTEGER NOT NULL DEFAULT 0',
+      );
+    }
   }
 
   Future<void> _createNotificationHistoryTables(Database db) async {
@@ -147,7 +153,8 @@ class DatabaseHelper {
         carbs INTEGER NOT NULL,
         fat INTEGER NOT NULL,
         exercises_json TEXT NOT NULL,
-        healthy_meals INTEGER NOT NULL DEFAULT 0
+        healthy_meals INTEGER NOT NULL DEFAULT 0,
+        burned INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }

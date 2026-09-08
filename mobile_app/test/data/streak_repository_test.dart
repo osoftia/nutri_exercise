@@ -30,7 +30,8 @@ void main() {
               carbs INTEGER NOT NULL,
               fat INTEGER NOT NULL,
               exercises_json TEXT NOT NULL,
-              healthy_meals INTEGER NOT NULL DEFAULT 0
+              healthy_meals INTEGER NOT NULL DEFAULT 0,
+              burned INTEGER NOT NULL DEFAULT 0
             )
           ''');
         },

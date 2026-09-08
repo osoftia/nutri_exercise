@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../data/daily_entry_repository.dart';
+import '../data/local_daily_entry_repository.dart';
 import '../data/meal_action_repository.dart';
 import '../data/local_meal_action_repository.dart';
 import '../data/local_tamagotchi_progress_repository.dart';
@@ -9,6 +11,7 @@ import '../models/daily_entry.dart';
 import '../models/meal_action.dart';
 import '../models/tamagotchi_progress.dart';
 import '../state/muscle_tamagotchi_state.dart';
+import 'exercise_response_handler.dart';
 import 'notification_service.dart';
 
 /// Default calorie estimate applied when a meal is quick-logged from a
@@ -29,7 +32,8 @@ Future<void> onDidReceiveBackgroundNotificationResponse(
 
 /// Processes a notification action response: writes the quick-logged meal to
 /// SQLite, runs the tamagotchi bloat math against the persisted progress, and
-/// clears the notification.
+/// clears the notification. Exercise check-in responses ("Yes"/"Not yet") are
+/// dispatched to [ExerciseResponseHandler].
 ///
 /// Repositories and the plugin are injectable for tests; production uses the
 /// SQLite-backed implementations.
@@ -38,11 +42,24 @@ Future<void> handleNotificationResponse(
   NotificationResponse response, {
   MealActionRepository? mealRepository,
   TamagotchiProgressRepository? progressRepository,
+  DailyEntryRepository? dailyEntryRepository,
   FlutterLocalNotificationsPlugin? plugin,
 }) async {
   final pluginInstance = plugin ?? FlutterLocalNotificationsPlugin();
+  final actionId = response.actionId;
 
-  final meal = NotificationService.mealNameFromActionId(response.actionId);
+  if (actionId == NotificationService.exerciseYesActionId ||
+      actionId == NotificationService.exerciseNoActionId) {
+    await ExerciseResponseHandler.handleExerciseResponse(
+      actionId: actionId,
+      entries: dailyEntryRepository ?? LocalDailyEntryRepository(),
+      progress: progressRepository ?? LocalTamagotchiProgressRepository(),
+    );
+    await _cancelNotification(pluginInstance, response);
+    return;
+  }
+
+  final meal = NotificationService.mealNameFromActionId(actionId);
   if (meal == null) {
     // A plain tap or a non-meal action: nothing to persist in the background.
     await _cancelNotification(pluginInstance, response);

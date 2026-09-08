@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nutri_mobile_app/core/mocks/mock_daily_entry_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_meal_action_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_tamagotchi_progress_repository.dart';
 import 'package:nutri_mobile_app/core/models/daily_entry.dart';
@@ -7,6 +8,7 @@ import 'package:nutri_mobile_app/core/models/tamagotchi_progress.dart';
 import 'package:nutri_mobile_app/core/services/notification_background_handler.dart';
 import 'package:nutri_mobile_app/core/services/notification_service.dart';
 import 'package:nutri_mobile_app/core/state/muscle_tamagotchi_state.dart';
+import 'package:nutri_mobile_app/core/utils/weekly_stats.dart';
 
 class _RecordingAndroidPlatform extends AndroidFlutterLocalNotificationsPlugin {
   final List<int> cancelledIds = [];
@@ -89,5 +91,38 @@ void main() {
       MuscleTamagotchiState.coreFullnessAfterSlimming(0.5, amount: 0.2),
       0.3,
     );
+  });
+
+  test('exercise_yes responses are dispatched and record the burned calories',
+      () async {
+    final entries = MockDailyEntryRepository()
+      ..save(DailyEntry(
+        date: DailyEntry.dateKey(DateTime.now()),
+        exercises: const ['Squat'],
+      ));
+    final progress = MockTamagotchiProgressRepository(
+      const TamagotchiProgress(coreFullness: 0.8),
+    );
+    final platform = _RecordingAndroidPlatform();
+    FlutterLocalNotificationsPlatform.instance = platform;
+    final plugin = FlutterLocalNotificationsPlugin();
+
+    await handleNotificationResponse(
+      NotificationResponse(
+        id: 99,
+        actionId: NotificationService.exerciseYesActionId,
+        notificationResponseType: NotificationResponseType.selectedNotificationAction,
+      ),
+      dailyEntryRepository: entries,
+      progressRepository: progress,
+      plugin: plugin,
+    );
+
+    expect(
+      (await entries.getByDate(DailyEntry.dateKey(DateTime.now())))!.burned,
+      caloriesBurnedPerExercise,
+    );
+    expect((await progress.get())!.coreFullness, lessThan(0.8));
+    expect(platform.cancelledIds, contains(99));
   });
 }

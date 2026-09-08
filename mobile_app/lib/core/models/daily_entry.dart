@@ -11,6 +11,7 @@ class DailyEntry {
     this.fat = 0,
     this.exercises = const [],
     this.healthyMeals = 0,
+    this.burned = 0,
   });
 
   /// The calendar date this entry belongs to, in `YYYY-MM-DD` form.
@@ -27,8 +28,13 @@ class DailyEntry {
   /// Number of healthy meals logged on this day (drives the streak engine).
   final int healthyMeals;
 
+  /// Calories burned from today's workouts (set when the 9 PM check-in is
+  /// confirmed).
+  final int burned;
+
   /// Whether nothing meaningful has been logged for this day.
-  bool get isEmpty => calories == 0 && exercises.isEmpty && healthyMeals == 0;
+  bool get isEmpty =>
+      calories == 0 && exercises.isEmpty && healthyMeals == 0 && burned == 0;
 
   /// Formats a [DateTime] into the `YYYY-MM-DD` key used for persistence.
   static String dateKey(DateTime date) {
@@ -46,6 +52,7 @@ class DailyEntry {
     int? fat,
     List<String>? exercises,
     int? healthyMeals,
+    int? burned,
   }) {
     return DailyEntry(
       date: date ?? this.date,
@@ -55,6 +62,7 @@ class DailyEntry {
       fat: fat ?? this.fat,
       exercises: exercises ?? this.exercises,
       healthyMeals: healthyMeals ?? this.healthyMeals,
+      burned: burned ?? this.burned,
     );
   }
 
@@ -67,6 +75,7 @@ class DailyEntry {
     'fat': fat,
     'exercises_json': jsonEncode(exercises),
     'healthy_meals': healthyMeals,
+    'burned': burned,
   };
 
   /// Restores a [DailyEntry] from a SQLite row map produced by [toMap].
@@ -78,6 +87,7 @@ class DailyEntry {
     fat: (map['fat'] as int?) ?? 0,
     exercises: _decodeExercises(map['exercises_json'] as String?),
     healthyMeals: (map['healthy_meals'] as int?) ?? 0,
+    burned: (map['burned'] as int?) ?? 0,
   );
 
   static List<String> _decodeExercises(String? raw) {
