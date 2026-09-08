@@ -1,0 +1,7 @@
+# M28 Autonomous Backlog
+
+- [x] Task 1: Dependencies & Setup - Add `share_plus` and `path_provider` to `pubspec.yaml`. Run `flutter pub get`. (Ensure compatibility with Flutter 3.29.0).
+- [x] Task 2: Streak Calculator Engine - Update `DailyLogRepository` and the SQLite logic to calculate the "Current Streak" (rachas). A streak increases for consecutive days where at least one exercise or healthy meal is logged.
+- [x] Task 3: Shareable UI Card - Create a new hidden widget `SocialShareCard` (wrapped in a `RepaintBoundary` with a GlobalKey). It should have a highly polished, vertical "Instagram Story" style layout containing: the user's `InteractiveBodyMap` (with current muscle colors/bloat), the current Streak count (with a 🔥 icon), and a motivational summary.
+- [x] Task 4: Image Capture Utility - Create a utility service `WidgetToImageExporter` that takes the `GlobalKey` of the `RepaintBoundary`, converts it to a `ui.Image`, formats it as a PNG `Uint8List`, and saves it to the temporary directory.
+- [x] Task 5: Share Integration - Add a visually appealing "Share Progress" button to the `HomePage` or `WeeklyStatsSheet`. When tapped, it captures the PNG and uses `Share.shareXFiles` to trigger the native OS share dialog.
