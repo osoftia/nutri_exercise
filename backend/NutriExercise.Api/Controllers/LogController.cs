@@ -25,9 +25,43 @@ public class LogController : ControllerBase
         _dbContext = dbContext;
     }
 
+    [HttpGet("history")]
+    public async Task<IActionResult> GetHistory(
+        [FromQuery] string? sort = "desc",
+        [FromQuery] DateTime? from = null,
+        [FromQuery] DateTime? to = null)
+    {
+        var logs = await _dailyLogRepository.GetAllAsync();
+
+        if (from.HasValue)
+        {
+            logs = logs.Where(l => l.CreatedAt >= from.Value);
+        }
+
+        if (to.HasValue)
+        {
+            logs = logs.Where(l => l.CreatedAt <= to.Value);
+        }
+
+        logs = sort?.ToLower() == "asc"
+            ? logs.OrderBy(l => l.CreatedAt)
+            : logs.OrderByDescending(l => l.CreatedAt);
+
+        return Ok(logs);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var deleted = await _dailyLogRepository.DeleteAsync(id);
+        return deleted ? NoContent() : NotFound();
+    }
+
     [HttpPost("parse")]
     public async Task<IActionResult> Parse([FromBody] ParseLogRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         if (string.IsNullOrWhiteSpace(request.Text))
         {
             return BadRequest("Log text is required.");
@@ -68,6 +102,8 @@ public class LogController : ControllerBase
     [HttpPost("save")]
     public async Task<IActionResult> Save([FromBody] LogSaveRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         if (string.IsNullOrWhiteSpace(request.OriginalText))
         {
             return BadRequest("Original text is required.");

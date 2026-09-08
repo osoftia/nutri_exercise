@@ -68,7 +68,9 @@ dotnet_naming_style.camel_case_style.capitalization = camel_case
 # ---------------------------------------------------------------------------
 dotnet_diagnostic.CA1501.severity = warning
 dotnet_diagnostic.CA1505.severity = warning
-dotnet_diagnostic.CA1506.severity = warning
+# CA1506 (class coupling) is expected to be high in Program.cs top-level
+# statements (DI registrations); lowered to suggestion to avoid noise.
+dotnet_diagnostic.CA1506.severity = suggestion
 dotnet_diagnostic.CA1507.severity = warning
 dotnet_diagnostic.CA1508.severity = warning
 dotnet_diagnostic.CA1509.severity = warning
@@ -82,3 +84,10 @@ dotnet_diagnostic.IDE0055.severity = warning
 
 # Treat compiler warnings as errors for strictness
 dotnet_analyzer_diagnostic.severity = default
+
+# ---------------------------------------------------------------------------
+# EF Core auto-generated migrations: suppress null-validation warnings
+# (CA1062) since these files are machine-generated and not edited by hand.
+# ---------------------------------------------------------------------------
+[**/Migrations/**]
+dotnet_diagnostic.CA1062.severity = none

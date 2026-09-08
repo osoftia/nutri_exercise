@@ -45,3 +45,9 @@ PROMPT*
 
 # Reqnroll auto-generated code-behind
 **/*.feature.cs
+
+# Local database backups and config
+backend/*.sql
+backend/*.backup
+backend/.config/
+backend/docker-compose.yaml

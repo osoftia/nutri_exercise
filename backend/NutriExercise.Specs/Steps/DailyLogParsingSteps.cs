@@ -52,7 +52,8 @@ public class DailyLogParsingSteps
     public void ThenTheResponseShouldContainCalories()
     {
         var okResult = _result as OkObjectResult;
-        var response = okResult!.Value as ParsedLogResponse;
+        var value = okResult!.Value;
+        var response = value?.GetType().GetProperty("Parsed")?.GetValue(value) as ParsedLogResponse;
 
         response.Should().NotBeNull();
         response!.Calories.Should().Be(600);
@@ -62,7 +63,8 @@ public class DailyLogParsingSteps
     public void ThenTheExercisedMusclesShouldInclude(string muscle)
     {
         var okResult = _result as OkObjectResult;
-        var response = okResult!.Value as ParsedLogResponse;
+        var value = okResult!.Value;
+        var response = value?.GetType().GetProperty("Parsed")?.GetValue(value) as ParsedLogResponse;
 
         response.Should().NotBeNull();
         response!.Muscles.Should().Contain(muscle);

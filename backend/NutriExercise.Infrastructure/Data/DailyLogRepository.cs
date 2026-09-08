@@ -29,4 +29,17 @@ public class DailyLogRepository : IDailyLogRepository
     {
         return await _context.DailyLogRecords.AsNoTracking().ToListAsync(cancellationToken);
     }
+
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var record = await _context.DailyLogRecords.FindAsync(new object[] { id }, cancellationToken);
+        if (record is null)
+        {
+            return false;
+        }
+
+        _context.DailyLogRecords.Remove(record);
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
 }

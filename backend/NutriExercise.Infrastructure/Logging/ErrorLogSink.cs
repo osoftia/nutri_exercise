@@ -17,6 +17,8 @@ public class ErrorLogSink : ILogEventSink
 
     public void Emit(LogEvent logEvent)
     {
+        ArgumentNullException.ThrowIfNull(logEvent);
+
         if (logEvent.Level < LogEventLevel.Error)
         {
             return;

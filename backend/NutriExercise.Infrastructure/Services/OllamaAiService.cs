@@ -10,6 +10,8 @@ public class OllamaAiService : IAiService
 
     public OllamaAiService(IHttpClientFactory httpClientFactory)
     {
+        ArgumentNullException.ThrowIfNull(httpClientFactory);
+
         _httpClient = httpClientFactory.CreateClient("Ollama");
     }
 

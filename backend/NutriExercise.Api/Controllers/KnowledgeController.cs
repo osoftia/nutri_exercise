@@ -21,6 +21,8 @@ public class KnowledgeController : ControllerBase
     [HttpPost("document")]
     public async Task<IActionResult> AddDocument([FromBody] AddDocumentRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         if (string.IsNullOrWhiteSpace(request.Title) ||
             string.IsNullOrWhiteSpace(request.Content) ||
             string.IsNullOrWhiteSpace(request.Source))

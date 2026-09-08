@@ -9,4 +9,6 @@ public interface IDailyLogRepository
     Task<DailyLogRecord?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<DailyLogRecord>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
