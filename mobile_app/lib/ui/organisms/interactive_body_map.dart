@@ -289,7 +289,11 @@ Path _screenPath(
 }
 
 MuscleRegion? muscleAt(Offset position, Size size) {
-  for (final region in muscleRegions) {
+  // Hit-test in reverse paint order so taps resolve to the topmost-painted
+  // region. This keeps the split anatomies (upper arms vs forearms, thighs
+  // vs calves) distinct and tappable where their vector seams overlap.
+  for (var i = muscleRegions.length - 1; i >= 0; i--) {
+    final region = muscleRegions[i];
     if (_screenPath(region, size).contains(position)) return region;
   }
   return null;
