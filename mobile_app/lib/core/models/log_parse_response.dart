@@ -16,6 +16,7 @@ class LogParseResponse {
     this.carbs,
     this.fat,
     this.muscleGroups = const [],
+    this.healthy,
   });
 
   final int calories;
@@ -32,6 +33,23 @@ class LogParseResponse {
   /// Muscle groups mentioned in the summary (lower-case ids).
   final List<String> muscleGroups;
 
+  /// Explicit food-quality flag from the parser. When `null`, [isHealthy]
+  /// falls back to a macro heuristic.
+  final bool? healthy;
+
+  /// Whether the meal counts as "healthy" for gamification.
+  ///
+  /// An explicit parser flag wins; otherwise a meal is healthy when it is
+  /// high-protein (>= 20 g) and low-fat (<= 30 g).
+  bool get isHealthy {
+    final explicit = healthy;
+    if (explicit != null) return explicit;
+    final p = protein;
+    if (p == null || p < 20) return false;
+    final f = fat;
+    return f == null || f <= 30;
+  }
+
   factory LogParseResponse.fromJson(Map<String, dynamic> json) {
     final macros = json['macros'];
     final macrosMap = macros is Map<String, dynamic>
@@ -46,6 +64,7 @@ class LogParseResponse {
       muscleGroups: (json['muscleGroups'] as List<dynamic>? ?? const [])
           .whereType<String>()
           .toList(),
+      healthy: json['healthy'] as bool?,
     );
   }
 
@@ -57,6 +76,7 @@ class LogParseResponse {
     'carbs': carbs,
     'fat': fat,
     'muscleGroups': muscleGroups,
+    if (healthy != null) 'healthy': healthy,
   };
 
   static int? _readInt(dynamic value) {

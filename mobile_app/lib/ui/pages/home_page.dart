@@ -84,15 +84,16 @@ class _HomePageState extends State<HomePage> {
   void _simulateMeal() {
     const meal = LogParseResponse(calories: 650, protein: 45, fat: 18);
     _nutrition.add(meal);
-    _tamagotchi.applyNutrition(meal.calories);
+    _tamagotchi.applyMeal(meal);
   }
 
   /// Logs a default quick meal into the nutrition totals and applies the
-  /// resulting core bloat to the tamagotchi. Used by the "Quick Add" button.
+  /// tamagotchi food-quality effect (healthy → muscle, unhealthy → bloat).
+  /// Used by the "Quick Add" button.
   void _quickAdd() {
     const meal = LogParseResponse(calories: 650, protein: 45, fat: 18);
     _nutrition.add(meal);
-    _tamagotchi.applyNutrition(meal.calories);
+    _tamagotchi.applyMeal(meal);
   }
 
   void _launchWizard() {

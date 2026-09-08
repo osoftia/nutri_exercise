@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../models/log_parse_response.dart';
+
 /// The four gamified muscle groups of the tamagotchi avatar.
 enum MuscleTamagotchiGroup { core, arms, chest, legs }
 
@@ -69,6 +71,21 @@ class MuscleTamagotchiState extends ChangeNotifier {
     _coreFullness = coreFullnessAfterNutrition(_coreFullness, calories);
     _coreBloating = true;
     notifyListeners();
+  }
+
+  /// Applies a meal to the avatar based on its food quality: healthy meals
+  /// (high protein / vegetables) grow the arms, legs and chest muscle vectors,
+  /// while unhealthy meals increase stomach bloat.
+  void applyMeal(LogParseResponse meal) {
+    if (meal.isHealthy) {
+      applyGrowth(const [
+        MuscleTamagotchiGroup.arms,
+        MuscleTamagotchiGroup.legs,
+        MuscleTamagotchiGroup.chest,
+      ]);
+    } else {
+      applyNutrition(meal.calories);
+    }
   }
 
   /// Ends the transient bloat; the increased fullness (permanent size) remains.
