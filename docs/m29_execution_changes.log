@@ -1,0 +1,25 @@
+# M29 Execution Changes Log — Quick Add & Calendar Sync Fixes
+
+Autonomous sprint following the M26–M28 loop: per task → branch → spec → TDD red/green → analyze/test → merge → backlog check-off. All merged to `main` via fast-forward.
+
+## Task 1: Quick Add Placement
+- `lib/ui/pages/home_page.dart` — restructured the dashboard so the muscle map stands alone: the profile card moved beside "Daily Totals" and Quick Add sits EXACTLY and exclusively immediately below the `InteractiveBodyMap` (no widget in between).
+- Tests: `test/features/m29_task1_quick_add_placement_widget_test.dart` (exactly one Quick Add button; Quick Add immediately below the body map with a small gap; profile card no longer between them). Existing M25 placement test still green.
+
+## Task 2: Daily Log Header Action Button
+- `lib/ui/pages/home_page.dart` — added a "Daily Log" section header with a trailing action button (`daily_log_action`, key) that opens `showDailyLogSheet`. Requires an optional injected `DailyLogController`; the section is hidden without one.
+- `lib/ui/organisms/interactive_body_map.dart` — added an `animate` flag (default true). The hidden social share card now passes `animate: false`, stopping the perpetual glow tick (enables `pumpAndSettle` and avoids battery drain).
+- `lib/ui/organisms/social_share_card.dart` — passes `animate: false`.
+- Tests: `test/features/m29_task2_daily_log_action_widget_test.dart` (section + button shown, tapping opens the sheet, hidden without a controller).
+
+## Task 3: Calendar & Database Sync
+- `lib/ui/pages/home_page.dart` — `_quickAdd` now upserts today's `DailyEntry` (calories + healthy-meal count) via `dailyEntryRepository`; `_openDailyLog` mirrors the logged summary (or parsed calories) into today's entry after the sheet closes. Both write with today's `YYYY-MM-DD` timestamp so the calendar instantly marks the day.
+- Tests: `test/features/m29_task3_calendar_sync_widget_test.dart` (Quick Add persists calories + healthy meals; Daily Log action persists an entry; calendar day cell is marked after logging).
+
+## Environment fixes handled during verification
+- Restored a corrupted uncommitted `nutrition_page.dart` (a stray edit had moved the "Quick Add" section into the middle of the macro-rings Row, breaking 11 Nutrition tests) via `git checkout`.
+- Regenerated `.dart_tool/package_config.json` which had been pointing `flutter` at an old cached SDK (3.10.0) instead of the pinned 3.29.0.
+
+## Verification
+- `flutter analyze`: No issues found (0 warnings/errors).
+- `flutter test`: 362/362 passing (baseline 356 before M29).
