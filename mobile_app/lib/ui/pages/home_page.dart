@@ -12,6 +12,7 @@ import '../../core/models/diet_models.dart';
 import '../../core/models/log_parse_response.dart';
 import '../../core/models/user_profile.dart';
 import '../../core/state/body_proportions.dart';
+import '../../core/state/daily_log_controller.dart';
 import '../../core/state/daily_nutrition_state.dart';
 import '../../core/state/muscle_tamagotchi_state.dart';
 import '../../core/providers/environment_provider.dart';
@@ -22,6 +23,7 @@ import '../../core/services/share_progress_controller.dart';
 import '../../core/utils/exercise_muscle_mapper.dart';
 import '../atoms/custom_button.dart';
 import '../atoms/typography.dart';
+import '../molecules/daily_log_sheet.dart';
 import '../molecules/daily_totals_card.dart';
 import '../molecules/exercise_card.dart';
 import '../organisms/bottom_nav_bar.dart';
@@ -38,6 +40,7 @@ class HomePage extends StatefulWidget {
     this.profile,
     this.dailyEntryRepository,
     this.dailyLogRepository,
+    this.dailyLogController,
     this.shareController,
   });
 
@@ -52,6 +55,9 @@ class HomePage extends StatefulWidget {
 
   /// Optional streak source for the share card.
   final DailyLogRepository? dailyLogRepository;
+
+  /// Optional daily check-in controller; enables the "Daily Log" section.
+  final DailyLogController? dailyLogController;
 
   /// Optional share orchestrator (injectable for tests).
   final ShareProgressController? shareController;
@@ -119,6 +125,13 @@ class _HomePageState extends State<HomePage> {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const WizardPage()),
     );
+  }
+
+  /// Opens the quick daily check-in logging sheet.
+  Future<void> _openDailyLog() async {
+    final controller = widget.dailyLogController;
+    if (controller == null) return;
+    await showDailyLogSheet(context, controller);
   }
 
   void _navigateToProfile() {
@@ -272,6 +285,24 @@ class _HomePageState extends State<HomePage> {
         ),
         const SizedBox(height: AppSpacing.lg),
         const SizedBox.shrink(),
+        if (widget.dailyLogController != null) ...[
+          const SizedBox(height: AppSpacing.xxl),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const AppHeading('Daily Log', size: AppHeadingSize.h2),
+              IconButton(
+                key: const Key('daily_log_action'),
+                icon: const Icon(
+                  Icons.edit_note,
+                  color: AppColors.primary400,
+                ),
+                tooltip: 'Quick log today',
+                onPressed: _openDailyLog,
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: AppSpacing.xxl),
         const AppHeading('Daily Totals'),
         const SizedBox(height: AppSpacing.md),

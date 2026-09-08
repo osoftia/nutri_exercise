@@ -71,6 +71,7 @@ class SocialShareCard extends StatelessWidget {
                 child: InteractiveBodyMap(
                   tamagotchiState: tamagotchiState,
                   bodyWidthFactor: bodyWidthFactor,
+                  animate: false,
                 ),
               ),
             ),

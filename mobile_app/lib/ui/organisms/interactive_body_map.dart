@@ -66,6 +66,7 @@ class InteractiveBodyMap extends StatefulWidget {
     this.activeRegions = const {},
     this.tamagotchiState,
     this.bodyWidthFactor = 1.0,
+    this.animate = true,
   });
 
   final String? selectedMuscle;
@@ -75,6 +76,10 @@ class InteractiveBodyMap extends StatefulWidget {
 
   /// Baseline body width factor (from the user's BMI); `1.0` is neutral.
   final double bodyWidthFactor;
+
+  /// Whether the selection glow animates. Disable for static captures (e.g.
+  /// the hidden social share card) to avoid perpetual ticking.
+  final bool animate;
 
   @override
   State<InteractiveBodyMap> createState() => _InteractiveBodyMapState();
@@ -95,8 +100,10 @@ class _InteractiveBodyMapState extends State<InteractiveBodyMap>
   void initState() {
     super.initState();
     _selected = widget.selectedMuscle;
-    _glowController = AnimationController(vsync: this, duration: _kGlowDuration)
-      ..repeat();
+    _glowController = AnimationController(vsync: this, duration: _kGlowDuration);
+    if (widget.animate) {
+      _glowController.repeat();
+    }
     _glowController.addListener(() {
       setState(() => _glow = _glowController.value);
     });
