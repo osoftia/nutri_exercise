@@ -10,6 +10,13 @@ export const routes: Routes = [
         (m) => m.AnalyticsPage,
       ),
   },
+  {
+    path: 'rag-lab',
+    loadComponent: () =>
+      import('./components/organisms/prompt-lab/prompt-lab').then(
+        (m) => m.PromptLab,
+      ),
+  },
   { path: 'admin-dashboard', redirectTo: '/history', pathMatch: 'full' },
   { path: '', redirectTo: '/history', pathMatch: 'full' },
 ];
