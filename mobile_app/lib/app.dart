@@ -91,6 +91,7 @@ class _NutriAppState extends State<NutriApp> {
       if (widget.config.enableNotifications) {
         await _notificationService.scheduleDailyReminder();
         await _notificationService.scheduleDailyMealReminders();
+        await _notificationService.scheduleDailyExerciseReminder();
       }
       final launch = await _notificationService.launchDetails();
       if (launch != null && launch.didNotificationLaunchApp) {

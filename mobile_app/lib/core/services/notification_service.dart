@@ -125,6 +125,28 @@ class NotificationService {
     );
   }
 
+  /// Schedules the daily 9:00 PM exercise check-in reminder (repeating every
+  /// day). Cancels the previous reminder id first so relaunching never stacks
+  /// duplicates.
+  Future<void> scheduleDailyExerciseReminder() async {
+    await initialize();
+    final scheduled = nextDailyOccurrence(
+      tz.TZDateTime.now(tz.local),
+      hour: 21,
+      minute: 0,
+    );
+    await _scheduler.cancel(exerciseReminderId);
+    await _scheduler.zonedSchedule(
+      exerciseReminderId,
+      _exerciseTitle,
+      _exerciseBody,
+      scheduled,
+      _exerciseDetails(),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
   static const List<({int id, String timeOfDay, String title, int hour, int minute})>
   mealSlots = [
     (id: breakfastReminderId, timeOfDay: 'breakfast', title: 'Breakfast', hour: 8, minute: 0),
