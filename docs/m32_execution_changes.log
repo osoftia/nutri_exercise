@@ -1,0 +1,33 @@
+# M32 Execution Changes Log — 9 PM Exercise Notification & "EXERCISE NOT" Button
+
+Autonomous sprint following the loop: per task → branch → spec → TDD red/green → analyze/test → merge → backlog check-off. All merged to `main` via fast-forward.
+
+> Note: M31 was partially interrupted. M31 Task 1 (calendar visual repair) was completed and merged first (committed on `feature/m31-task-1`, merged to `main`); M31 Tasks 2–5 remain on the backlog for a future run. The M31 verification hang was diagnosed and fixed: the C: drive was full (~20 MB free), so `flutter test` could not write its compiler output. Freeing temp space restored the environment.
+
+## Task 1: "EXERCISE NOT" UI Test Button
+- `lib/core/services/notification_service.dart` — added exercise-check-in constants (`exerciseReminderId` 3201, test id 3202, `exercise_yes`/`exercise_no` action ids, channel + title/body) and `showExerciseReminderTest()` which immediately shows the exercise check-in notification with Yes / Not-yet actions.
+- `lib/ui/pages/nutrition_page.dart` — added an "EXERCISE NOT" button (`exercise_not_button`) in the notifications section that triggers the test payload.
+- Test: `test/features/m32_task1_exercise_not_widget_test.dart`.
+
+## Task 2: 9 PM Daily Exercise Notification Schedule
+- `lib/core/services/notification_service.dart` — `scheduleDailyExerciseReminder()` schedules a daily repeating 21:00 reminder (`DateTimeComponents.time`) with Yes / Not-yet actions; cancels the previous id first.
+- `lib/app.dart` — bootstraps the exercise reminder alongside the other daily reminders.
+- Test: `test/services/notification_exercise_reminder_test.dart`.
+
+## Task 3: Interactive Response Handler & Calorie Calculation
+- `lib/core/models/daily_entry.dart` — added `burned` (int) + toMap/fromMap/copyWith.
+- `lib/core/database/database_helper.dart` — schema v8 (`daily_entries.burned`).
+- `lib/core/services/exercise_response_handler.dart` — `caloriesBurnedFor(exercises)` (250 kcal each), `slimmedFullness(current, exercises)` (per-exercise slimming), and `handleExerciseResponse(...)`: on "Yes" records burned calories on today's entry and reduces the persisted core fullness; "Not yet" is a no-op.
+- `lib/core/services/notification_background_handler.dart` — dispatches `exercise_yes`/`exercise_no` actions to the handler (with injectable `dailyEntryRepository`).
+- Tests: `test/services/exercise_response_handler_test.dart`; extended `notification_background_handler_test.dart` with a dispatch test.
+
+## Task 4: Verification & Tests
+- `docs/specs/m32_task_4.feature` — formal spec.
+- Confirmed dedicated tests cover scheduling, actions, cancel-before-reschedule, burned math, slimming, SQLite update, and the Not-yet no-op.
+
+## Verification
+- `flutter analyze`: No issues found (0 warnings/errors).
+- `flutter test`: 376/376 passing (baseline 362 before M32).
+
+## Environment fix
+- C: drive was critically full (≈20 MB free), causing `flutter test` compiler `writeFrom` failures (errno 112) and 12-minute load timeouts. Deleted stale `flutter_tools.*` temp dirs and old Temp files to restore ~1.7 GB free; tests run normally afterward.
