@@ -9,6 +9,7 @@ import '../../core/data/daily_log_repository.dart';
 import '../../core/data/diet_repository.dart';
 import '../../core/data/routine_repository.dart';
 import '../../core/models/diet_models.dart';
+import '../../core/models/daily_entry.dart';
 import '../../core/models/log_parse_response.dart';
 import '../../core/models/user_profile.dart';
 import '../../core/state/body_proportions.dart';
@@ -113,11 +114,30 @@ class _HomePageState extends State<HomePage> {
 
   /// Logs a default quick meal into the nutrition totals and applies the
   /// tamagotchi food-quality effect (healthy → muscle, unhealthy → bloat).
-  /// Used by the "Quick Add" button.
+  /// Used by the "Quick Add" button. Also persists today's entry to SQLite so
+  /// the calendar reflects it instantly.
   void _quickAdd() {
     const meal = LogParseResponse(calories: 650, protein: 45, fat: 18);
     _nutrition.add(meal);
     _tamagotchi.applyMeal(meal);
+    _persistTodayEntry(
+      (entry) => entry.copyWith(
+        calories: entry.calories + meal.calories,
+        healthyMeals: entry.healthyMeals + (meal.isHealthy ? 1 : 0),
+      ),
+    );
+  }
+
+  /// Upserts today's entry in the history repository (when available),
+  /// applying [update] to the existing value.
+  Future<void> _persistTodayEntry(
+    DailyEntry Function(DailyEntry current) update,
+  ) async {
+    final repository = widget.dailyEntryRepository;
+    if (repository == null) return;
+    final today = DailyEntry.dateKey(DateTime.now());
+    final existing = await repository.getByDate(today);
+    await repository.save(update(existing ?? DailyEntry(date: today)));
   }
 
   void _launchWizard() {
@@ -127,11 +147,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// Opens the quick daily check-in logging sheet.
+  /// Opens the quick daily check-in logging sheet. After it closes, the logged
+  /// summary (or its parsed calories) is mirrored into today's SQLite entry so
+  /// the calendar reflects it instantly.
   Future<void> _openDailyLog() async {
     final controller = widget.dailyLogController;
     if (controller == null) return;
     await showDailyLogSheet(context, controller);
+    await _persistTodayEntry(
+      (entry) => entry.copyWith(
+        calories: controller.parseResult?.calories ?? entry.calories,
+      ),
+    );
   }
 
   void _navigateToProfile() {
