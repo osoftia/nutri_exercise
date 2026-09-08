@@ -1,0 +1,7 @@
+# M27 Autonomous Backlog
+
+- [x] Task 1: UI Layout & History Access - Fix the HomePage layout: Move the "Quick Add" button so it sits EXACTLY below the `InteractiveBodyMap` vector drawing. Add a prominent Calendar/History button to the main UI (e.g., AppBar) to easily open the M25 history viewer/editor so the user can actually see and edit past logs.
+- [x] Task 2: Visual Anatomy & Colors Fix - Fix the `InteractiveBodyMap` rendering. Ensure the UI canvas/SVG actually displays the Arms (Upper/Forearms) and Legs (Thighs/Calves) split, and guarantee that the `regionColorOverrides` from M24 are visibly painted on the screen when an exercise is selected.
+- [x] Task 3: Weekly Stats Panel - Build a new UI section or modal showing Weekly Statistics. Include polished charts and smooth animations displaying the balance of calories consumed vs. calories burned over the last 7 days.
+- [x] Task 4: Diet Gamification Math - Update the log parser and `MuscleTamagotchiState`. Distinguish food quality: "Healthy" foods (protein/vegetables) grow muscle vectors (arms, legs, chest), while "Unhealthy" foods increase stomach bloat.
+- [x] Task 5: Reactive Notifications - Add a "Test Notifications" toggle/button in the UI. Implement reactive local notification logic: immediately after logging a meal, trigger a notification. If no exercise is logged today: "Remember to do your routine!". If exercise is logged: "You've recovered X of the Y calories you burned!".
