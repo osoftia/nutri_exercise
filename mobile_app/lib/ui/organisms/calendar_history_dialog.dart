@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
@@ -139,14 +141,23 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
 
   Widget _buildMonthHeader() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         IconButton(
           key: const Key('history_prev_month'),
           icon: const Icon(Icons.chevron_left),
           onPressed: _previousMonth,
         ),
-        AppText(_monthLabel(), key: const Key('history_month_label')),
+        Expanded(
+          child: Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: AppText(
+                _monthLabel(),
+                key: const Key('history_month_label'),
+              ),
+            ),
+          ),
+        ),
         IconButton(
           key: const Key('history_next_month'),
           icon: const Icon(Icons.chevron_right),
@@ -198,7 +209,10 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
           borderRadius: BorderRadius.circular(AppRadius.md),
           child: Container(
             margin: const EdgeInsets.all(2),
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+              vertical: AppSpacing.xs,
+            ),
             decoration: BoxDecoration(
               color: hasEntry
                   ? AppColors.primary500.withValues(alpha: 0.18)
@@ -206,9 +220,12 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                AppText('$day'),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AppText('$day'),
+                ),
                 if (hasEntry)
                   const Icon(Icons.circle, size: 6, color: AppColors.accent),
               ],
@@ -221,12 +238,23 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
       cells.add(const SizedBox.shrink());
     }
 
-    return GridView.count(
-      crossAxisCount: 7,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1.1,
-      children: cells,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cellWidth = constraints.maxWidth / 7;
+        final cellHeight = math.min(cellWidth * 1.1, 64.0);
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 7,
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 4,
+            mainAxisExtent: cellHeight,
+          ),
+          itemCount: cells.length,
+          itemBuilder: (context, index) => cells[index],
+        );
+      },
     );
   }
 }
