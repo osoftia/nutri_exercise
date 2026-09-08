@@ -23,6 +23,11 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 
 
 
+
+## [2026-09-08]
+
+- \`158b5a2\` chore(backend): point connection string to local PostgreSQL
+
 ## [2026-09-07]
 
 - \`ff36e2c\` feat(backend): add Serilog ErrorLogSink, global exception middleware, and EF migrations
