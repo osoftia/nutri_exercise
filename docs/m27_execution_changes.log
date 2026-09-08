@@ -1,0 +1,36 @@
+# M27 Execution Changes Log — UI Sync, Stats Dashboard & Diet Gamification
+
+Autonomous sprint following the M25/M26 loop: per task → branch → spec → TDD red/green → analyze/test → merge → backlog check-off. All merged to `main` via fast-forward.
+
+## Task 1: UI Layout & History Access
+- `lib/ui/pages/main_shell_page.dart` — added an AppBar ("NutriExercise") with a Calendar/History action (`history_action`) that opens the M25 `showCalendarHistoryDialog` when a `dailyEntryRepository` is present.
+- `lib/ui/pages/home_page.dart` — added an optional `dailyEntryRepository` and an AppBar History action for the admin dashboard; the Quick Add button remains directly below the `InteractiveBodyMap` drawing.
+- `test/features/m27_task1_history_access_widget_test.dart` — verifies the AppBar action opens the calendar editor via the full `NutriApp`.
+- `test/widget_test.dart` — taller viewport for the full-app test (AppBar consumed vertical space, pushing content below the fold).
+
+## Task 2: Visual Anatomy & Colors Fix
+- `lib/ui/pages/home_page.dart` — selecting an exercise card now calls `_tamagotchi.setOverrides(ExerciseMuscleMapper.getColorsForExercise(name))`, so the `InteractiveBodyMap` visibly paints primary (red) / secondary (orange) muscles. The split Upper Arms/Forearms & Thighs/Calves vectors were already in place from M25.
+- `test/features/m27_task2_anatomy_colors_widget_test.dart` — proves the split "Upper Arms" legend renders, selecting "Bench Press" sets `chest`→red and `upper_arms`/`shoulders`→orange, and overrides take precedence over tier colors.
+
+## Task 3: Weekly Stats Panel
+- `lib/core/models/weekly_stat.dart` — `WeeklyStat` (date, consumed, burned, balance).
+- `lib/core/utils/weekly_stats.dart` — `computeWeeklyStats(entries, now)` builds the last-7-days window (zero-filled), burning `caloriesBurnedPerExercise` (250 kcal) per logged exercise.
+- `lib/ui/organisms/weekly_stats_sheet.dart` — neumorphic sheet with totals/balance tiles and an animated grouped bar chart (TweenAnimationBuilder, easeOutCubic).
+- `lib/ui/pages/main_shell_page.dart` — Weekly Stats AppBar action (`weekly_stats_action`).
+- Tests: `test/utils/weekly_stats_test.dart`, `test/features/m27_task3_weekly_stats_widget_test.dart`.
+
+## Task 4: Diet Gamification Math
+- `lib/core/models/log_parse_response.dart` — added optional `healthy` flag (parsed from JSON, round-tripped) and `isHealthy` (explicit flag or high-protein/low-fat heuristic).
+- `lib/core/state/muscle_tamagotchi_state.dart` — `applyMeal(LogParseResponse)`: healthy meals grow arms/legs/chest vectors; unhealthy meals increase stomach bloat (`applyNutrition`).
+- `lib/ui/pages/home_page.dart` — Quick Add / Simulate Meal use `applyMeal`.
+- Tests: `test/state/muscle_tamagotchi_meal_test.dart`.
+
+## Task 5: Reactive Notifications
+- `lib/core/services/notification_service.dart` — `mealLoggedNotificationBody(...)` (reminder vs recovered/burned summary via `DailyEntryRepository`), `showMealLoggedNotification(...)`, and `showReactiveMealNotification(...)` (non-critical, swallows errors); stable id 4001.
+- `lib/ui/pages/nutrition_page.dart` — reactive-notifications toggle (`reactive_notifications_toggle`), Test Notifications button (`test_notifications_button`), and `_logFood` fires the reactive notification after each meal.
+- `lib/ui/pages/main_shell_page.dart` + `lib/app.dart` — thread the `NotificationService` into the Nutrition tab.
+- Tests: `test/features/m27_task5_reactive_notifications_test.dart`.
+
+## Verification
+- `flutter analyze`: No issues found (0 warnings/errors).
+- `flutter test`: 338/338 passing (baseline 318 before M27).
