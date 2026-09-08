@@ -71,6 +71,60 @@ class NotificationService {
   /// Stable id for the immediate "meal logged" reactive notification.
   static const int mealLoggedNotificationId = 4001;
 
+  /// Stable id for the daily 9 PM exercise check-in reminder.
+  static const int exerciseReminderId = 3201;
+
+  /// Stable id for the "EXERCISE NOT" test notification.
+  static const int exerciseReminderTestId = 3202;
+
+  /// Notification action ids for the exercise check-in.
+  static const String exerciseYesActionId = 'exercise_yes';
+  static const String exerciseNoActionId = 'exercise_no';
+
+  static const String _exerciseChannelId = 'exercise_reminders';
+  static const String _exerciseChannelName = 'Workout check-in';
+  static const String _exerciseChannelDescription =
+      'Asks if you completed your workout routines';
+  static const String _exerciseTitle = 'Workout check-in';
+  static const String _exerciseBody =
+      'Did you complete your workout routines today?';
+
+  NotificationDetails _exerciseDetails() => const NotificationDetails(
+    android: AndroidNotificationDetails(
+      _exerciseChannelId,
+      _exerciseChannelName,
+      channelDescription: _exerciseChannelDescription,
+      importance: Importance.high,
+      priority: Priority.high,
+      actions: [
+        AndroidNotificationAction(
+          exerciseYesActionId,
+          'Yes',
+          showsUserInterface: false,
+        ),
+        AndroidNotificationAction(
+          exerciseNoActionId,
+          'Not yet',
+          showsUserInterface: false,
+        ),
+      ],
+    ),
+    iOS: DarwinNotificationDetails(),
+    macOS: DarwinNotificationDetails(),
+  );
+
+  /// Immediately shows a test exercise check-in notification (used by the
+  /// "EXERCISE NOT" button).
+  Future<void> showExerciseReminderTest() async {
+    await initialize();
+    await _plugin.show(
+      exerciseReminderTestId,
+      _exerciseTitle,
+      _exerciseBody,
+      _exerciseDetails(),
+    );
+  }
+
   static const List<({int id, String timeOfDay, String title, int hour, int minute})>
   mealSlots = [
     (id: breakfastReminderId, timeOfDay: 'breakfast', title: 'Breakfast', hour: 8, minute: 0),

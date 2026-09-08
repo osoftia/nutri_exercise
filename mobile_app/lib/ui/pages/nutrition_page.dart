@@ -187,11 +187,25 @@ class _NutritionPageState extends State<NutritionPage> {
                         right: AppSpacing.md,
                         bottom: AppSpacing.md,
                       ),
-                      child: CustomButton(
-                        key: const Key('test_notifications_button'),
-                        label: 'Test Notifications',
-                        variant: CustomButtonVariant.ghost,
-                        onPressed: _testNotifications,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          CustomButton(
+                            key: const Key('exercise_not_button'),
+                            label: 'EXERCISE NOT',
+                            variant: CustomButtonVariant.ghost,
+                            onPressed: () =>
+                                widget.notificationService
+                                    ?.showExerciseReminderTest(),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          CustomButton(
+                            key: const Key('test_notifications_button'),
+                            label: 'Test Notifications',
+                            variant: CustomButtonVariant.ghost,
+                            onPressed: _testNotifications,
+                          ),
+                        ],
                       ),
                     ),
                   ],
