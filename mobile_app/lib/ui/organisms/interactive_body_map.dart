@@ -88,6 +88,27 @@ bool shouldRestartBloat({
   return fullness > lastFullness;
 }
 
+/// Content equality for region-id sets, so the painter repaints when the
+/// active set's contents change even if the same instance is reused.
+bool sameRegionIdSet(Set<String> a, Set<String> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  return a.containsAll(b);
+}
+
+/// Resolves the selection highlight base color for a region: an explicit
+/// entry in [overrides] wins; otherwise [fallback] is used.
+///
+/// The painter builds the selected region's glow, fill and stroke from this
+/// base color, so exercise overrides (red primary, orange secondary) always
+/// beat the tier heatmap for the selected or logged exercise.
+Color selectionBaseColor({
+  required Map<String, Color> overrides,
+  required String regionId,
+  required Color fallback,
+}) =>
+    overrides[regionId] ?? fallback;
+
 class InteractiveBodyMap extends StatefulWidget {
   const InteractiveBodyMap({
     super.key,
@@ -330,24 +351,26 @@ class _BodyMapPainter extends CustomPainter {
       for (final region in muscleRegions) {
         if (region.id != selectedMuscle) continue;
         final path = _regionPath(region, size);
+        final highlight = _selectionBaseColor(region);
         canvas.drawPath(
           path,
           Paint()
-            ..color = AppColors.primary500.withValues(alpha: 0.25 + 0.30 * glow)
+            ..color =
+                highlight.withValues(alpha: 0.25 + 0.30 * glow)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
         );
         canvas.drawPath(
           path,
           Paint()
             ..style = PaintingStyle.fill
-            ..color = AppColors.primary500.withValues(alpha: 0.60),
+            ..color = highlight.withValues(alpha: 0.60),
         );
         canvas.drawPath(
           path,
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2.0
-            ..color = AppColors.primary300,
+            ..color = highlight,
         );
       }
     }
@@ -399,6 +422,15 @@ class _BodyMapPainter extends CustomPainter {
     }
     return tierColor(tamagotchiState!.tierOf(group));
   }
+
+  /// Base color for the selected-region highlight: the region's explicit
+  /// override when one exists, otherwise the neutral selection blue. This
+  /// keeps exercise colors (red primary, orange secondary) on top of tiers.
+  Color _selectionBaseColor(MuscleRegion region) => selectionBaseColor(
+        overrides: tamagotchiState?.regionColorOverrides ?? const {},
+        regionId: region.id,
+        fallback: AppColors.primary500,
+      );
 
   void _paintSilhouette(Canvas canvas, Size size, MuscleView view) {
     final box = _figureBox(view, size);
@@ -452,7 +484,7 @@ class _BodyMapPainter extends CustomPainter {
   bool shouldRepaint(_BodyMapPainter oldDelegate) {
     return oldDelegate.selectedMuscle != selectedMuscle ||
         oldDelegate.glow != glow ||
-        oldDelegate.activeRegions != activeRegions ||
+        !sameRegionIdSet(oldDelegate.activeRegions, activeRegions) ||
         oldDelegate.revision != revision ||
         oldDelegate.bodyWidthFactor != bodyWidthFactor ||
         oldDelegate.coreBloating != coreBloating ||
