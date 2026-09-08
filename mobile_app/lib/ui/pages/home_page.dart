@@ -275,18 +275,11 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: AppSpacing.xxl),
         const AppHeading('Daily Totals'),
         const SizedBox(height: AppSpacing.md),
-        DailyTotalsCard(state: _nutrition),
-        const SizedBox(height: AppSpacing.xxl),
-        const AppHeading('Muscle Map'),
-        const SizedBox(height: AppSpacing.md),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: MuscleGroupVisualizer(
-                tamagotchiState: _tamagotchi,
-                bodyWidthFactor: _bodyWidthFactor,
-              ),
+              child: DailyTotalsCard(state: _nutrition),
             ),
             const SizedBox(width: AppSpacing.md),
             _ProfileInfoCard(
@@ -294,6 +287,13 @@ class _HomePageState extends State<HomePage> {
               onEdit: _navigateToProfile,
             ),
           ],
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+        const AppHeading('Muscle Map'),
+        const SizedBox(height: AppSpacing.md),
+        MuscleGroupVisualizer(
+          tamagotchiState: _tamagotchi,
+          bodyWidthFactor: _bodyWidthFactor,
         ),
         const SizedBox(height: AppSpacing.sm),
         Row(
