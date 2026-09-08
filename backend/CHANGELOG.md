@@ -24,6 +24,11 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 
 
 
+
+## [2026-09-08]
+
+- \`0ed8ca1\` feat(backend): resolve BDD ambiguity, fix analyzer warnings, and implement daily log history US-1
+
 ## [2026-09-08]
 
 - \`158b5a2\` chore(backend): point connection string to local PostgreSQL
