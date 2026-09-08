@@ -1,0 +1,25 @@
+# M33 Execution Changes Log — Visual Rendering & State Sync Repair
+
+Autonomous sprint following the loop: per task → branch → spec → code → targeted tests → merge → backlog check-off, plus final `flutter analyze` and full `flutter test`. All merged to `main` (fast-forward / --no-ff task merges).
+
+## Task 1: Stomach Bloat Visual Scale
+- `lib/ui/organisms/interactive_body_map.dart` — extracted pure `coreRenderScale({settledScale, bloating, bloatT})` (overshoot → settle) used by the painter's core-region scale; added `_lastFullness` tracking and pure `shouldRestartBloat(...)` so successive meal logs restart the bloat swell in real-time instead of being swallowed by a running animation.
+- Tests: `test/ui/interactive_body_map_bloat_test.dart` (3 `coreRenderScale` unit tests, 4 `shouldRestartBloat` unit tests, 1 widget test proving successive meals keep the map bloating and restart the swell — bloat 0.1428 → 0.0).
+
+## Task 2: Exercise Slimming & Eating Bloat UI Trigger
+- Verified every log path (`applyNutrition`, `applyMeal` healthy/unhealthy, `applySlimming`, `applyGrowth`, `applyDecay`, `setOverrides`) notifies exactly once, and that `clearOverrides`/`settleCore` stay quiet when no-ops.
+- Tests: `test/state/muscle_tamagotchi_notify_test.dart` (9 tests). No library change required.
+
+## Task 3: Muscle Color Overrides Rendering Fix
+- `lib/ui/organisms/interactive_body_map.dart` — the selected-region highlight (glow, fill, stroke) is now built from an override-first base color via public pure `selectionBaseColor(...)`; `shouldRepaint` compares `activeRegions` by content via public `sameRegionIdSet(...)` so in-place set mutations still repaint.
+- Tests: `test/ui/body_map_render_test.dart` (6 unit tests) + `test/features/m33_task3_override_render_widget_test.dart` (2 widget tests: selection carries red/orange overrides; override updates bump painter revision).
+
+## Task 4: Split Anatomy Vector Rendering
+- Inspection: `muscle_vectors.dart` already defines Upper Arms, Forearms, Thighs, Calves as separate mirrored front/back pairs (4 entries each, distinct labels/paths); no unified `arms`/`legs` blocks remain; every region maps to exactly one tamagotchi group.
+- `lib/ui/organisms/interactive_body_map.dart` — `muscleAt` now hit-tests in reverse paint order so seam taps resolve to the topmost-painted region.
+- Tests: `test/constants/muscle_vectors_split_test.dart` (8 tests: registry counts/views/labels/paths, no unified ids, group coverage, front+back hit-testing, topmost seam, null outside).
+
+## Verification
+- `fvm flutter analyze` (Flutter 3.29.0): No issues found.
+- `fvm flutter test` (full suite): 409 passed, 0 failed (baseline files untouched; includes 31 new M33 tests).
+- Note: verification used the project's pinned FVM SDK (3.29.0); the system Flutter (3.24.3) cannot compile `Color.withValues`. Pre-existing dirty files (`pubspec.lock`, `.metadata`, `ai_chat_service_test.dart`, milestone docs) were left untouched; only task files were staged per commit.
