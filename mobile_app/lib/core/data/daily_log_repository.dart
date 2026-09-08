@@ -23,4 +23,9 @@ abstract interface class DailyLogRepository {
   /// (`breakfast` | `lunch` | `dinner`), falling back to the meal presets when
   /// there is no history.
   Future<List<String>> getTopMealsForTimeOfDay(String timeOfDay);
+
+  /// Returns the current streak: consecutive days ending today (or yesterday
+  /// when today is inactive) where at least one exercise or healthy meal was
+  /// logged.
+  Future<int> currentStreak();
 }

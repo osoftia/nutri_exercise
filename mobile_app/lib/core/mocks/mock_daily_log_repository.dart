@@ -5,8 +5,11 @@ import '../models/log_parse_response.dart';
 
 /// In-memory test double for [DailyLogRepository].
 class MockDailyLogRepository implements DailyLogRepository {
-  MockDailyLogRepository({Map<String, String>? seed, this.topMeals = const {}})
-    : _store = {} {
+  MockDailyLogRepository({
+    Map<String, String>? seed,
+    this.topMeals = const {},
+    this.streak = 0,
+  }) : _store = {} {
     if (seed != null) {
       for (final entry in seed.entries) {
         _store[entry.key] = DailyLog(date: entry.key, text: entry.value);
@@ -19,6 +22,9 @@ class MockDailyLogRepository implements DailyLogRepository {
 
   /// Optional per-slot meal seeds that override the defaults.
   final Map<String, List<String>> topMeals;
+
+  /// The streak value returned by [currentStreak].
+  final int streak;
 
   @override
   Future<DailyLog?> getByDate(String date) async => _store[date];
@@ -48,4 +54,7 @@ class MockDailyLogRepository implements DailyLogRepository {
     if (custom != null && custom.isNotEmpty) return custom;
     return defaultMealsByTimeOfDay[timeOfDay] ?? const [];
   }
+
+  @override
+  Future<int> currentStreak() async => streak;
 }

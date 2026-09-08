@@ -19,7 +19,7 @@ class DatabaseHelper {
   DatabaseHelper({Database? database}) : _databaseOverride = database;
 
   static const String _dbName = 'nutri_exercise.db';
-  static const int _dbVersion = 6;
+  static const int _dbVersion = 7;
 
   final Database? _databaseOverride;
   Database? _database;
@@ -111,6 +111,12 @@ class DatabaseHelper {
     if (oldVersion < 6) {
       await _createNotificationHistoryTables(db);
     }
+    if (oldVersion < 7) {
+      await db.execute(
+        'ALTER TABLE daily_entries ADD COLUMN healthy_meals '
+        'INTEGER NOT NULL DEFAULT 0',
+      );
+    }
   }
 
   Future<void> _createNotificationHistoryTables(Database db) async {
@@ -140,7 +146,8 @@ class DatabaseHelper {
         protein INTEGER NOT NULL,
         carbs INTEGER NOT NULL,
         fat INTEGER NOT NULL,
-        exercises_json TEXT NOT NULL
+        exercises_json TEXT NOT NULL,
+        healthy_meals INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }
@@ -375,6 +382,39 @@ class DatabaseHelper {
       limit: 1,
     );
     return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Computes the current streak: consecutive days (ending today, or yesterday
+  /// when today is still inactive) in which at least one exercise or one
+  /// healthy meal was logged.
+  Future<int> currentStreak() async {
+    final db = await database;
+    final rows = await db.query(
+      'daily_entries',
+      columns: ['date', 'exercises_json', 'healthy_meals'],
+    );
+    final active = <String>{};
+    for (final row in rows) {
+      final exercisesRaw = row['exercises_json'] as String?;
+      final hasExercises =
+          exercisesRaw != null && exercisesRaw.isNotEmpty && exercisesRaw != '[]';
+      final healthyMeals = (row['healthy_meals'] as int?) ?? 0;
+      if (hasExercises || healthyMeals > 0) {
+        active.add(row['date'] as String);
+      }
+    }
+
+    final now = DateTime.now();
+    var cursor = DateTime(now.year, now.month, now.day);
+    if (!active.contains(DailyEntry.dateKey(cursor))) {
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+    var streak = 0;
+    while (active.contains(DailyEntry.dateKey(cursor))) {
+      streak++;
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+    return streak;
   }
 
   /// Upserts the single tamagotchi progress row.

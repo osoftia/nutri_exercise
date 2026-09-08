@@ -26,7 +26,8 @@ void main() {
               protein INTEGER NOT NULL,
               carbs INTEGER NOT NULL,
               fat INTEGER NOT NULL,
-              exercises_json TEXT NOT NULL
+              exercises_json TEXT NOT NULL,
+              healthy_meals INTEGER NOT NULL DEFAULT 0
             )
           ''');
         },

@@ -55,4 +55,7 @@ class LocalDailyLogRepository implements DailyLogRepository {
     if (top.isNotEmpty) return top;
     return defaultMealsByTimeOfDay[timeOfDay] ?? const [];
   }
+
+  @override
+  Future<int> currentStreak() => _databaseHelper.currentStreak();
 }
