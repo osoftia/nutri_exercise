@@ -1,0 +1,33 @@
+# M28 Execution Changes Log — Social Sharing & Streak Export
+
+Autonomous sprint following the M26/M27 loop: per task → branch → spec → TDD red/green → analyze/test → merge → backlog check-off. All merged to `main` via fast-forward.
+
+## Task 1: Dependencies & Setup
+- `mobile_app/pubspec.yaml` — added `share_plus: ^10.1.4` (path_provider already present); ran `flutter pub get`. Resolves compatibly with Flutter 3.29.0.
+
+## Task 2: Streak Calculator Engine
+- `lib/core/models/daily_entry.dart` — added `healthyMeals` (int, default 0) to `DailyEntry` + toMap/fromMap/copyWith.
+- `lib/core/database/database_helper.dart` — schema v7: `healthy_meals` column on `daily_entries` (CREATE + ALTER on upgrade); new `currentStreak()` that counts consecutive active days ending today (or yesterday when today is inactive). A day counts when it has ≥1 exercise or ≥1 healthy meal.
+- `lib/core/data/daily_log_repository.dart` + `local_daily_log_repository.dart` + `mock_daily_log_repository.dart` — added `currentStreak()` (mock returns a configurable value).
+- Tests: `test/data/streak_repository_test.dart` (zero streak, consecutive, gap reset, calories-don't-count, inactive-today); updated `local_daily_entry_repository_test.dart` schema.
+
+## Task 3: Shareable UI Card
+- `lib/ui/organisms/social_share_card.dart` — vertical 9:16 "Instagram Story" card wrapped in `RepaintBoundary(key)`; renders the `InteractiveBodyMap` (current colors/bloat), a 🔥 streak count, and a streak-based motivational summary.
+- Tests: `test/ui/social_share_card_test.dart` (boundary key, body map present, streak + flame, motivation, custom message).
+
+## Task 4: Image Capture Utility
+- `lib/core/services/widget_to_image_exporter.dart` — `capturePng(GlobalKey, {pixelRatio})` rasterizes the `RenderRepaintBoundary` into a PNG `Uint8List` (throws `StateError` for non-boundary keys); `saveToTemp(...)` writes to the OS temp directory via path_provider (injectable provider for tests); `exportShareImage` combines both.
+- Tests: `test/services/widget_to_image_exporter_test.dart` (PNG magic bytes, temp file round-trip, error on non-boundary) — real rasterization/IO driven via `tester.runAsync`.
+
+## Task 5: Share Integration
+- `lib/core/services/share_progress_controller.dart` — orchestrates capture + `Share.shareXFiles` (injectable share fn).
+- `lib/ui/pages/home_page.dart` — hidden `SocialShareCard` mounted in a Stack (painted behind `Opacity(0)` so its boundary rasterizes cleanly), a "Share Progress" AppBar button, and the current streak loaded from `DailyLogRepository`.
+- Updated `m25_task1` / `m27_task2` tests to target the visible `InteractiveBodyMap` (the hidden card adds a second one).
+- Tests: `test/services/share_progress_controller_test.dart` (capture + share sheet receives the PNG), `test/features/m28_task5_share_widget_test.dart` (button + hidden card + streak shown; tapping triggers the share flow).
+
+## Operational note
+Timed-out `flutter test` runs on Windows left orphaned `dart`/`dartvm` processes holding the Flutter startup lock, making later runs hang. Killed orphans before each run; full suite is green.
+
+## Verification
+- `flutter analyze`: No issues found (0 warnings/errors).
+- `flutter test`: 354/354 passing (baseline 338 before M28).
