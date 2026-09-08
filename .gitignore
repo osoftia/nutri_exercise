@@ -38,6 +38,7 @@ PROMPT*.txt
 # Logs
 *.log
 npm-debug.log*
+**/Logs/
 
 # Prompt files
 PROMPT*

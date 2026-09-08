@@ -20,6 +20,12 @@ public class AppDbContext : DbContext
 
     public virtual DbSet<AiInteraction> AiInteractions => Set<AiInteraction>();
 
+    public virtual DbSet<DailyLogRecord> DailyLogRecords => Set<DailyLogRecord>();
+
+    public virtual DbSet<AiTrainingTrace> AiTrainingTraces => Set<AiTrainingTrace>();
+
+    public virtual DbSet<ErrorLog> ErrorLogs => Set<ErrorLog>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

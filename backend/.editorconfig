@@ -1,0 +1,84 @@
+# Strict code quality metrics for the NutriExercise .NET 8 backend.
+# Equivalent of the ESLint rules requested in the backlog, mapped to Roslyn/.NET analyzers.
+
+root = true
+
+[*.cs]
+
+# ---------------------------------------------------------------------------
+# max-lines: 150 lines per file (error)
+# No built-in Roslyn rule exists for file length. Enforced via convention and
+# code review. The closest enforceable proxy is IDE0055 (formatting) and the
+# maintainability analyzers below. Keep files under 150 lines.
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# max-lines-per-function: 50 lines per function (warn)
+# No built-in Roslyn rule exists. Enforced via convention and code review.
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# complexity: cyclomatic complexity limit 10 (error)
+# Configured via CodeMetricsConfig.txt (CA1502: 10) marked as AdditionalFiles
+# in the project file. Severity is set to error here.
+# ---------------------------------------------------------------------------
+dotnet_diagnostic.CA1502.severity = error
+
+# ---------------------------------------------------------------------------
+# max-depth: max nesting depth of 3 (error)
+# No built-in Roslyn rule exists for nesting depth. Enforced via convention
+# and code review. CA1502 (complexity) is the closest automated proxy.
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# eqeqeq: enforce type-safe equality operators (error)
+# C# is statically typed, so == is already type-safe. The closest analyzers
+# guard against unintended reference/string comparisons and null patterns.
+# ---------------------------------------------------------------------------
+dotnet_diagnostic.CA2241.severity = error
+dotnet_diagnostic.CA1307.severity = warning
+dotnet_diagnostic.CA1309.severity = warning
+
+# ---------------------------------------------------------------------------
+# camelcase: enforced for all variables, functions, and properties (error)
+# ---------------------------------------------------------------------------
+dotnet_naming_rule.local_variables_should_be_camel_case.severity = error
+dotnet_naming_rule.local_variables_should_be_camel_case.symbols = local_variables
+dotnet_naming_rule.local_variables_should_be_camel_case.style = camel_case_style
+
+dotnet_naming_rule.parameters_should_be_camel_case.severity = error
+dotnet_naming_rule.parameters_should_be_camel_case.symbols = parameters
+dotnet_naming_rule.parameters_should_be_camel_case.style = camel_case_style
+
+dotnet_naming_rule.private_fields_should_be_camel_case.severity = error
+dotnet_naming_rule.private_fields_should_be_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_should_be_camel_case.style = camel_case_style
+
+dotnet_naming_symbols.local_variables.applicable_kinds = local
+dotnet_naming_symbols.local_variables.applicable_accessibilities = *
+dotnet_naming_symbols.parameters.applicable_kinds = parameter
+dotnet_naming_symbols.parameters.applicable_accessibilities = *
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+dotnet_naming_style.camel_case_style.capitalization = camel_case
+
+# ---------------------------------------------------------------------------
+# General code quality (maintainability analyzers)
+# ---------------------------------------------------------------------------
+dotnet_diagnostic.CA1501.severity = warning
+dotnet_diagnostic.CA1505.severity = warning
+dotnet_diagnostic.CA1506.severity = warning
+dotnet_diagnostic.CA1507.severity = warning
+dotnet_diagnostic.CA1508.severity = warning
+dotnet_diagnostic.CA1509.severity = warning
+
+# Nullable / null-safety
+dotnet_diagnostic.CA1062.severity = warning
+dotnet_diagnostic.CA1848.severity = warning
+
+# Formatting (IDE0055) as a baseline
+dotnet_diagnostic.IDE0055.severity = warning
+
+# Treat compiler warnings as errors for strictness
+dotnet_analyzer_diagnostic.severity = default

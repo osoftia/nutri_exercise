@@ -1,60 +1,97 @@
 using Microsoft.EntityFrameworkCore;
+using NutriExercise.Api.Middleware;
 using NutriExercise.Core.Interfaces;
 using NutriExercise.Infrastructure.Data;
+using NutriExercise.Infrastructure.Logging;
 using NutriExercise.Infrastructure.Services;
 using Pgvector.EntityFrameworkCore;
+using Serilog;
+using Serilog.Formatting.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+    .UseNpgsql(connectionString, o => o.UseVector())
+    .Options;
 
-builder.Services.AddCors(options =>
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.File(new JsonFormatter(), "Logs/combined.log")
+    .WriteTo.Sink(new ErrorLogSink(dbOptions))
+    .CreateLogger();
+
+try
 {
-    options.AddPolicy("AllowFrontendClients", policy =>
+    Log.Information("Starting up NutriExercise API...");
+
+    builder.Host.UseSerilog();
+
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+
+    builder.Services.AddCors(options =>
     {
-        policy.WithOrigins(
-            "http://localhost:4200",
-            "http://localhost:5000",
-            "http://127.0.0.1:5000",
-            "http://10.0.2.2:5000",
-            "http://localhost:5039",
-            "http://127.0.0.1:5039",
-            "http://10.0.2.2:5039")
-            .AllowAnyMethod()
-            .AllowAnyHeader();
+        options.AddPolicy("AllowFrontendClients", policy =>
+        {
+            policy.WithOrigins(
+                "http://localhost:4200",
+                "http://localhost:5000",
+                "http://127.0.0.1:5000",
+                "http://10.0.2.2:5000",
+                "http://localhost:5039",
+                "http://127.0.0.1:5039",
+                "http://10.0.2.2:5039")
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+        });
     });
-});
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        o => o.UseVector()));
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            o => o.UseVector()));
 
-builder.Services.AddHttpClient("Ollama", client =>
-{
-    client.BaseAddress = new Uri("http://localhost:11434/");
-    client.Timeout = TimeSpan.FromMinutes(5);
-});
-builder.Services.AddScoped<IAiService, OllamaAiService>();
-builder.Services.AddScoped<IRoutineRepository, RoutineRepository>();
-builder.Services.AddScoped<IResearchDocumentRepository, ResearchDocumentRepository>();
+    builder.Services.AddHttpClient("Ollama", client =>
+    {
+        client.BaseAddress = new Uri("http://localhost:11434/");
+        client.Timeout = TimeSpan.FromMinutes(5);
+    });
+    builder.Services.AddScoped<IAiService, OllamaAiService>();
+    builder.Services.AddScoped<IRoutineRepository, RoutineRepository>();
+    builder.Services.AddScoped<IResearchDocumentRepository, ResearchDocumentRepository>();
+    builder.Services.AddScoped<IDailyLogRepository, DailyLogRepository>();
 
-var app = builder.Build();
+    var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
+
+    app.UseMiddleware<GlobalExceptionMiddleware>();
+
+    app.UseCors("AllowFrontendClients");
+
+    app.UseSerilogRequestLogging();
+
+    app.MapControllers();
+
+    app.Run();
 }
-
-if (!app.Environment.IsDevelopment())
+catch (Exception ex)
 {
-    app.UseHttpsRedirection();
+    Log.Fatal(ex, "Application start-up failed");
+    throw;
 }
-
-app.UseCors("AllowFrontendClients");
-
-app.MapControllers();
-
-app.Run();
+finally
+{
+    Log.CloseAndFlush();
+}

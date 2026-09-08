@@ -12,12 +12,17 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NutriExercise.Core\NutriExercise.Core.csproj" />
     <ProjectReference Include="..\NutriExercise.Infrastructure\NutriExercise.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="CodeMetricsConfig.txt" />
   </ItemGroup>
 
 </Project>
