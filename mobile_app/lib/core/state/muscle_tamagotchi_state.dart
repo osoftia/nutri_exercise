@@ -38,6 +38,28 @@ class MuscleTamagotchiState extends ChangeNotifier {
   double _coreFullness = 0.0;
   bool _coreBloating = false;
 
+  /// Number of food logs submitted through [applyMeal]/[applyNutrition].
+  /// The body map watches this to flash the stomach on every meal.
+  int _mealCount = 0;
+
+  /// Wall-clock time of the most recent food log, if any.
+  DateTime? _lastMealAt;
+
+  /// How long the stomach red-flash debug effect lasts after a food log.
+  static const Duration foodFlashDuration = Duration(seconds: 2);
+
+  /// Number of food logs submitted so far.
+  int get mealCount => _mealCount;
+
+  /// Wall-clock time of the most recent food log, if any.
+  DateTime? get lastMealAt => _lastMealAt;
+
+  /// Whether a food flash started at [lastMealAt] is still active at [now].
+  static bool foodFlashActiveSince(DateTime? lastMealAt, DateTime now) {
+    if (lastMealAt == null) return false;
+    return now.difference(lastMealAt) < foodFlashDuration;
+  }
+
   /// Per-region color overrides keyed by region id (e.g. `chest`).
   /// Applied by the body map before falling back to tier colors.
   Map<String, Color> regionColorOverrides = {};
@@ -70,6 +92,8 @@ class MuscleTamagotchiState extends ChangeNotifier {
   void applyNutrition(int calories) {
     _coreFullness = coreFullnessAfterNutrition(_coreFullness, calories);
     _coreBloating = true;
+    _mealCount++;
+    _lastMealAt = DateTime.now();
     notifyListeners();
   }
 
@@ -77,6 +101,8 @@ class MuscleTamagotchiState extends ChangeNotifier {
   /// (high protein / vegetables) grow the arms, legs and chest muscle vectors,
   /// while unhealthy meals increase stomach bloat.
   void applyMeal(LogParseResponse meal) {
+    _mealCount++;
+    _lastMealAt = DateTime.now();
     if (meal.isHealthy) {
       applyGrowth(const [
         MuscleTamagotchiGroup.arms,
