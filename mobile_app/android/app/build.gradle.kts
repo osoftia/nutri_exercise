@@ -20,6 +20,9 @@ android {
         applicationId = "com.example.nutri_mobile_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // Explicit minSdk 23 (not flutter.minSdkVersion=21): required for
+        // POST_NOTIFICATIONS / SCHEDULE_EXACT_ALARM behavior and avoids
+        // uses-sdk manifest-merger conflicts with transitive plugin deps.
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode
