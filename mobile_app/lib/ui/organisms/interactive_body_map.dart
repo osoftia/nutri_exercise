@@ -339,14 +339,22 @@ class _BodyMapPainter extends CustomPainter {
       );
       if (!isSelected) {
         final isActive = activeRegions.contains(region.id);
+        // M34 Task 2: split-limb segments keep their own color identity.
+        // Stroking upper arms / forearms / thighs / calves with their
+        // resolved region color (tier or override) instead of the shared
+        // neutral gray stops adjacent same-tier segments from visually
+        // merging into a single-block limb.
+        final strokeColor = isActive
+            ? AppColors.accent
+            : isSplitLimbRegion(region.id)
+                ? _regionColor(region)
+                : AppColors.neutralMuscle.withValues(alpha: 0.55);
         canvas.drawPath(
           path,
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = isActive ? 2.0 : 1.4
-            ..color = isActive
-                ? AppColors.accent
-                : AppColors.neutralMuscle.withValues(alpha: 0.55),
+            ..color = strokeColor,
         );
       }
     }
