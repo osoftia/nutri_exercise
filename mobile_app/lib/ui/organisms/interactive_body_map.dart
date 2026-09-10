@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -16,6 +17,10 @@ const double _kBloatOvershoot = 0.35;
 
 /// The red tint applied to the Core region while it is bloating.
 const Color _kCoreBloatColor = Color(0xFFEF4444);
+
+/// Bright-red debug flash painted on the stomach (`abs`) for
+/// [MuscleTamagotchiState.foodFlashDuration] after every food log.
+const Color _kFoodFlashColor = Color(0xFFFF0000);
 
 /// Size factor applied to a muscle region for a given mass.
 ///
@@ -147,6 +152,9 @@ class _InteractiveBodyMapState extends State<InteractiveBodyMap>
   double _lastFullness = 0.0;
   MuscleTamagotchiState? _tamagotchiState;
   int _revision = 0;
+  int _lastSeenMealCount = 0;
+  bool _foodFlash = false;
+  Timer? _flashTimer;
 
   @override
   void initState() {
@@ -175,12 +183,30 @@ class _InteractiveBodyMapState extends State<InteractiveBodyMap>
     _tamagotchiState?.removeListener(_onTamagotchiChanged);
     _tamagotchiState = widget.tamagotchiState;
     _tamagotchiState?.addListener(_onTamagotchiChanged);
+    _lastSeenMealCount = _tamagotchiState?.mealCount ?? 0;
     _syncBloat();
   }
 
   void _onTamagotchiChanged() {
     setState(() => _revision++);
     _syncBloat();
+    _syncFoodFlash();
+  }
+
+  /// M35 Task 1: stomach red-flash debug. Every food log bumps
+  /// [MuscleTamagotchiState.mealCount]; on a bump the stomach flashes
+  /// bright red for [MuscleTamagotchiState.foodFlashDuration], proving the
+  /// bloat state → UI re-render path is live.
+  void _syncFoodFlash() {
+    final meals = _tamagotchiState?.mealCount ?? 0;
+    if (meals <= _lastSeenMealCount) return;
+    _lastSeenMealCount = meals;
+    _flashTimer?.cancel();
+    setState(() => _foodFlash = true);
+    _flashTimer = Timer(MuscleTamagotchiState.foodFlashDuration, () {
+      if (!mounted) return;
+      setState(() => _foodFlash = false);
+    });
   }
 
   void _syncBloat() {
@@ -215,6 +241,7 @@ class _InteractiveBodyMapState extends State<InteractiveBodyMap>
 
   @override
   void dispose() {
+    _flashTimer?.cancel();
     _tamagotchiState?.removeListener(_onTamagotchiChanged);
     _glowController.dispose();
     _bloatController.dispose();
@@ -251,6 +278,7 @@ class _InteractiveBodyMapState extends State<InteractiveBodyMap>
                 bodyWidthFactor: widget.bodyWidthFactor,
                 coreBloating: _coreBloating,
                 bloat: _bloat,
+                foodFlash: _foodFlash,
               ),
             ),
           );
@@ -309,6 +337,7 @@ class _BodyMapPainter extends CustomPainter {
     required this.bodyWidthFactor,
     required this.coreBloating,
     required this.bloat,
+    required this.foodFlash,
   });
 
   final String? selectedMuscle;
@@ -319,6 +348,9 @@ class _BodyMapPainter extends CustomPainter {
   final double bodyWidthFactor;
   final bool coreBloating;
   final double bloat;
+
+  /// M35 Task 1: while true the stomach (`abs`) renders bright red.
+  final bool foodFlash;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -423,6 +455,9 @@ class _BodyMapPainter extends CustomPainter {
   }
 
   Color _regionColor(MuscleRegion region) {
+    // M35 Task 1: food-flash debug beats everything on the stomach so a
+    // freshly logged meal is unmistakable for 2 seconds.
+    if (foodFlash && region.id == 'abs') return _kFoodFlashColor;
     if (tamagotchiState == null) return AppColors.neutralMuscle;
     final group = tamagotchiGroupForRegion(region.id);
     if (group == null) return AppColors.neutralMuscle;
@@ -500,6 +535,7 @@ class _BodyMapPainter extends CustomPainter {
         oldDelegate.revision != revision ||
         oldDelegate.bodyWidthFactor != bodyWidthFactor ||
         oldDelegate.coreBloating != coreBloating ||
-        oldDelegate.bloat != bloat;
+        oldDelegate.bloat != bloat ||
+        oldDelegate.foodFlash != foodFlash;
   }
 }
