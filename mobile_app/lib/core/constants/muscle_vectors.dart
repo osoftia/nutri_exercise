@@ -193,3 +193,16 @@ String muscleLabel(String id) {
   }
   return id;
 }
+
+/// Region ids that form the split-limb anatomy: the arms render as Upper
+/// Arms + Forearms and the legs as Thighs + Calves instead of single-block
+/// limbs. The painter gives each of these its own outline/color identity.
+const Set<String> splitLimbRegionIds = {
+  'upper_arms',
+  'forearms',
+  'thighs',
+  'calves',
+};
+
+/// Whether [id] is one of the split-limb segments in [splitLimbRegionIds].
+bool isSplitLimbRegion(String id) => splitLimbRegionIds.contains(id);
