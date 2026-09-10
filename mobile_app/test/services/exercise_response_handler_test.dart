@@ -96,4 +96,80 @@ void main() {
       expect((await entries.getByDate(today))!.burned, 0);
     });
   });
+
+  group('ExerciseResponseHandler avatar sync (M34)', () {
+    test('growthGroupsFor maps exercises to tamagotchi groups', () {
+      expect(
+        ExerciseResponseHandler.growthGroupsFor(const ['Squat']),
+        contains(MuscleTamagotchiGroup.legs),
+      );
+      expect(
+        ExerciseResponseHandler.growthGroupsFor(const ['Bench Press']),
+        containsAll([
+          MuscleTamagotchiGroup.chest,
+          MuscleTamagotchiGroup.arms,
+        ]),
+      );
+      expect(
+        ExerciseResponseHandler.growthGroupsFor(const ['Unknown Move XYZ']),
+        isEmpty,
+      );
+    });
+
+    test('"Yes" grows avatar tiers and shrinks avatar bloat', () async {
+      final entries = MockDailyEntryRepository()
+        ..save(DailyEntry(
+          date: today,
+          exercises: const ['Squat', 'Bench Press'],
+        ));
+      final progress = MockTamagotchiProgressRepository(
+        const TamagotchiProgress(coreFullness: 0.9),
+      );
+      final avatar = MuscleTamagotchiState();
+      avatar.applyNutrition(600);
+      final legsBefore = avatar.massOf(MuscleTamagotchiGroup.legs);
+      final chestBefore = avatar.massOf(MuscleTamagotchiGroup.chest);
+
+      var notified = 0;
+      avatar.addListener(() => notified++);
+
+      await ExerciseResponseHandler.handleExerciseResponse(
+        actionId: NotificationService.exerciseYesActionId,
+        entries: entries,
+        progress: progress,
+        tamagotchi: avatar,
+      );
+
+      expect(avatar.massOf(MuscleTamagotchiGroup.legs), greaterThan(legsBefore));
+      expect(
+        avatar.massOf(MuscleTamagotchiGroup.chest),
+        greaterThan(chestBefore),
+      );
+      expect(avatar.coreIsBloating, isFalse);
+      expect(notified, greaterThan(0));
+      // SQLite stays in sync with the avatar slimming.
+      expect((await progress.get())!.coreFullness, lessThan(0.9));
+      expect((await entries.getByDate(today))!.burned,
+          2 * caloriesBurnedPerExercise);
+    });
+
+    test('"Not yet" leaves a provided avatar untouched', () async {
+      final entries = MockDailyEntryRepository()
+        ..save(DailyEntry(date: today, exercises: const ['Squat']));
+      final progress = MockTamagotchiProgressRepository(
+        const TamagotchiProgress(coreFullness: 0.5),
+      );
+      final avatar = MuscleTamagotchiState();
+      final legsBefore = avatar.massOf(MuscleTamagotchiGroup.legs);
+
+      await ExerciseResponseHandler.handleExerciseResponse(
+        actionId: NotificationService.exerciseNoActionId,
+        entries: entries,
+        progress: progress,
+        tamagotchi: avatar,
+      );
+
+      expect(avatar.massOf(MuscleTamagotchiGroup.legs), legsBefore);
+    });
+  });
 }

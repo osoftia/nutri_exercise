@@ -1,8 +1,10 @@
+import '../constants/tamagotchi_groups.dart';
 import '../data/daily_entry_repository.dart';
 import '../data/tamagotchi_progress_repository.dart';
 import '../models/daily_entry.dart';
 import '../models/tamagotchi_progress.dart';
 import '../state/muscle_tamagotchi_state.dart';
+import '../utils/exercise_muscle_mapper.dart';
 import '../utils/weekly_stats.dart';
 import 'notification_service.dart';
 
@@ -23,16 +25,45 @@ class ExerciseResponseHandler {
         amount: MuscleTamagotchiState.slimmingPerExercise * exercises.length,
       );
 
+  /// The tamagotchi muscle groups targeted by [exercises].
+  ///
+  /// Each exercise name resolves through [ExerciseMuscleMapper] to its
+  /// primary/secondary region ids, which map back to tamagotchi groups.
+  /// Unknown exercises contribute no groups.
+  static Set<MuscleTamagotchiGroup> growthGroupsFor(
+    List<String> exercises,
+  ) {
+    final groups = <MuscleTamagotchiGroup>{};
+    for (final name in exercises) {
+      final activation = ExerciseMuscleMapper.activationFor(name);
+      for (final regionId in [
+        ...activation.primaryRegions,
+        ...activation.secondaryRegions,
+      ]) {
+        final group = tamagotchiGroupForRegion(regionId);
+        if (group != null) groups.add(group);
+      }
+    }
+    return groups;
+  }
+
   /// Processes a check-in response.
   ///
   /// When [actionId] is the "Yes" action, today's logged exercises determine
   /// the burned calories which are stored on today's entry, and the tamagotchi
   /// core fullness is reduced (slimming). "Not yet" and other actions are a
   /// no-op.
+  ///
+  /// When [tamagotchi] (the live foreground avatar) is provided, the same
+  /// event also mutates it — growing the targeted muscle tiers and shrinking
+  /// its bloat with the same slimming math persisted to SQLite — so the UI
+  /// rebuilds simultaneously via `notifyListeners()`. Background-isolate
+  /// callers omit it (no live UI there); SQLite stays the source of truth.
   static Future<void> handleExerciseResponse({
     required String? actionId,
     required DailyEntryRepository entries,
     required TamagotchiProgressRepository progress,
+    MuscleTamagotchiState? tamagotchi,
   }) async {
     if (actionId != NotificationService.exerciseYesActionId) return;
 
@@ -50,5 +81,14 @@ class ExerciseResponseHandler {
     await entries.save(
       (entry ?? DailyEntry(date: today)).copyWith(burned: burned),
     );
+
+    final avatar = tamagotchi;
+    if (avatar != null) {
+      final groups = growthGroupsFor(exercises);
+      if (groups.isNotEmpty) avatar.applyGrowth(groups);
+      avatar.applySlimming(
+        amount: MuscleTamagotchiState.slimmingPerExercise * exercises.length,
+      );
+    }
   }
 }
