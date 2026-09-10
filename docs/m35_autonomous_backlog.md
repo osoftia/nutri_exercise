@@ -1,0 +1,4 @@
+# M35 Autonomous Backlog
+- [x] Task 1: Stomach Red Flash Debug - Add a temporary or permanent visual flash effect (turns the stomach region bright red for 2 seconds) whenever a food log is submitted, proving that bloat state and UI re-render are successfully communicating.
+- [x] Task 2: Strict Split Limbs Vector Rendering - Rewrite the coordinate paths in `InteractiveBodyMap` / custom painter so Upper Arms, Forearms, Thighs, and Calves are distinctly separated by visible gaps or independent bounding boxes, ensuring they never merge into a single limb block.
+- [x] Task 3: State Re-render Trigger Verification - Ensure `HomePage` listens directly to `MuscleTamagotchiState` changes via `ListenableBuilder` or `AnimatedBuilder` so the avatar updates instantly without requiring a manual page refresh.
