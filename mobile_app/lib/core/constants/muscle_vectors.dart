@@ -55,21 +55,24 @@ Path _frontSilhouette() {
 }
 
 Path _leftUpperArm() {
+  // M35 Task 2: bottom edge stops at y≈0.335–0.345, leaving a visible gap
+  // before the forearm (top y≈0.365) so the arm never renders as one block.
   return Path()
     ..moveTo(0.34, 0.18)
-    ..quadraticBezierTo(0.18, 0.22, 0.20, 0.36)
-    ..lineTo(0.28, 0.37)
+    ..quadraticBezierTo(0.18, 0.22, 0.20, 0.335)
+    ..lineTo(0.28, 0.345)
     ..quadraticBezierTo(0.30, 0.26, 0.38, 0.22)
     ..close();
 }
 
 Path _leftForearm() {
+  // M35 Task 2: top edge starts at y≈0.365, gapped from the upper arm above.
   return Path()
-    ..moveTo(0.20, 0.36)
+    ..moveTo(0.20, 0.365)
     ..quadraticBezierTo(0.22, 0.48, 0.27, 0.58)
     ..lineTo(0.30, 0.55)
     ..lineTo(0.27, 0.45)
-    ..lineTo(0.29, 0.36)
+    ..lineTo(0.29, 0.365)
     ..close();
 }
 
@@ -92,18 +95,21 @@ Path _abs() {
 }
 
 Path _leftThigh() {
+  // M35 Task 2: bottom edge stops at y≈0.785, leaving a visible gap
+  // before the calf (top y≈0.815) so the leg never renders as one block.
   return Path()
     ..moveTo(0.50, 0.66)
     ..lineTo(0.42, 0.66)
-    ..lineTo(0.39, 0.80)
-    ..lineTo(0.48, 0.80)
+    ..lineTo(0.39, 0.785)
+    ..lineTo(0.48, 0.785)
     ..close();
 }
 
 Path _leftCalf() {
+  // M35 Task 2: top edge starts at y≈0.815, gapped from the thigh above.
   return Path()
-    ..moveTo(0.48, 0.80)
-    ..lineTo(0.39, 0.80)
+    ..moveTo(0.48, 0.815)
+    ..lineTo(0.39, 0.815)
     ..lineTo(0.36, 0.93)
     ..lineTo(0.46, 0.93)
     ..close();
