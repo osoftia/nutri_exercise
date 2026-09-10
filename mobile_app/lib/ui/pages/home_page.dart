@@ -349,9 +349,19 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: AppSpacing.xxl),
         const AppHeading('Muscle Map'),
         const SizedBox(height: AppSpacing.md),
-        MuscleGroupVisualizer(
-          tamagotchiState: _tamagotchi,
-          bodyWidthFactor: _bodyWidthFactor,
+        // M34 Task 1: explicit avatar rebuild trigger. Every tamagotchi
+        // mutation (log exercise, 9 PM "Yes" slimming, quick-add meal)
+        // calls notifyListeners(); this ListenableBuilder forces the
+        // avatar subtree to rebuild with the latest state instead of
+        // relying solely on InteractiveBodyMap's internal listener.
+        ListenableBuilder(
+          listenable: _tamagotchi,
+          builder: (context, _) {
+            return MuscleGroupVisualizer(
+              tamagotchiState: _tamagotchi,
+              bodyWidthFactor: _bodyWidthFactor,
+            );
+          },
         ),
         const SizedBox(height: AppSpacing.sm),
         Row(
