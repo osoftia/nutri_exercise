@@ -59,6 +59,85 @@ namespace NutriExercise.Infrastructure.Migrations
                     b.ToTable("AiInteractions");
                 });
 
+            modelBuilder.Entity("NutriExercise.Core.Entities.AiTrainingTrace", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AiPredictedJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("ExecutionTimeMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("HumanFinalJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ModelName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PromptUsed")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserRawText")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("WasCorrectedByHuman")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AiTrainingTraces");
+                });
+
+            modelBuilder.Entity("NutriExercise.Core.Entities.DailyLogRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Calories")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Carbs")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Fats")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MuscleGroups")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OriginalText")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Protein")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("TraceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DailyLogRecords");
+                });
+
             modelBuilder.Entity("NutriExercise.Core.Entities.Diet", b =>
                 {
                     b.Property<int>("Id")
@@ -82,6 +161,31 @@ namespace NutriExercise.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Diets");
+                });
+
+            modelBuilder.Entity("NutriExercise.Core.Entities.ErrorLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StackTrace")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ErrorLogs");
                 });
 
             modelBuilder.Entity("NutriExercise.Core.Entities.ResearchDocument", b =>

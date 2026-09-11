@@ -29,6 +29,8 @@ public class InteractionController : ControllerBase
     [HttpPut("{id:guid}/feedback")]
     public async Task<IActionResult> SubmitFeedback(Guid id, [FromBody] FeedbackRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         var interaction = await _dbContext.AiInteractions.FindAsync(id);
         if (interaction is null)
         {

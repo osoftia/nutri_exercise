@@ -1,9 +1,12 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using NutriExercise.Api.Controllers;
 using NutriExercise.Api.DTOs;
+using NutriExercise.Core.Entities;
 using NutriExercise.Core.Interfaces;
+using NutriExercise.Infrastructure.Data;
 using Reqnroll;
 
 namespace NutriExercise.Specs.Steps;
@@ -12,6 +15,7 @@ namespace NutriExercise.Specs.Steps;
 public class DailyLogParsingSteps
 {
     private readonly Mock<IAiService> _aiServiceMock = new();
+    private readonly Mock<IDailyLogRepository> _dailyLogRepositoryMock = new();
     private LogController? _controller;
     private IActionResult? _result;
     private string _submittedText = string.Empty;
@@ -20,7 +24,10 @@ public class DailyLogParsingSteps
     public void GivenTheUserSubmitsTheText(string text)
     {
         _submittedText = text;
-        _controller = new LogController(_aiServiceMock.Object);
+        _controller = new LogController(
+            _aiServiceMock.Object,
+            _dailyLogRepositoryMock.Object,
+            CreateMockDbContext());
     }
 
     [Given(@"the AI service is mocked to return a valid extraction JSON")]
@@ -45,7 +52,8 @@ public class DailyLogParsingSteps
     public void ThenTheResponseShouldContainCalories()
     {
         var okResult = _result as OkObjectResult;
-        var response = okResult!.Value as ParsedLogResponse;
+        var value = okResult!.Value;
+        var response = value?.GetType().GetProperty("Parsed")?.GetValue(value) as ParsedLogResponse;
 
         response.Should().NotBeNull();
         response!.Calories.Should().Be(600);
@@ -55,9 +63,28 @@ public class DailyLogParsingSteps
     public void ThenTheExercisedMusclesShouldInclude(string muscle)
     {
         var okResult = _result as OkObjectResult;
-        var response = okResult!.Value as ParsedLogResponse;
+        var value = okResult!.Value;
+        var response = value?.GetType().GetProperty("Parsed")?.GetValue(value) as ParsedLogResponse;
 
         response.Should().NotBeNull();
         response!.Muscles.Should().Contain(muscle);
+    }
+
+    private static AppDbContext CreateMockDbContext()
+    {
+        var traces = new List<AiTrainingTrace>();
+
+        var dbSetMock = new Mock<DbSet<AiTrainingTrace>>();
+        dbSetMock
+            .Setup(d => d.Add(It.IsAny<AiTrainingTrace>()))
+            .Callback<AiTrainingTrace>(traces.Add);
+
+        var dbContextMock = new Mock<AppDbContext>(new DbContextOptions<AppDbContext>());
+        dbContextMock.Setup(c => c.AiTrainingTraces).Returns(dbSetMock.Object);
+        dbContextMock
+            .Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        return dbContextMock.Object;
     }
 }

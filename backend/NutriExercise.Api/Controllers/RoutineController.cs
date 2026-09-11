@@ -26,6 +26,8 @@ public class RoutineController : ControllerBase
     [HttpPost("generate")]
     public async Task<IActionResult> Generate([FromBody] GenerateRoutineRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         if (string.IsNullOrWhiteSpace(request.UserPreferences))
         {
             return BadRequest("User preferences are required.");

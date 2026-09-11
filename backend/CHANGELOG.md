@@ -21,6 +21,26 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 
 
 
+
+
+
+
+## [2026-09-08]
+
+- \`0ed8ca1\` feat(backend): resolve BDD ambiguity, fix analyzer warnings, and implement daily log history US-1
+
+## [2026-09-08]
+
+- \`158b5a2\` chore(backend): point connection string to local PostgreSQL
+
+## [2026-09-07]
+
+- \`ff36e2c\` feat(backend): add Serilog ErrorLogSink, global exception middleware, and EF migrations
+
+## [2026-09-07]
+
+- \`206acb5\` fix(backend): skip HTTPS redirection in Development to avoid port warning
+
 ## [2026-09-03]
 
 - \`1b1acea\` feat(backend): implement daily log parser with Gherkin BDD and ignore auto-generated feature files
