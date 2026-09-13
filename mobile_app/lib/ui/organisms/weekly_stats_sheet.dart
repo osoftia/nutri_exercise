@@ -34,8 +34,6 @@ class WeeklyStatsSheet extends StatefulWidget {
 }
 
 class _WeeklyStatsSheetState extends State<WeeklyStatsSheet> {
-  static const List<String> _weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
   late final Future<List<WeeklyStat>> _stats;
 
   @override
@@ -82,10 +80,10 @@ class _WeeklyStatsSheetState extends State<WeeklyStatsSheet> {
                     else ...[
                       _WeeklySummary(stats: stats),
                       const SizedBox(height: AppSpacing.lg),
-                      _WeeklyBalanceChart(
-                        stats: stats,
-                        labels: _weekdays,
-                      ),
+                      // M36 Task 1: labels come from the real stat dates
+                      // (weekdayLabel), never a static list, so each bar is
+                      // tagged with its exact weekday.
+                      _WeeklyBalanceChart(stats: stats),
                     ],
                   ],
                 ),
@@ -180,10 +178,9 @@ class _SummaryTile extends StatelessWidget {
 
 /// Animated grouped bar chart: consumed (blue) and burned (green) per day.
 class _WeeklyBalanceChart extends StatelessWidget {
-  const _WeeklyBalanceChart({required this.stats, required this.labels});
+  const _WeeklyBalanceChart({required this.stats});
 
   final List<WeeklyStat> stats;
-  final List<String> labels;
 
   @override
   Widget build(BuildContext context) {
@@ -224,7 +221,7 @@ class _WeeklyBalanceChart extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: AppSpacing.xs),
-                      AppCaption(labels[i]),
+                      AppCaption(weekdayLabel(stats[i].date)),
                     ],
                   ),
                 ),

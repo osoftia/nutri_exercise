@@ -20,6 +20,18 @@ class DailyEntryController extends ChangeNotifier {
   /// Every stored entry.
   List<DailyEntry> get entries => List.unmodifiable(_entries);
 
+  /// The entry stored for exactly [date] (`YYYY-MM-DD`), or `null`.
+  ///
+  /// M36 Task 1: single canonical exact-match lookup shared by the calendar
+  /// grid, the day editor and tests, so selecting day X always resolves to
+  /// day X's row — never a neighbour via prefix or index math.
+  DailyEntry? entryForDate(String date) {
+    for (final entry in _entries) {
+      if (entry.date == date) return entry;
+    }
+    return null;
+  }
+
   /// The set of dates (YYYY-MM-DD) that have at least one entry.
   Set<String> get datesWithEntries =>
       _entries.map((entry) => entry.date).toSet();
