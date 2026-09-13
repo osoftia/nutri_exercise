@@ -180,3 +180,17 @@ class MuscleTamagotchiState extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+/// M36 Task 1: single source of truth for the Tamagotchi avatar.
+///
+/// `HomePage` (and every widget under it) must observe this exact instance
+/// unless a test injects its own via `HomePage(tamagotchiState: ...)`.
+/// A per-widget `MuscleTamagotchiState()` duplicate silently forks growth /
+/// bloat state so taps stop moving the painted avatar.
+MuscleTamagotchiState sharedMuscleTamagotchiState = MuscleTamagotchiState();
+
+/// Replaces the shared instance with a fresh baseline (tests only), so
+/// widget tests stay isolated from each other.
+void resetSharedMuscleTamagotchiState() {
+  sharedMuscleTamagotchiState = MuscleTamagotchiState();
+}
