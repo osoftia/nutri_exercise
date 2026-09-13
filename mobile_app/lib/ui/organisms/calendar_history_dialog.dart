@@ -11,24 +11,34 @@ import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
 
 /// Opens the calendar history popup backed by [repository].
+///
+/// [onChanged] fires after any successful entry save/delete inside the
+/// dialog so hosts can refresh dependent state (e.g. streak counters).
 Future<void> showCalendarHistoryDialog(
   BuildContext context, {
   required DailyEntryRepository repository,
+  VoidCallback? onChanged,
 }) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => CalendarHistoryDialog(repository: repository),
+    builder: (context) => CalendarHistoryDialog(
+      repository: repository,
+      onChanged: onChanged,
+    ),
   );
 }
 
 /// Month grid of daily logged entries (nutrition + exercises) with an inline
 /// editor for reviewing and updating past days.
 class CalendarHistoryDialog extends StatefulWidget {
-  const CalendarHistoryDialog({super.key, required this.repository});
+  const CalendarHistoryDialog({super.key, required this.repository, this.onChanged});
 
   final DailyEntryRepository repository;
+
+  /// Fired after any successful entry save/delete (M36 Task 2).
+  final VoidCallback? onChanged;
 
   @override
   State<CalendarHistoryDialog> createState() => _CalendarHistoryDialogState();
@@ -83,7 +93,9 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
     // M36 Task 1: exact-match lookup through the controller so the tapped
     // day X always opens day X's entry.
     final existing = _controller.entryForDate(date);
-    await showModalBottomSheet<void>(
+    // M36 Task 2: the sheet reports success so dependent host state
+    // (streak/stats) refreshes right after a save/delete.
+    final changed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -93,6 +105,7 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
         existing: existing,
       ),
     );
+    if ((changed ?? false) && mounted) widget.onChanged?.call();
   }
 
   @override
@@ -320,12 +333,12 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
     );
 
     final saved = await widget.controller.save(entry);
-    if (saved && mounted) Navigator.of(context).pop();
+    if (saved && mounted) Navigator.of(context).pop(true);
   }
 
   Future<void> _delete() async {
     final deleted = await widget.controller.delete(widget.date);
-    if (deleted && mounted) Navigator.of(context).pop();
+    if (deleted && mounted) Navigator.of(context).pop(true);
   }
 
   @override
@@ -412,11 +425,29 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     if (hasExisting) ...[
-                      CustomButton(
+                      // M36 Task 2: prominent delete affordance — danger
+                      // outline + trash icon + explicit label (same stable
+                      // key so existing tests keep resolving it).
+                      OutlinedButton.icon(
                         key: const Key('history_delete_button'),
-                        label: 'Delete',
-                        variant: CustomButtonVariant.ghost,
                         onPressed: _delete,
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: AppColors.danger,
+                        ),
+                        label: const Text('Delete Record'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.danger,
+                          side: const BorderSide(color: AppColors.danger),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xl,
+                            vertical: AppSpacing.md,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.md),
+                          ),
+                        ),
                       ),
                       const SizedBox(width: AppSpacing.md),
                     ],

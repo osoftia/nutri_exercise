@@ -87,9 +87,29 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _menus = widget.dietRepository.getDailyMenus();
     _shareController = widget.shareController ?? ShareProgressController();
+    _loadStreak();
+  }
+
+  /// Reloads the share-card streak from the log repository.
+  ///
+  /// M36 Task 2: also fired via the calendar history `onChanged` hook so a
+  /// day deleted (or saved) in the calendar instantly updates the
+  /// Tamagotchi/stats state instead of leaving a stale count.
+  void _loadStreak() {
     widget.dailyLogRepository?.currentStreak().then((streak) {
       if (mounted) setState(() => _streak = streak);
     });
+  }
+
+  /// Opens the calendar history; any save/delete inside refreshes the streak.
+  void _openHistory() {
+    final repository = widget.dailyEntryRepository;
+    if (repository == null) return;
+    showCalendarHistoryDialog(
+      context,
+      repository: repository,
+      onChanged: _loadStreak,
+    );
   }
 
   @override
@@ -218,10 +238,7 @@ class _HomePageState extends State<HomePage> {
                 color: AppColors.textMedium,
               ),
               tooltip: 'History',
-              onPressed: () => showCalendarHistoryDialog(
-                context,
-                repository: widget.dailyEntryRepository!,
-              ),
+              onPressed: _openHistory,
             ),
           PopupMenuButton<Flavor>(
             icon: const Icon(
