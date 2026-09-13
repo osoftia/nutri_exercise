@@ -43,6 +43,7 @@ class HomePage extends StatefulWidget {
     this.dailyLogRepository,
     this.dailyLogController,
     this.shareController,
+    this.tamagotchiState,
   });
 
   final DietRepository dietRepository;
@@ -63,13 +64,19 @@ class HomePage extends StatefulWidget {
   /// Optional share orchestrator (injectable for tests).
   final ShareProgressController? shareController;
 
+  /// M36 Task 1: single source of truth. When null, [HomePage] watches the
+  /// global [sharedMuscleTamagotchiState] so every mount paints/mutates the
+  /// exact same instance instead of forking a per-widget duplicate. Tests
+  /// may inject their own instance for isolation.
+  final MuscleTamagotchiState? tamagotchiState;
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   late Future<List<DailyMenu>> _menus;
-  final MuscleTamagotchiState _tamagotchi = MuscleTamagotchiState();
+  // M36 Task 1: no per-widget duplicate — resolved via [tamagotchi] getter.
   final DailyNutritionState _nutrition = DailyNutritionState();
   final GlobalKey _shareCardKey = GlobalKey();
   late final ShareProgressController _shareController;
@@ -87,7 +94,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    _tamagotchi.dispose();
+    // M36 Task 1: the tamagotchi instance is shared/injected, never owned
+    // here — disposing it would kill the global singleton for the next mount.
     _nutrition.dispose();
     super.dispose();
   }
@@ -102,14 +110,21 @@ class _HomePageState extends State<HomePage> {
     return widthFactorForBmi(bmi(profile.heightCm, profile.weightKg));
   }
 
+  /// M36 Task 1: the single watched instance. Injected state wins (tests),
+  /// otherwise the global [sharedMuscleTamagotchiState]. Every handler and
+  /// every painted subtree below must go through this getter — never a
+  /// second `MuscleTamagotchiState()` or dummy/mock.
+  MuscleTamagotchiState get tamagotchi =>
+      widget.tamagotchiState ?? sharedMuscleTamagotchiState;
+
   void _simulateCoreWorkout() {
-    _tamagotchi.applyGrowth([MuscleTamagotchiGroup.core]);
+    tamagotchi.applyGrowth([MuscleTamagotchiGroup.core]);
   }
 
   void _simulateMeal() {
     const meal = LogParseResponse(calories: 650, protein: 45, fat: 18);
     _nutrition.add(meal);
-    _tamagotchi.applyMeal(meal);
+    tamagotchi.applyMeal(meal);
   }
 
   /// Logs a default quick meal into the nutrition totals and applies the
@@ -119,7 +134,7 @@ class _HomePageState extends State<HomePage> {
   void _quickAdd() {
     const meal = LogParseResponse(calories: 650, protein: 45, fat: 18);
     _nutrition.add(meal);
-    _tamagotchi.applyMeal(meal);
+    tamagotchi.applyMeal(meal);
     _persistTodayEntry(
       (entry) => entry.copyWith(
         calories: entry.calories + meal.calories,
@@ -268,7 +283,7 @@ class _HomePageState extends State<HomePage> {
             height: SocialShareCard.height,
             child: SocialShareCard(
               repaintKey: _shareCardKey,
-              tamagotchiState: _tamagotchi,
+              tamagotchiState: tamagotchi,
               streak: _streak,
             ),
           ),
@@ -355,10 +370,10 @@ class _HomePageState extends State<HomePage> {
         // avatar subtree to rebuild with the latest state instead of
         // relying solely on InteractiveBodyMap's internal listener.
         ListenableBuilder(
-          listenable: _tamagotchi,
+          listenable: tamagotchi,
           builder: (context, _) {
             return MuscleGroupVisualizer(
-              tamagotchiState: _tamagotchi,
+              tamagotchiState: tamagotchi,
               bodyWidthFactor: _bodyWidthFactor,
             );
           },
@@ -415,9 +430,9 @@ class _HomePageState extends State<HomePage> {
                       ? null
                       : tamagotchiGroupForRegion(regionId);
                   if (group != null) {
-                    _tamagotchi.applyGrowth([group]);
+                    tamagotchi.applyGrowth([group]);
                   }
-                  _tamagotchi.applySlimming();
+                  tamagotchi.applySlimming();
                 }
               },
               onTap: () {
@@ -426,7 +441,7 @@ class _HomePageState extends State<HomePage> {
                 if (regionId != null) {
                   provider.selectMuscleRegion(regionId);
                 }
-                _tamagotchi.setOverrides(
+                tamagotchi.setOverrides(
                   ExerciseMuscleMapper.getColorsForExercise(exercise.name),
                 );
               },
