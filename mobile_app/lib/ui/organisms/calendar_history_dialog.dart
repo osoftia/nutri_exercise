@@ -80,9 +80,9 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
   }
 
   Future<void> _openEditor(String date) async {
-    final existing = _controller.entries
-        .where((entry) => entry.date == date)
-        .firstOrNull;
+    // M36 Task 1: exact-match lookup through the controller so the tapped
+    // day X always opens day X's entry.
+    final existing = _controller.entryForDate(date);
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,

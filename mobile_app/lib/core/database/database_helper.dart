@@ -414,12 +414,14 @@ class DatabaseHelper {
     final now = DateTime.now();
     var cursor = DateTime(now.year, now.month, now.day);
     if (!active.contains(DailyEntry.dateKey(cursor))) {
-      cursor = cursor.subtract(const Duration(days: 1));
+      // M36 Task 1: step by calendar day (immune to DST 23/25-hour days),
+      // never by fixed 24-hour durations which can shift the wall date.
+      cursor = DateTime(cursor.year, cursor.month, cursor.day - 1);
     }
     var streak = 0;
     while (active.contains(DailyEntry.dateKey(cursor))) {
       streak++;
-      cursor = cursor.subtract(const Duration(days: 1));
+      cursor = DateTime(cursor.year, cursor.month, cursor.day - 1);
     }
     return streak;
   }
