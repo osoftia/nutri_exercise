@@ -1,36 +1,38 @@
-# M36 Task 2 — Forced Split Limb Canvas Paths
+# M36 Task 2 — Entry Deletion Control
 
 ## Goal
-`InteractiveBodyMap` must paint Upper Arms, Forearms, Thighs and Calves with
-explicitly separate drawing commands plus coordinate offsets, so the four
-segments are 100% visibly independent even at maximum growth scale.
+The daily entry editor must expose a prominent Delete control that removes
+the entry from SQLite, updates dependent Tamagotchi/stats state, and
+refreshes the calendar UI instantly.
 
-## Findings
-- M35 cut vector gaps (upper bottom y≈0.345 vs fore top y≈0.365; thigh
-  bottom y≈0.785 vs calf top y≈0.815) and strokes split regions in their own
-  color, but `_BodyMapPainter.paint` still draws every region in ONE shared
-  loop — a single command stream, and heavy growth scaling can visually
-  re-close the gaps.
-- Hit-testing (`muscleAt`) uses un-offset screen paths; paint offsets must
-  stay small so pinned taps keep resolving.
+## Findings (audit)
+- Delete plumbing already exists end-to-end: `_EntryEditorSheet._delete` →
+  `DailyEntryController.delete(date)` → `DELETE WHERE date = ?` + `loadAll`
+  → `ListenableBuilder` re-renders the grid. Covered by
+  `calendar_history_dialog_test` ("an entry can be deleted").
+- GAP 1 (prominence): the control is a ghost-variant `CustomButton` labeled
+  "Delete" — subtle, no icon, no danger affordance.
+- GAP 2 (dependent state): nothing notifies the host after a delete/save.
+  `HomePage` caches `_streak` (read from the same `daily_entries` table via
+  `currentStreak`) once in `initState`, so deleting a streak day leaves the
+  share card stale. Weekly stats read fresh on open (no change needed);
+  the in-memory Tamagotchi avatar is not derived from history rows.
 
 ## Change
-- `lib/ui/organisms/interactive_body_map.dart`:
-  - New `splitLimbDrawOffsets` const: per-segment normalized offsets that
-    push joint neighbours apart (`upper_arms` up, `forearms` down, `thighs`
-    up, `calves` down).
-  - `paint()` restructured: torso/non-split regions in one loop, then FOUR
-    explicit segment passes (`upper_arms` / `forearms` / `thighs` /
-    `calves`), each shifting its paths by its offset and stroking in its
-    own region color.
-  - New `_paintSplitSeparators`: short page-background joint strips
-    (arm y≈0.355, leg y≈0.80, front+back boxes) painted last so the split
-    survives any growth overshoot.
-  - Joint y constants exported (`splitArmJointY`, `splitLegJointY`) for tests.
-- New test `test/ui/m36_task2_split_render_test.dart`: offsets present with
-  opposing signs, offset-shifted bounds stay disjoint with a wider gap than
-  raw vectors, pinned taps still resolve, widget smoke-renders.
+- `lib/ui/organisms/calendar_history_dialog.dart`:
+  - Replace the ghost "Delete" with a prominent danger-outlined
+    `OutlinedButton.icon` (trash icon + "Delete Record" label, same
+    `history_delete_button` key).
+  - Editor sheet pops with `true` on successful save/delete; `_openEditor`
+    forwards that as `widget.onChanged`.
+  - New optional `onChanged` on `showCalendarHistoryDialog` /
+    `CalendarHistoryDialog`, fired after any successful mutation.
+- `lib/ui/pages/home_page.dart`: extract `_loadStreak()`; history opener
+  passes `onChanged: _loadStreak` so the share-card streak (Tamagotchi
+  stats state) refreshes the moment a calendar entry is deleted/saved.
 
 ## Verify
-- `fvm flutter analyze` touched files; `fvm flutter test` new test + full
-  suite green.
+- `fvm flutter analyze` touched files.
+- Existing delete/edit calendar tests still green; new Task 3 tests pin:
+  delete removes the row, clears the grid dot instantly, and fires
+  `onChanged` (streak reload path).
