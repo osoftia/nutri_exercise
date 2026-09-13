@@ -93,6 +93,26 @@ bool shouldRestartBloat({
   return fullness > lastFullness;
 }
 
+/// M36 Task 2: forced split-limb rendering. Normalized draw offsets applied
+/// per split segment so joint neighbours are pushed apart on screen
+/// (upper arms rise while forearms drop; thighs rise while calves drop).
+/// Kept small (~1–2 px at typical sizes) so `muscleAt` hit-testing on the
+/// un-offset vector paths keeps resolving to the same segments.
+const Map<String, Offset> splitLimbDrawOffsets = {
+  'upper_arms': Offset(0.0, -0.012),
+  'forearms': Offset(0.0, 0.012),
+  'thighs': Offset(0.0, -0.010),
+  'calves': Offset(0.0, 0.010),
+};
+
+/// Normalized joint line between the upper-arm and forearm vector paths
+/// (upper bottom y≈0.345, forearm top y≈0.365).
+const double splitArmJointY = 0.355;
+
+/// Normalized joint line between the thigh and calf vector paths
+/// (thigh bottom y≈0.785, calf top y≈0.815).
+const double splitLegJointY = 0.80;
+
 /// Content equality for region-id sets, so the painter repaints when the
 /// active set's contents change even if the same instance is reused.
 bool sameRegionIdSet(Set<String> a, Set<String> b) {
@@ -359,7 +379,11 @@ class _BodyMapPainter extends CustomPainter {
     _paintSilhouette(canvas, size, MuscleView.back);
 
     final hasSelection = selectedMuscle != null;
+    // M36 Task 2 (pass 1/5): torso + every other NON-split region. Split
+    // limbs are skipped here — each gets its own explicit pass below so no
+    // two limb segments ever share a drawing command.
     for (final region in muscleRegions) {
+      if (isSplitLimbRegion(region.id)) continue;
       final isSelected = region.id == selectedMuscle;
       final path = _regionPath(region, size);
       canvas.drawPath(
@@ -372,25 +396,29 @@ class _BodyMapPainter extends CustomPainter {
       );
       if (!isSelected) {
         final isActive = activeRegions.contains(region.id);
-        // M34 Task 2: split-limb segments keep their own color identity.
-        // Stroking upper arms / forearms / thighs / calves with their
-        // resolved region color (tier or override) instead of the shared
-        // neutral gray stops adjacent same-tier segments from visually
-        // merging into a single-block limb.
-        final strokeColor = isActive
-            ? AppColors.accent
-            : isSplitLimbRegion(region.id)
-                ? _regionColor(region)
-                : AppColors.neutralMuscle.withValues(alpha: 0.55);
         canvas.drawPath(
           path,
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = isActive ? 2.0 : 1.4
-            ..color = strokeColor,
+            ..color = isActive
+                ? AppColors.accent
+                : AppColors.neutralMuscle.withValues(alpha: 0.55),
         );
       }
     }
+
+    // M36 Task 2 (passes 2–5/5): forced split rendering. One dedicated
+    // command stream per limb segment, each shifted by its own
+    // [splitLimbDrawOffsets] entry so Upper Arms / Forearms / Thighs /
+    // Calves are 100% visibly independent on screen.
+    _paintSplitSegment(canvas, size, 'upper_arms', hasSelection);
+    _paintSplitSegment(canvas, size, 'forearms', hasSelection);
+    _paintSplitSegment(canvas, size, 'thighs', hasSelection);
+    _paintSplitSegment(canvas, size, 'calves', hasSelection);
+    // Joint separators are cut last so growth scaling can never re-close
+    // the split.
+    _paintSplitSeparators(canvas, size);
 
     if (hasSelection) {
       for (final region in muscleRegions) {
@@ -479,6 +507,79 @@ class _BodyMapPainter extends CustomPainter {
         regionId: region.id,
         fallback: AppColors.primary500,
       );
+
+  /// M36 Task 2: the offset-shifted screen path for a split-limb segment.
+  /// The mass scale from [_regionPath] still applies; the segment is then
+  /// pushed apart from its joint neighbour by [splitLimbDrawOffsets].
+  Path _splitLimbPath(MuscleRegion region, Size size) {
+    final path = _regionPath(region, size);
+    final offset = splitLimbDrawOffsets[region.id];
+    if (offset == null || offset == Offset.zero) return path;
+    final box = _figureBox(region.view, size);
+    return path.shift(
+      Offset(offset.dx * box.width, offset.dy * box.height),
+    );
+  }
+
+  /// M36 Task 2: one dedicated drawing command stream for a single
+  /// split-limb [segmentId] (`upper_arms`, `forearms`, `thighs` or
+  /// `calves`). Each segment keeps its own fill + own-color outline
+  /// identity (thicker than torso strokes) so adjacent same-tier segments
+  /// can never merge into a single-block limb.
+  void _paintSplitSegment(
+    Canvas canvas,
+    Size size,
+    String segmentId,
+    bool hasSelection,
+  ) {
+    for (final region in muscleRegions) {
+      if (region.id != segmentId) continue;
+      final isSelected = region.id == selectedMuscle;
+      final path = _splitLimbPath(region, size);
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.fill
+          ..color = _regionColor(region).withValues(
+            alpha: isSelected ? 0.0 : (hasSelection ? 0.12 : 0.35),
+          ),
+      );
+      if (!isSelected) {
+        final isActive = activeRegions.contains(region.id);
+        canvas.drawPath(
+          path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = isActive ? 2.4 : 2.0
+            ..color = isActive ? AppColors.accent : _regionColor(region),
+        );
+      }
+    }
+  }
+
+  /// M36 Task 2: joint separator cuts painted after every segment, in the
+  /// page-background color, exactly over the vector gaps
+  /// ([splitArmJointY]/[splitLegJointY]). Growth scaling happens around
+  /// each path's own centre, so without this final cut a maxed-out mass
+  /// could visually re-close the joint — the separator forces the split.
+  void _paintSplitSeparators(Canvas canvas, Size size) {
+    final cut = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0
+      ..color = AppColors.surface900;
+    for (final view in MuscleView.values) {
+      final box = _figureBox(view, size);
+      Offset at(double nx, double ny) =>
+          Offset(box.left + nx * box.width, box.top + ny * box.height);
+      // Arm joints: narrow strips over each arm's x-range only, so the
+      // chest/abs torso paint is never touched.
+      canvas.drawLine(at(0.17, splitArmJointY), at(0.31, splitArmJointY), cut);
+      canvas.drawLine(at(0.69, splitArmJointY), at(0.83, splitArmJointY), cut);
+      // Leg joints.
+      canvas.drawLine(at(0.36, splitLegJointY), at(0.51, splitLegJointY), cut);
+      canvas.drawLine(at(0.49, splitLegJointY), at(0.64, splitLegJointY), cut);
+    }
+  }
 
   void _paintSilhouette(Canvas canvas, Size size, MuscleView view) {
     final box = _figureBox(view, size);
