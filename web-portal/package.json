@@ -8,7 +8,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:coverage": "ng test --coverage",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "build:docs": "md-to-pdf ../docs/USER_MANUAL.md"
   },
   "private": true,
   "packageManager": "npm@11.19.0",
@@ -33,6 +34,7 @@
     "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^10.9.1",
     "jsdom": "^28.0.0",
+    "md-to-pdf": "^5.2.5",
     "prettier": "^3.8.1",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.68.0",
