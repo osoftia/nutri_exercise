@@ -1,0 +1,108 @@
+.routine-board {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+.routine-board__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.routine-board__title {
+  margin: 0;
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-display);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text-high);
+}
+
+.routine-board__days {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.routine-board__day {
+  padding: 8px 14px;
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-ink);
+  color: var(--color-text-medium);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-overline);
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &--active {
+    background-color: var(--color-block-primary);
+    border-color: var(--color-block-primary);
+    color: var(--color-text-high);
+  }
+}
+
+.routine-board__duplicate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border: var(--border-accent);
+  border-radius: var(--radius-md);
+  background-color: var(--color-ink);
+}
+
+.routine-board__duplicate-label {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-overline);
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.routine-board__status {
+  margin: 0;
+  font-size: var(--font-size-label);
+  color: var(--color-text-low);
+
+  &--error {
+    color: var(--color-danger, #ef4444);
+  }
+}
+
+.routine-board__add {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.routine-board__group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.routine-board__group-label {
+  font-size: var(--font-size-label);
+  color: var(--color-text-low);
+}
+
+.routine-board__select {
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  border: var(--border-thin);
+  background-color: var(--color-bg);
+  color: var(--color-text-high);
+}
+
+.routine-board__columns {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}

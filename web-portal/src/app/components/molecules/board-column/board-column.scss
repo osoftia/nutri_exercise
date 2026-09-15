@@ -1,0 +1,108 @@
+.board-column {
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  border: var(--border-thin);
+}
+
+.board-column__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 4px;
+  cursor: grab;
+}
+
+.board-column__title {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text-high);
+}
+
+.board-column__count {
+  font-size: var(--font-size-metric);
+  font-weight: var(--font-weight-display);
+  color: var(--color-text-high);
+}
+
+.board-column__schedule {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 14px 8px;
+}
+
+.board-column__day {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-overline);
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.board-column__day-select {
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  background-color: var(--color-ink);
+  color: var(--color-text-high);
+  font-size: var(--font-size-label);
+}
+
+.board-column__zones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 14px 8px;
+}
+
+.board-column__zone {
+  padding: 2px 8px;
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-overline);
+  text-transform: uppercase;
+  color: var(--color-text-high);
+  background-color: var(--color-ink);
+
+  &--empty {
+    color: var(--color-text-low);
+  }
+}
+
+.board-column__zone-add {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 0 14px 8px;
+}
+
+.board-column__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 80px;
+  padding: 0 10px 12px;
+}
+
+.board-column__empty {
+  margin: 0;
+  padding: 16px;
+  text-align: center;
+  font-size: var(--font-size-label);
+  color: var(--color-text-low);
+}
+
+.board-column__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 10px 12px;
+}

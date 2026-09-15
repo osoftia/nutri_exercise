@@ -1,0 +1,89 @@
+<section class="routine-board" aria-label="Exercise routine board">
+  <header class="routine-board__toolbar">
+    <h2 class="routine-board__title">Weekly Planner</h2>
+    @if (store.hasSelection()) {
+      <app-custom-button variant="primary" (click)="store.bulkDelete()">
+        Delete selected ({{ store.selectedCount() }})
+      </app-custom-button>
+    }
+  </header>
+
+  <nav class="routine-board__days" aria-label="Filter by day of week">
+    @for (day of dayFilters; track day) {
+      <button
+        type="button"
+        class="routine-board__day"
+        [class.routine-board__day--active]="store.activeDay() === day"
+        (click)="store.setActiveDay(day)"
+      >
+        {{ day }}
+      </button>
+    }
+  </nav>
+
+  @if (duplicateSource()) {
+    <div class="routine-board__duplicate" role="dialog" aria-label="Duplicate routine to days">
+      <span class="routine-board__duplicate-label">Duplicate to:</span>
+      @for (day of weekDays; track day) {
+        <button
+          type="button"
+          class="routine-board__day"
+          [class.routine-board__day--active]="duplicateTargets().has(day)"
+          (click)="toggleTarget(day)"
+        >
+          {{ day }}
+        </button>
+      }
+      <app-custom-button variant="primary" (click)="confirmDuplicate()" [disabled]="duplicateTargets().size === 0">
+        Confirm
+      </app-custom-button>
+      <app-custom-button variant="ghost" (click)="cancelDuplicate()">Cancel</app-custom-button>
+    </div>
+  }
+
+  @if (store.loading()) {
+    <p class="routine-board__status">Loading board…</p>
+  }
+  @if (store.error()) {
+    <p class="routine-board__status routine-board__status--error">{{ store.error() }}</p>
+  }
+
+  <form class="routine-board__add" (submit)="$event.preventDefault(); onAdd()">
+    <app-form-input label="New exercise" placeholder="Hip Thrust" [(value)]="name" />
+    <label class="routine-board__group">
+      <span class="routine-board__group-label">Muscle group</span>
+      <select [(ngModel)]="muscleGroup" name="muscleGroup" class="routine-board__select">
+        @for (group of groups; track group) {
+          <option [value]="group">{{ group }}</option>
+        }
+      </select>
+    </label>
+    <app-custom-button type="submit" [disabled]="!name().trim()">Add exercise</app-custom-button>
+  </form>
+
+  <div
+    class="routine-board__columns"
+    cdkDropListGroup
+    cdkDropList
+    cdkDropListOrientation="horizontal"
+    (cdkDropListDropped)="onColumnDrop($event)"
+  >
+    @for (column of store.visibleColumns(); track column.id) {
+      <app-board-column
+        cdkDrag
+        [column]="column"
+        [exercises]="store.exercisesByColumn().get(column.id) ?? []"
+        [connectedIds]="columnIds()"
+        [selectedIds]="store.selectedIds()"
+        (drop)="onCardDrop($event, column.id)"
+        (toggleSelect)="store.toggleSelect($event)"
+        (rename)="onRename($event)"
+        (duplicate)="openDuplicate($event)"
+        (dayChange)="store.assignColumnToDay($event.id, $event.day)"
+        (zonesChange)="store.updateColumnZones($event.id, $event.zones)"
+      />
+    } @empty {
+      <p class="routine-board__status">No routines scheduled for this day.</p>
+    }
+  </div>
+</section>
