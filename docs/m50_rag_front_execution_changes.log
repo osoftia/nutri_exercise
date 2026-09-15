@@ -1,0 +1,99 @@
+# M50-RAG-FRONT Execution Changes Log — Angular Integration Checklist
+
+> **Prompt:** `PROMPT-BACKEND-RAG-FRONT-50.txt`
+> **Role:** @Coder (TDD per `.opencode.md`)
+> **Scope:** 5-point integration checklist for the Angular frontend (Windows) ↔
+> .NET 8 backend (Mac).
+
+## 1. Summary
+
+Implemented the RAG contracts, the `POST /api/rag/query` endpoint (TDD) and the
+connectivity/health wiring so the Angular app can call the API and verify it is
+alive.
+
+## 2. Task 1 — RAG Contracts (DTOs) · Checklist [1 & 2]
+
+**Created `backend/NutriExercise.Core/DTOs/RagContracts.cs`** (positional records,
+file-scoped namespace):
+
+- `RagRequest(string SystemPrompt, double Temperature, double SimilarityThreshold, string Query)`
+- `RagResponse(string GeneratedText, List<string> RetrievedContexts, TelemetryData Telemetry)`
+- `TelemetryData(long LatencyMs, List<double> PgVectorScores)`
+
+Build: 0 warnings / 0 errors.
+
+## 3. Task 2 — RAG Controller & Endpoint (TDD) · Checklist [3]
+
+**STEP 1 (Gherkin):** `backend/NutriExercise.Specs/Features/RagQuery.feature` —
+*Successful RAG query with valid parameters*.
+
+**STEP 2 (RED):** `backend/NutriExercise.Tests/RagControllerTests.cs` — xUnit +
+FluentAssertions. Build failed with `CS0246: 'RagController' not found`,
+confirming the red phase.
+
+**STEP 3 (GREEN):** `backend/NutriExercise.Api/Controllers/RagController.cs` —
+`[HttpPost("query")]` on `[Route("api/[controller]")]` (→ `api/rag/query`).
+
+- Uses `System.Diagnostics.Stopwatch` and maps `ElapsedMilliseconds` → `LatencyMs`.
+- Returns mocked `GeneratedText` and `PgVectorScores` for now (per the prompt).
+- Guards `ArgumentNullException.ThrowIfNull(request)`.
+
+**Supporting step definitions:** `backend/NutriExercise.Specs/Steps/RagQuerySteps.cs`.
+
+> Reqnroll note: the `When` binding captures the endpoint
+> (`""(.*)""`) because a quoted, parameter-less expression was interpreted as a
+> Cucumber expression by Reqnroll and did not match; adding a capture group makes
+> it a regex, matching the existing `RoutineGenerationSteps` convention.
+
+## 4. Task 3 — Connectivity & Health (`Program.cs`) · Checklist [4 & 5]
+
+### CORS — policy `AllowAngularApp`
+
+```csharp
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularApp", policy =>
+    {
+        policy.WithOrigins(
+            "http://localhost:4200",
+            "http://127.0.0.1:4200",
+            "http://localhost:5000",
+            "http://127.0.0.1:5000",
+            "http://10.0.2.2:5000",
+            "http://localhost:5039",
+            "http://127.0.0.1:5039",
+            "http://10.0.2.2:5039")
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+```
+
+Applied correctly in the pipeline (before `MapControllers`):
+
+```csharp
+app.UseCors("AllowAngularApp");
+```
+
+The two required Angular origins are first; the pre-existing web/mobile origins
+were preserved to avoid regressing the Flutter clients.
+
+### Health Checks
+
+```csharp
+builder.Services.AddHealthChecks();
+```
+
+```csharp
+app.MapHealthChecks("/health");
+```
+
+## 5. Verification
+
+- `dotnet build NutriExercise.sln` → 0 warnings / 0 errors.
+- `dotnet test NutriExercise.sln` → Specs **15/15**, Tests **14/14**.
+- Runtime smoke test (`dotnet run --urls http://127.0.0.1:5039`):
+  - `GET /health` → **200 OK**, body `Healthy`.
+  - `OPTIONS /api/rag/query` with `Origin: http://127.0.0.1:4200` → **204 No Content**
+    with `Access-Control-Allow-Origin`, `Access-Control-Allow-Methods: POST`,
+    `Access-Control-Allow-Headers: content-type`.

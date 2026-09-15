@@ -1,0 +1,124 @@
+# M50 Execution Changes Log — Prompt Lab Calibration Endpoint
+
+> **Milestone:** 50 — Prompt Lab calibration endpoint
+> **Contract:** `backend/NutriExercise.Specs/Features/PromptLab.feature`
+> **Prompt:** `PROMPT-BACKEND-DB-RAG-TEMPERATURE-MOCKUP-50.txt`
+> **Role:** @Coder (strict TDD per `.opencode.md`)
+
+## 1. Summary
+
+Delivered the `POST /api/PromptLab/run-query` endpoint that lets a developer
+calibrate `Temperature`, `SimilarityThreshold` and `SystemPrompt` against the RAG
+pipeline before releasing features. The endpoint validates its payload, runs a
+vector search and an LLM generation (each exactly once) and returns the generated
+text plus the number of retrieved contexts.
+
+## 2. Baseline state found
+
+The controller and its contracts already existed in the working tree but were
+**invisible to Git** and the feature was not executable:
+
+1. `.gitignore` contained a bare `PROMPT*` pattern under “Prompt files”. Because
+   Git ignore patterns match path segments regardless of case-insensitive
+   intent, it was swallowing every source file whose name starts with `Prompt`:
+   - `NutriExercise.Api/Controllers/PromptLabController.cs`
+   - `NutriExercise.Core/DTOs/PromptLabDtos.cs`
+   - `NutriExercise.Tests/PromptLabControllerTests.cs`
+   - `NutriExercise.Specs/Features/PromptLab.feature`
+2. `IVectorSearchService` and `IAiModelService` had **no concrete
+   implementations** and were **not registered** in DI, so the endpoint could not
+   be resolved by the host.
+3. The Reqnroll feature `PromptLab.feature` had no **step definitions**, so the
+   BDD scenarios failed with “no matching step”.
+
+## 3. Files created
+
+### `backend/NutriExercise.Specs/Steps/PromptLabSteps.cs`
+The Reqnroll `[Binding]` that drives the Gherkin contract. It follows the
+existing `RoutineGenerationSteps` convention (controller instantiated directly
+with Moq mocks, no `WebApplicationFactory`):
+
+- `[Given("the Prompt Lab API is running")]` — wires the two mocks
+  (`SearchAsync` → two contexts, `GenerateAsync` → `"generated response"`) and
+  builds the `PromptLabController`.
+- `[When(... valid payload \(Temp: (.*), Threshold: (.*)\))]` — parses the
+  temperature/threshold and issues the request.
+- `[When(... with (.*), (.*), (.*), and (.*))]` — the scenario-outline variant;
+  strips the surrounding quotes from `SystemPrompt`/`TestQuery` and parses the
+  numbers with `CultureInfo.InvariantCulture`.
+- `[Then("the response status should be 200 OK")]` /
+  `[Then("the response status should be 400 Bad Request")]` — assert
+  `OkObjectResult` / `BadRequestObjectResult`.
+- `[Then("the response should contain the \"(.*)\"")]` — serialises the
+  response and asserts the JSON contains the requested property.
+- `[Then("the response should contain the error message (.*)")]` — unquotes and
+  compares against the exact controller message.
+- `[Then("the vector search and AI model services must be called exactly once")]`
+  — `Mock.Verify(..., Times.Once)` for both services.
+
+### `backend/NutriExercise.Infrastructure/Services/VectorSearchService.cs`
+Real `IVectorSearchService`. Embeds the query via `IAiService.GenerateEmbeddingAsync`,
+fetches the 5 nearest documents from `IResearchDocumentRepository`, then filters
+them by **cosine similarity** (`1 - CosineDistance`) `>= similarityThreshold`
+and projects the document `Content` values.
+
+### `backend/NutriExercise.Infrastructure/Services/OllamaAiModelService.cs`
+Real `IAiModelService`. Builds a prompt from the system prompt + numbered
+scientific contexts + user query, POSTs it to Ollama `api/generate` with
+`options.temperature` (honouring the calibrated value) and returns the model
+response.
+
+## 4. Files modified
+
+### `.gitignore`
+Scoped the overly broad prompt pattern to the repository root so nested source
+files remain tracked:
+
+```diff
+-# Prompt files
+-PROMPT*
++# Prompt files (root-level only, keep source files like PromptLab* tracked)
++/PROMPT*
+```
+
+### `backend/NutriExercise.Api/Program.cs`
+Registered the two new services in the composition root:
+
+```csharp
+builder.Services.AddScoped<IVectorSearchService, VectorSearchService>();
+builder.Services.AddScoped<IAiModelService, OllamaAiModelService>();
+```
+
+### `backend/NutriExercise.Tests/NutriExercise.Tests.csproj` (pre-existing, unstaged)
+Added `FluentAssertions` 8.10.0 and `Moq` 4.20.72 so the pre-existing
+`PromptLabControllerTests` can compile.
+
+### Files now trackable (previously hidden by `.gitignore`)
+`PromptLabController.cs`, `PromptLabDtos.cs`, `PromptLabControllerTests.cs`,
+`IAiModelService.cs`, `IVectorSearchService.cs`, `PromptLab.feature`.
+
+## 5. Tests
+
+- `NutriExercise.Specs` → **14/14 passing** (7 of them Prompt Lab:
+  1 valid + 6 boundary examples).
+- `NutriExercise.Tests` → **12/12 passing** (valid, 6 theory boundaries,
+  null system prompt, null test query).
+- `dotnet build NutriExercise.sln` → **0 warnings, 0 errors**.
+
+## 6. Gherkin contract fulfilment
+
+| Scenario | Fulfilled by |
+|----------|--------------|
+| Valid payload returns 200 | `RunQuery` → `Ok(PromptLabRunResponse)` |
+| Response contains `GeneratedResponse` | `PromptLabRunResponse.GeneratedResponse` |
+| Response contains `RetrievedContextCount` | `contexts.Count` |
+| Services called exactly once | Single `SearchAsync` + `GenerateAsync` call in `RunQuery` |
+| Temperature out of `[0,1]` → 400 | First-range guard returns the exact message |
+| Threshold out of `[0,1]` → 400 | Range guard returns the exact message |
+| Empty `SystemPrompt` → 400 | `IsNullOrWhiteSpace` guard |
+| Empty `TestQuery` → 400 | `IsNullOrWhiteSpace` guard |
+
+## 7. Verification status
+
+- `dotnet test NutriExercise.sln` — **26/26 passing**.
+- `dotnet build NutriExercise.sln` — clean (0 warnings / 0 errors).

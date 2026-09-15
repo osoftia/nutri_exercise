@@ -37,11 +37,12 @@ PROMPT*.txt
 
 # Logs
 *.log
+!docs/*_execution_changes.log
 npm-debug.log*
 **/Logs/
 
-# Prompt files
-PROMPT*
+# Prompt files (root-level only, keep source files like PromptLab* tracked)
+/PROMPT*
 
 # Reqnroll auto-generated code-behind
 **/*.feature.cs

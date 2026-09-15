@@ -34,10 +34,11 @@ try
 
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowFrontendClients", policy =>
+        options.AddPolicy("AllowAngularApp", policy =>
         {
             policy.WithOrigins(
                 "http://localhost:4200",
+                "http://127.0.0.1:4200",
                 "http://localhost:5000",
                 "http://127.0.0.1:5000",
                 "http://10.0.2.2:5000",
@@ -48,6 +49,8 @@ try
                 .AllowAnyHeader();
         });
     });
+
+    builder.Services.AddHealthChecks();
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(
             builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -62,6 +65,8 @@ try
     builder.Services.AddScoped<IRoutineRepository, RoutineRepository>();
     builder.Services.AddScoped<IResearchDocumentRepository, ResearchDocumentRepository>();
     builder.Services.AddScoped<IDailyLogRepository, DailyLogRepository>();
+    builder.Services.AddScoped<IVectorSearchService, VectorSearchService>();
+    builder.Services.AddScoped<IAiModelService, OllamaAiModelService>();
 
     var app = builder.Build();
 
@@ -78,11 +83,13 @@ try
 
     app.UseMiddleware<GlobalExceptionMiddleware>();
 
-    app.UseCors("AllowFrontendClients");
+    app.UseCors("AllowAngularApp");
 
     app.UseSerilogRequestLogging();
 
     app.MapControllers();
+
+    app.MapHealthChecks("/health");
 
     app.Run();
 }
