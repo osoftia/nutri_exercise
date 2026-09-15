@@ -25,6 +25,11 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 
 
 
+
+## [2026-09-15]
+
+- \`dd7e5b4\` feat(m50): RAG contracts, /api/rag/query endpoint, CORS and health checks
+
 ## [2026-09-08]
 
 - \`0ed8ca1\` feat(backend): resolve BDD ambiguity, fix analyzer warnings, and implement daily log history US-1
