@@ -1,4 +1,4 @@
-package com.example.nutri_mobile_app
+package com.osoft.nutri_mobile_app
 
 import io.flutter.embedding.android.FlutterActivity
 

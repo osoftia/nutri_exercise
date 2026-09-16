@@ -1,4 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.nutri_mobile_app">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- NOTE: Do NOT add package="..." here. The applicationId/namespace is
+         declared in android/app/build.gradle.kts (namespace = ...). AGP 8+
+         fails :app:processReleaseMainManifest when both are set. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
