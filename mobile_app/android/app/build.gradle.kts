@@ -1,5 +1,9 @@
 plugins {
     id("com.android.application")
+    // Required so android/app/src/main/kotlin/**/*.kt (MainActivity) is actually
+    // compiled. Without this plugin the .kt file is ignored, the class is absent
+    // from the APK, and the app crashes with ClassNotFoundException.
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
