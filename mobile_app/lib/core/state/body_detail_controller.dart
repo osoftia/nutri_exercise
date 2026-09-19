@@ -187,6 +187,25 @@ class BodyDetailController extends ChangeNotifier {
     }
   }
 
+  /// Re-reads the per-segment workout logs after a completion toggle and
+  /// notifies, so the blueprint's set callouts and muscle scaling reflect the
+  /// persisted state on the same frame without a full overview reload.
+  Future<void> refreshWorkouts() async {
+    try {
+      final workouts = <BodySegment, MuscleWorkoutLog>{};
+      for (final segment in overviewSegments) {
+        workouts[segment] = await _repository.loadWorkoutLog(segment);
+      }
+      _workouts = workouts;
+    } catch (_) {
+      _overviewError = 'Could not load your body blueprint.';
+    }
+    notifyListeners();
+    if (_projectionParams != null) {
+      await _runForecast();
+    }
+  }
+
   /// Applies the selected milestone by asking the [BodyProjectionForecaster].
   Future<void> applyProjection({
     required int month,

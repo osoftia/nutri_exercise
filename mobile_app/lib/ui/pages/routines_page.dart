@@ -89,11 +89,13 @@ class _RoutinesPageState extends State<RoutinesPage> {
 
     if (value) {
       await completion.confirm(widget.detailController.plannedExercises());
+      await widget.detailController.refreshWorkouts();
       final summary = completion.summary;
       if (!mounted || summary == null) return;
       await showExerciseCompletionSheet(context, summary);
     } else {
       await completion.undo();
+      await widget.detailController.refreshWorkouts();
     }
   }
 
