@@ -15,6 +15,7 @@ import '../domain/notifications/exercise_check_in.dart';
 import '../domain/popups/exercise_completion.dart';
 import '../models/food_entry.dart';
 import '../services/rule_based_body_projection_forecaster.dart';
+import '../services/tamagotchi_scale_mapper.dart';
 import 'muscle_tamagotchi_state.dart';
 
 /// ChangeNotifier backing the blueprint diagram and its detail popups.
@@ -36,7 +37,9 @@ class BodyDetailController extends ChangeNotifier {
         _forecaster = forecaster ?? const RuleBasedBodyProjectionForecaster(),
         _tamagotchi = tamagotchi,
         _calorieTarget = calorieTarget,
-        _macroTargets = macroTargets;
+        _macroTargets = macroTargets {
+    _tamagotchi?.addListener(_onTamagotchiChanged);
+  }
 
   final BodyDetailRepository _repository;
   final MuscleGapAdvisor _advisor;
@@ -226,25 +229,50 @@ class BodyDetailController extends ChangeNotifier {
 
   /// Builds the immutable view model for the diagram.
   ///
-  /// When a [forecast] (or the latest applied projection) exists, its
-  /// per-segment scales and statuses replace the current-log-derived ones.
+  /// Tamagotchi muscle mass / core fullness drive the baseline per-segment
+  /// thickness; an active projection multiplies on top of it. When a
+  /// [forecast] (or the latest applied projection) exists, its estimated
+  /// statuses replace the current-log-derived ones.
   BodyDiagramViewModel buildViewModel({
     BodySegment? selectedSegment,
     BodyProjectionForecast? forecast,
   }) {
+    final tamagotchi = _tamagotchi;
+    final tamagotchiScales = tamagotchi == null
+        ? const <BodySegment, double>{}
+        : tamagotchiScaleFactors(
+            mass: tamagotchi.massOf,
+            coreFullness: tamagotchi.coreFullness,
+          );
+
     final base = const BodyDiagramBuilder().build(
       foodLog: _foodLog,
       workouts: _workouts,
       calorieTarget: _calorieTarget,
       macroTargets: _macroTargets,
+      scaleFactors: tamagotchiScales,
       selectedSegment: selectedSegment,
     );
+
     final projection = forecast ?? _forecast;
     if (projection == null) return base;
+
     return base.copyWith(
-      scaleFactors: projection.scaleFactors,
+      scaleFactors: {
+        for (final segment in BodySegment.values)
+          segment:
+              projection.scaleFor(segment) * (tamagotchiScales[segment] ?? 1.0),
+      },
       statuses: projection.statuses,
     );
+  }
+
+  void _onTamagotchiChanged() => notifyListeners();
+
+  @override
+  void dispose() {
+    _tamagotchi?.removeListener(_onTamagotchiChanged);
+    super.dispose();
   }
 
   /// Loads today's food log for the food sheet and notifies.
