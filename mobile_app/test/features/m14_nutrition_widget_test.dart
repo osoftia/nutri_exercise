@@ -62,6 +62,8 @@ void main() {
 
       await tester.tap(find.byKey(const Key('quick_add_Grilled Chicken Bowl')));
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('quick_add_confirm')));
+      await tester.pumpAndSettle();
 
       expect(controller.consumedCalories, 1650);
       expect(find.text('1650 of 2000 kcal'), findsOneWidget);
@@ -102,6 +104,8 @@ void main() {
       final before = avatarPainter(tester).morph;
 
       await tester.tap(find.byKey(const Key('quick_add_Protein Shake')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('quick_add_confirm')));
       await tester.pumpAndSettle();
 
       expect(controller.consumedCalories, 1150);

@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
+import '../../core/domain/body_projection/nutrition_log.dart';
+import '../../core/domain/nutrition/portion_scaler.dart';
 import '../../core/models/food_entry.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/state/body_detail_controller.dart';
@@ -13,6 +17,7 @@ import '../atoms/neumorphic_circular_progress.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
 import '../molecules/body_segment_sheet.dart';
+import '../molecules/quick_add_grams_dialog.dart';
 import '../organisms/calendar_history_dialog.dart';
 
 class NutritionPage extends StatefulWidget {
@@ -104,11 +109,49 @@ class _NutritionPageState extends State<NutritionPage> {
     _caloriesController.clear();
   }
 
+  /// Intercepts a preset quick-add: asks for the portion in grams (default
+  /// 100 g) and logs the proportionally scaled entry.
+  Future<void> _addQuick(FoodEntry entry) async {
+    final grams = await showQuickAddGramsDialog(context, food: entry);
+    if (grams == null || !mounted) return;
+    _logFood(PortionScaler.scaleFood(entry, grams), grams: grams);
+  }
+
   /// Logs [entry] and, when reactive notifications are enabled, fires an
   /// immediate meal-logged notification.
-  void _logFood(FoodEntry entry) {
+  ///
+  /// When [grams] is provided the entry is mirrored onto the shared body-detail
+  /// log so the blueprint abdomen status colour and the Tamagotchi stomach mass
+  /// react to the actual portion on the same frame.
+  void _logFood(FoodEntry entry, {double? grams}) {
     widget.controller.logFood(entry);
+    final detail = widget.bodyDetailController;
+    if (detail != null) {
+      unawaited(
+        detail.addFood(
+          LoggedFood(
+            name: entry.name,
+            portion: grams == null ? '1 serving' : _formatGrams(grams),
+            calories: entry.calories,
+            proteinG: entry.proteinG,
+            carbsG: entry.carbsG,
+            fatG: entry.fatG,
+            time: _nowHHmm(),
+          ),
+        ),
+      );
+    }
     _maybeNotifyReactive();
+  }
+
+  static String _formatGrams(double grams) => grams == grams.roundToDouble()
+      ? '${grams.toInt()} g'
+      : '${grams.toStringAsFixed(1)} g';
+
+  static String _nowHHmm() {
+    final now = DateTime.now();
+    String two(int value) => value.toString().padLeft(2, '0');
+    return '${two(now.hour)}:${two(now.minute)}';
   }
 
   Future<void> _maybeNotifyReactive() async {
@@ -297,7 +340,7 @@ class _NutritionPageState extends State<NutritionPage> {
                     key: Key('quick_add_${entry.name}'),
                     label: entry.name,
                     variant: CustomButtonVariant.ghost,
-                    onPressed: () => _logFood(entry),
+                    onPressed: () => _addQuick(entry),
                   ),
               ],
             ),
