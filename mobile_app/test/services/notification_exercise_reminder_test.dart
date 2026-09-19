@@ -14,6 +14,7 @@ class _RecordingScheduler implements NotificationScheduler {
   final List<NotificationDetails> details = [];
   final List<tz.TZDateTime> dates = [];
   final List<DateTimeComponents?> components = [];
+  final List<String?> payloads = [];
 
   @override
   Future<void> cancel(int id) async {
@@ -36,6 +37,7 @@ class _RecordingScheduler implements NotificationScheduler {
     details.add(notificationDetails);
     dates.add(scheduledDate);
     components.add(matchDateTimeComponents);
+    payloads.add(payload);
   }
 }
 
@@ -100,6 +102,16 @@ void main() {
         scheduler.bodies.first,
         'Did you complete your workout routines today?',
       );
+    });
+
+    test('forwards the structured payload to the scheduler', () async {
+      final scheduler = _RecordingScheduler();
+      final service = NotificationService(scheduler: scheduler);
+      const payload = '{"type":"exercise_check_in","exercises":[]}';
+
+      await service.scheduleDailyExerciseReminder(payload: payload);
+
+      expect(scheduler.payloads.first, payload);
     });
   });
 }

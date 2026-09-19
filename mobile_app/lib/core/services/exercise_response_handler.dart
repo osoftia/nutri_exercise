@@ -1,6 +1,8 @@
 import '../constants/tamagotchi_groups.dart';
+import '../data/body_detail_repository.dart';
 import '../data/daily_entry_repository.dart';
 import '../data/tamagotchi_progress_repository.dart';
+import '../domain/notifications/exercise_check_in.dart';
 import '../models/daily_entry.dart';
 import '../models/tamagotchi_progress.dart';
 import '../state/muscle_tamagotchi_state.dart';
@@ -63,17 +65,28 @@ class ExerciseResponseHandler {
     required String? actionId,
     required DailyEntryRepository entries,
     required TamagotchiProgressRepository progress,
+    String? payload,
     MuscleTamagotchiState? tamagotchi,
+    BodyDetailRepository? completions,
   }) async {
     if (actionId != NotificationService.exerciseYesActionId) return;
 
     final today = DailyEntry.dateKey(DateTime.now());
     final entry = await entries.getByDate(today);
-    final exercises = entry?.exercises ?? const <String>[];
-    final burned = caloriesBurnedFor(exercises);
+    final names = entry?.exercises ?? const <String>[];
+
+    // Prefer the structured payload (sets/reps/load); fall back to the stored
+    // exercise names when the notification carried none.
+    final checkIn = ExerciseCheckIn.tryParse(payload);
+    final structured =
+        (checkIn != null && checkIn.exercises.isNotEmpty) ? checkIn.exercises : null;
+    final completed =
+        structured ?? ExerciseCheckIn.fromNames(names).exercises;
+    final burnedNames = completed.map((exercise) => exercise.name).toList();
+    final burned = caloriesBurnedFor(burnedNames);
 
     final current = (await progress.get())?.coreFullness ?? 0.0;
-    final slimmed = slimmedFullness(current, exercises);
+    final slimmed = slimmedFullness(current, burnedNames);
     await progress.save(
       TamagotchiProgress(coreFullness: slimmed, updatedAt: DateTime.now()),
     );
@@ -82,12 +95,18 @@ class ExerciseResponseHandler {
       (entry ?? DailyEntry(date: today)).copyWith(burned: burned),
     );
 
+    // Persist the day's completed exercises so the foreground popup can present
+    // them after a notification action.
+    if (completions != null && completed.isNotEmpty) {
+      await completions.saveCompletedExercises(completed);
+    }
+
     final avatar = tamagotchi;
     if (avatar != null) {
-      final groups = growthGroupsFor(exercises);
+      final groups = growthGroupsFor(burnedNames);
       if (groups.isNotEmpty) avatar.applyGrowth(groups);
       avatar.applySlimming(
-        amount: MuscleTamagotchiState.slimmingPerExercise * exercises.length,
+        amount: MuscleTamagotchiState.slimmingPerExercise * burnedNames.length,
       );
     }
   }

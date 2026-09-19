@@ -49,7 +49,8 @@ void main() {
       expect(service.timeout, const Duration(seconds: 60));
     });
 
-    test('POSTs to /api/ai/chat and returns the assistant message', () async {
+    test('POSTs to /api/aiproxy/chat and returns the assistant message',
+        () async {
       late http.Request captured;
       final client = MockClient((request) async {
         captured = request;
@@ -64,7 +65,7 @@ void main() {
         );
       });
       final service = AiChatService(
-        baseUrl: 'http://192.168.1.10:5039',
+        baseUrl: 'http://192.168.1.6:5039',
         client: client,
       );
 
@@ -72,7 +73,7 @@ void main() {
 
       expect(reply, 'Here is your routine');
       expect(captured.method, 'POST');
-      expect(captured.url.path, '/api/ai/chat');
+      expect(captured.url.path, '/api/aiproxy/chat');
       expect(captured.headers['Content-Type'], 'application/json');
       final body = jsonDecode(captured.body) as Map<String, dynamic>;
       expect(body['message'], 'Push pull 4 days');

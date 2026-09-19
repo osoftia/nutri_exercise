@@ -6,10 +6,10 @@ import 'package:http/testing.dart';
 import 'package:nutri_mobile_app/core/services/log_parse_service.dart';
 
 void main() {
-  test('parse POSTs rawText and returns the parsed response', () async {
+  test('parse POSTs text and returns the parsed response', () async {
     final client = MockClient((request) async {
       expect(request.url.path, '/api/log/parse');
-      expect(jsonDecode(request.body), {'rawText': 'Ate chicken and rice'});
+      expect(jsonDecode(request.body), {'text': 'Ate chicken and rice'});
       return http.Response(
         jsonEncode({
           'calories': 500,

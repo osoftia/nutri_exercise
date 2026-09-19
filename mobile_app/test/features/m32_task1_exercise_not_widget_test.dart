@@ -11,7 +11,7 @@ class _SpyNotificationService extends NotificationService {
   int exerciseTestCalls = 0;
 
   @override
-  Future<void> showExerciseReminderTest() async {
+  Future<void> showExerciseReminderTest({String? payload}) async {
     exerciseTestCalls++;
   }
 }

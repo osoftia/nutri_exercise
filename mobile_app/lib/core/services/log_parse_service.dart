@@ -70,7 +70,7 @@ class LogParseService {
           .post(
             uri,
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'rawText': rawText}),
+            body: jsonEncode({'text': rawText}),
           )
           .timeout(timeout);
     } on TimeoutException catch (e) {

@@ -3,13 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:nutri_mobile_app/core/mocks/mock_body_detail_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_daily_log_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_nutrition_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_profile_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_projection_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_schedule_repository.dart';
 import 'package:nutri_mobile_app/core/services/ai_chat_service.dart';
+import 'package:nutri_mobile_app/core/services/rule_based_muscle_gap_advisor.dart';
 import 'package:nutri_mobile_app/core/state/ai_chat_controller.dart';
+import 'package:nutri_mobile_app/core/state/body_detail_controller.dart';
 import 'package:nutri_mobile_app/core/state/daily_log_controller.dart';
 import 'package:nutri_mobile_app/core/state/notification_navigation_controller.dart';
 import 'package:nutri_mobile_app/core/state/nutrition_controller.dart';
@@ -57,6 +60,10 @@ void main() {
           scheduleController: scheduleController,
           nutritionController: nutritionController,
           projectionController: projectionController,
+          bodyDetailController: BodyDetailController(
+            repository: MockBodyDetailRepository(),
+            advisor: const RuleBasedMuscleGapAdvisor(),
+          ),
           aiChatController: AiChatController(
             service: AiChatService(
               baseUrl: 'http://test',

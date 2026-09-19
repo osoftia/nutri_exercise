@@ -1,5 +1,8 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nutri_mobile_app/core/domain/notifications/exercise_check_in.dart';
+import 'package:nutri_mobile_app/core/domain/popups/exercise_completion.dart';
+import 'package:nutri_mobile_app/core/mocks/mock_body_detail_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_daily_entry_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_meal_action_repository.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_tamagotchi_progress_repository.dart';
@@ -115,6 +118,7 @@ void main() {
       ),
       dailyEntryRepository: entries,
       progressRepository: progress,
+      bodyDetailRepository: MockBodyDetailRepository(),
       plugin: plugin,
     );
 
@@ -124,5 +128,49 @@ void main() {
     );
     expect((await progress.get())!.coreFullness, lessThan(0.8));
     expect(platform.cancelledIds, contains(99));
+  });
+
+  test('exercise_yes with a structured payload persists its completions',
+      () async {
+    final entries = MockDailyEntryRepository()
+      ..save(DailyEntry(
+        date: DailyEntry.dateKey(DateTime.now()),
+        exercises: const ['Bench Press'],
+      ));
+    final bodyDetail = MockBodyDetailRepository();
+    final platform = _RecordingAndroidPlatform();
+    FlutterLocalNotificationsPlatform.instance = platform;
+    final plugin = FlutterLocalNotificationsPlugin();
+    final payload = const ExerciseCheckIn(
+      exercises: [
+        CompletedExercise(
+          name: 'Bench Press',
+          plannedSets: 4,
+          completedSets: 3,
+          reps: 8,
+          loadKg: 60,
+        ),
+      ],
+    ).encode();
+
+    await handleNotificationResponse(
+      NotificationResponse(
+        id: 100,
+        actionId: NotificationService.exerciseYesActionId,
+        payload: payload,
+        notificationResponseType:
+            NotificationResponseType.selectedNotificationAction,
+      ),
+      dailyEntryRepository: entries,
+      progressRepository: MockTamagotchiProgressRepository(),
+      bodyDetailRepository: bodyDetail,
+      plugin: plugin,
+    );
+
+    final saved = await bodyDetail.loadCompletedExercises();
+    expect(saved, hasLength(1));
+    expect(saved.single.completedSets, 3);
+    expect(saved.single.plannedSets, 4);
+    expect(saved.single.loadKg, 60);
   });
 }

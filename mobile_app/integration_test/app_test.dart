@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:nutri_mobile_app/app.dart';
 import 'package:nutri_mobile_app/core/config/app_config.dart';
-import 'package:nutri_mobile_app/ui/atoms/projection_avatar.dart';
+import 'package:nutri_mobile_app/core/domain/body_projection/body_segment.dart';
+import 'package:nutri_mobile_app/ui/organisms/body_blueprint/body_blueprint_diagram.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -13,12 +14,10 @@ void main() {
     matching: find.text(label),
   );
 
-  ProjectionAvatarPainter projectionPainter(WidgetTester tester) {
-    final customPaint = tester.widget<CustomPaint>(
-      find.byKey(const Key('projection_avatar')),
-    );
-    return customPaint.painter! as ProjectionAvatarPainter;
-  }
+  double chestScale(WidgetTester tester) => tester
+      .widget<BodyBlueprintDiagram>(find.byType(BodyBlueprintDiagram))
+      .viewModel
+      .scaleFor(BodySegment.chest);
 
   testWidgets('full app flow: tabs, profile persistence and avatar morph', (
     tester,
@@ -29,11 +28,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // 1. Routines tab (default) shows the projection timeline + avatar.
+    // 1. Routines tab (default) shows the projection timeline + blueprint.
     expect(find.text('Body Projection'), findsOneWidget);
     expect(find.byKey(const Key('timeline_0')), findsOneWidget);
     expect(find.byKey(const Key('timeline_6')), findsOneWidget);
-    expect(projectionPainter(tester).shoulderFactor, 0.5);
+    expect(chestScale(tester), 1.0);
 
     // 2. Nutrition tab shows the dashboard.
     await tester.tap(navTab('Nutrition'));
@@ -76,12 +75,12 @@ void main() {
     await tester.tap(navTab('Routines'));
     await tester.pumpAndSettle();
 
-    final baselineShoulder = projectionPainter(tester).shoulderFactor;
+    final baselineShoulder = chestScale(tester);
     await tester.tap(find.byKey(const Key('timeline_6')));
     await tester.pumpAndSettle();
 
-    final morphedShoulder = projectionPainter(tester).shoulderFactor;
+    final morphedShoulder = chestScale(tester);
     expect(morphedShoulder, greaterThan(baselineShoulder));
-    expect(morphedShoulder, 1.0);
+    expect(morphedShoulder, 1.3);
   });
 }

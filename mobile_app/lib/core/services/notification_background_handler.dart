@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../data/daily_entry_repository.dart';
+import '../data/body_detail_repository.dart';
+import '../data/local_body_detail_repository.dart';
 import '../data/local_daily_entry_repository.dart';
 import '../data/meal_action_repository.dart';
 import '../data/local_meal_action_repository.dart';
@@ -43,6 +45,7 @@ Future<void> handleNotificationResponse(
   MealActionRepository? mealRepository,
   TamagotchiProgressRepository? progressRepository,
   DailyEntryRepository? dailyEntryRepository,
+  BodyDetailRepository? bodyDetailRepository,
   FlutterLocalNotificationsPlugin? plugin,
 }) async {
   final pluginInstance = plugin ?? FlutterLocalNotificationsPlugin();
@@ -54,6 +57,10 @@ Future<void> handleNotificationResponse(
       actionId: actionId,
       entries: dailyEntryRepository ?? LocalDailyEntryRepository(),
       progress: progressRepository ?? LocalTamagotchiProgressRepository(),
+      payload: response.payload,
+      completions: actionId == NotificationService.exerciseYesActionId
+          ? bodyDetailRepository ?? LocalBodyDetailRepository()
+          : null,
     );
     await _cancelNotification(pluginInstance, response);
     return;

@@ -19,7 +19,7 @@ class DatabaseHelper {
   DatabaseHelper({Database? database}) : _databaseOverride = database;
 
   static const String _dbName = 'nutri_exercise.db';
-  static const int _dbVersion = 8;
+  static const int _dbVersion = 9;
 
   final Database? _databaseOverride;
   Database? _database;
@@ -85,6 +85,7 @@ class DatabaseHelper {
     await _createProjectionTables(db);
     await _createDailyEntryTable(db);
     await _createNotificationHistoryTables(db);
+    await _createBodyDetailTables(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -123,6 +124,38 @@ class DatabaseHelper {
         'INTEGER NOT NULL DEFAULT 0',
       );
     }
+    if (oldVersion < 9) {
+      await _createBodyDetailTables(db);
+    }
+  }
+
+  Future<void> _createBodyDetailTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS food_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        name TEXT NOT NULL,
+        portion TEXT NOT NULL,
+        calories INTEGER NOT NULL,
+        protein INTEGER NOT NULL,
+        carbs INTEGER NOT NULL,
+        fat INTEGER NOT NULL,
+        time TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS exercise_completions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        name TEXT NOT NULL,
+        planned_sets INTEGER NOT NULL,
+        completed_sets INTEGER NOT NULL,
+        reps INTEGER NOT NULL,
+        load_kg REAL NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    ''');
   }
 
   Future<void> _createNotificationHistoryTables(Database db) async {
@@ -510,6 +543,62 @@ class DatabaseHelper {
       await txn.delete('projection_milestone');
       for (final milestone in plan.milestones) {
         await txn.insert('projection_milestone', milestone.toMap(planId: 1));
+      }
+    });
+  }
+
+  /// Returns every food-log row for [date], oldest first.
+  Future<List<Map<String, Object?>>> getFoodLogsByDate(String date) async {
+    final db = await database;
+    return db.query(
+      'food_logs',
+      where: 'date = ?',
+      whereArgs: [date],
+      orderBy: 'id',
+    );
+  }
+
+  /// Replaces every food-log row for [date] in a single transaction.
+  Future<void> replaceFoodLogsByDate(
+    String date,
+    List<Map<String, Object?>> rows,
+  ) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('food_logs', where: 'date = ?', whereArgs: [date]);
+      for (final row in rows) {
+        await txn.insert('food_logs', row);
+      }
+    });
+  }
+
+  /// Returns every completed-exercise row for [date], oldest first.
+  Future<List<Map<String, Object?>>> getExerciseCompletionsByDate(
+    String date,
+  ) async {
+    final db = await database;
+    return db.query(
+      'exercise_completions',
+      where: 'date = ?',
+      whereArgs: [date],
+      orderBy: 'id',
+    );
+  }
+
+  /// Replaces every completed-exercise row for [date] in a single transaction.
+  Future<void> replaceExerciseCompletionsByDate(
+    String date,
+    List<Map<String, Object?>> rows,
+  ) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete(
+        'exercise_completions',
+        where: 'date = ?',
+        whereArgs: [date],
+      );
+      for (final row in rows) {
+        await txn.insert('exercise_completions', row);
       }
     });
   }

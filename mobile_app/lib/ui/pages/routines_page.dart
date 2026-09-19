@@ -1,16 +1,38 @@
 import 'package:flutter/material.dart';
 
+import '../../core/state/body_detail_controller.dart';
 import '../../core/state/projection_controller.dart';
+import '../../core/state/workout_completion_controller.dart';
 import '../../core/theme/app_theme.dart';
+import '../atoms/custom_button.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/neumorphic_timeline.dart';
-import '../atoms/projection_avatar.dart';
 import '../atoms/typography.dart';
+import '../molecules/body_segment_sheet.dart';
+import '../molecules/exercise_completion_sheet.dart';
+import '../organisms/body_blueprint/body_blueprint_diagram.dart';
 
+/// Routines tab: the blueprint Body Projection card plus the weekly plan.
+///
+/// The diagram's selection callback is wired to the shared
+/// [BodyDetailController] and opens the matching food / exercise detail sheet.
 class RoutinesPage extends StatefulWidget {
-  const RoutinesPage({super.key, required this.controller});
+  /// Creates the Routines tab.
+  const RoutinesPage({
+    super.key,
+    required this.controller,
+    required this.detailController,
+    this.workoutCompletionController,
+  });
 
+  /// Owns the long-term projection plan and selected milestone.
   final ProjectionController controller;
+
+  /// Owns the blueprint data and its detail popups.
+  final BodyDetailController detailController;
+
+  /// Optional workout completion controller; enables the check-in button.
+  final WorkoutCompletionController? workoutCompletionController;
 
   @override
   State<RoutinesPage> createState() => _RoutinesPageState();
@@ -35,16 +57,51 @@ class _RoutinesPageState extends State<RoutinesPage> {
   @override
   void initState() {
     super.initState();
-    widget.controller.load();
+    widget.controller.addListener(_onProjectionChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.controller.load();
+      widget.detailController.loadOverview();
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onProjectionChanged);
+    super.dispose();
+  }
+
+  /// Forwards the selected milestone to the forecaster behind the controller.
+  void _onProjectionChanged() {
+    final milestone = widget.controller.selectedMilestone;
+    if (milestone == null) return;
+    widget.detailController.applyProjection(
+      month: widget.controller.selectedMonth,
+      shoulderFactor: milestone.shoulderFactor,
+      waistFactor: milestone.waistFactor,
+    );
+  }
+
+  /// Confirms the planned workout and opens the completion summary popup.
+  Future<void> _confirmWorkout() async {
+    final completion = widget.workoutCompletionController;
+    if (completion == null) return;
+
+    await completion.confirm(widget.detailController.plannedExercises());
+    final summary = completion.summary;
+    if (!mounted || summary == null) return;
+    await showExerciseCompletionSheet(context, summary);
   }
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: widget.controller,
+      listenable: Listenable.merge([widget.controller, widget.detailController]),
       builder: (context, _) {
-        final c = widget.controller;
-        final milestone = c.selectedMilestone;
+        final controller = widget.controller;
+        final milestone = controller.selectedMilestone;
+        final viewModel = widget.detailController.buildViewModel();
+
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           children: [
@@ -56,14 +113,23 @@ class _RoutinesPageState extends State<RoutinesPage> {
                 children: [
                   const AppText('Body Projection'),
                   const SizedBox(height: AppSpacing.md),
-                  ProjectionAvatar(
-                    shoulderFactor: c.shoulderFactor,
-                    waistFactor: c.waistFactor,
+                  SizedBox(
+                    height: 320,
+                    width: double.infinity,
+                    child: BodyBlueprintDiagram(
+                      viewModel: viewModel,
+                      onSegmentSelected: (segment) =>
+                          showBodySegmentDetailSheet(
+                        context,
+                        segment: segment,
+                        controller: widget.detailController,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   NeumorphicTimeline(
-                    selectedMonth: c.selectedMonth,
-                    onSelected: c.selectMonth,
+                    selectedMonth: controller.selectedMonth,
+                    onSelected: controller.selectMonth,
                   ),
                   if (milestone != null) ...[
                     const SizedBox(height: AppSpacing.md),
@@ -71,6 +137,14 @@ class _RoutinesPageState extends State<RoutinesPage> {
                       '${milestone.weightKg.toStringAsFixed(1)} kg · '
                       '${milestone.focus}',
                       key: const Key('projection_summary'),
+                    ),
+                  ],
+                  if (widget.workoutCompletionController != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    CustomButton(
+                      key: const Key('confirm_workout_button'),
+                      label: 'Confirm workout',
+                      onPressed: _confirmWorkout,
                     ),
                   ],
                 ],

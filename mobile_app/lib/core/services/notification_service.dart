@@ -40,10 +40,10 @@ class NotificationService {
   NotificationService({
     FlutterLocalNotificationsPlugin? plugin,
     NotificationScheduler? scheduler,
-    void Function(String? payload)? onTap,
+    void Function(String? actionId, String? payload)? onResponse,
     DailyLogRepository? dailyLogRepository,
   }) : _plugin = plugin ?? FlutterLocalNotificationsPlugin(),
-       _onTap = onTap,
+       _onResponse = onResponse,
        _dailyLogRepository = dailyLogRepository {
     _scheduler = scheduler ?? FlutterLocalNotificationScheduler(_plugin);
   }
@@ -115,20 +115,24 @@ class NotificationService {
 
   /// Immediately shows a test exercise check-in notification (used by the
   /// "EXERCISE NOT" button).
-  Future<void> showExerciseReminderTest() async {
+  Future<void> showExerciseReminderTest({String? payload}) async {
     await initialize();
     await _plugin.show(
       exerciseReminderTestId,
       _exerciseTitle,
       _exerciseBody,
       _exerciseDetails(),
+      payload: payload,
     );
   }
 
   /// Schedules the daily 9:00 PM exercise check-in reminder (repeating every
   /// day). Cancels the previous reminder id first so relaunching never stacks
   /// duplicates.
-  Future<void> scheduleDailyExerciseReminder() async {
+  ///
+  /// [payload] optionally carries the structured [ExerciseCheckIn] so the
+  /// notification action has parity with the in-app manual check-in.
+  Future<void> scheduleDailyExerciseReminder({String? payload}) async {
     await initialize();
     final scheduled = nextDailyOccurrence(
       tz.TZDateTime.now(tz.local),
@@ -143,6 +147,7 @@ class NotificationService {
       scheduled,
       _exerciseDetails(),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: payload,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
@@ -166,7 +171,7 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _plugin;
   late final NotificationScheduler _scheduler;
-  void Function(String? payload)? _onTap;
+  void Function(String? actionId, String? payload)? _onResponse;
   DailyLogRepository? _dailyLogRepository;
   bool _initialized = false;
 
@@ -188,7 +193,7 @@ class NotificationService {
     await _plugin.initialize(
       settings,
       onDidReceiveNotificationResponse:
-          _onTap == null ? null : _handleResponse,
+          _onResponse == null ? null : _handleResponse,
       onDidReceiveBackgroundNotificationResponse:
           onDidReceiveBackgroundNotificationResponse,
     );
@@ -208,10 +213,13 @@ class NotificationService {
     await android.requestExactAlarmsPermission();
   }
 
-  /// Replaces the notification-tap handler (used when the service is created
-  /// before the app owns a navigation controller).
-  void setOnTap(void Function(String? payload)? onTap) {
-    _onTap = onTap;
+  /// Replaces the notification-response handler (used when the service is
+  /// created before the app owns a navigation controller).
+  ///
+  /// Receives both the action id (e.g. [exerciseYesActionId]) and the raw
+  /// payload so the app can route exercise check-ins to the right surface.
+  void setOnResponse(void Function(String? actionId, String? payload)? onResponse) {
+    _onResponse = onResponse;
   }
 
   /// Replaces the meal-history repository used for the interactive action
@@ -221,7 +229,7 @@ class NotificationService {
   }
 
   void _handleResponse(NotificationResponse response) {
-    _onTap?.call(response.payload);
+    _onResponse?.call(response.actionId, response.payload);
   }
 
   /// Simulates scheduling a weekly local notification for the selected routine.
