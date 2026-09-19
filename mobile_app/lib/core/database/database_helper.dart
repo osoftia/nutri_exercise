@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -19,7 +20,7 @@ class DatabaseHelper {
   DatabaseHelper({Database? database}) : _databaseOverride = database;
 
   static const String _dbName = 'nutri_exercise.db';
-  static const int _dbVersion = 9;
+  static const int _dbVersion = 10;
 
   final Database? _databaseOverride;
   Database? _database;
@@ -127,6 +128,26 @@ class DatabaseHelper {
     if (oldVersion < 9) {
       await _createBodyDetailTables(db);
     }
+    if (oldVersion < 10) {
+      await ensureTamagotchiMassColumn(db);
+    }
+  }
+
+  /// Adds the `mass_json` column to `tamagotchi_progress` (version 10).
+  ///
+  /// Exposed for tests so the legacy-schema upgrade path can be exercised
+  /// without spinning up the real documents-directory database.
+  @visibleForTesting
+  static Future<void> ensureTamagotchiMassColumn(Database db) async {
+    final columns = await db.rawQuery(
+      'PRAGMA table_info(tamagotchi_progress)',
+    );
+    final hasColumn = columns.any((row) => row['name'] == 'mass_json');
+    if (hasColumn) return;
+    await db.execute(
+      "ALTER TABLE tamagotchi_progress ADD COLUMN mass_json TEXT NOT NULL "
+      "DEFAULT '{}'",
+    );
   }
 
   Future<void> _createBodyDetailTables(Database db) async {
@@ -163,6 +184,7 @@ class DatabaseHelper {
       CREATE TABLE IF NOT EXISTS tamagotchi_progress (
         id INTEGER PRIMARY KEY CHECK (id = 1),
         core_fullness REAL NOT NULL,
+        mass_json TEXT NOT NULL DEFAULT '{}',
         updated_at TEXT NOT NULL
       )
     ''');

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'core/config/ai_chat_factory.dart';
@@ -11,6 +13,7 @@ import 'core/data/local_daily_entry_repository.dart';
 import 'core/data/local_daily_log_repository.dart';
 import 'core/data/local_profile_repository.dart';
 import 'core/data/local_projection_repository.dart';
+import 'core/data/local_tamagotchi_progress_repository.dart';
 import 'core/data/nutrition_repository.dart';
 import 'core/data/profile_repository.dart';
 import 'core/data/projection_repository.dart';
@@ -87,6 +90,17 @@ class _NutriAppState extends State<NutriApp> {
     });
     _notificationService.setDailyLogRepository(_dailyLogRepository());
     _bootstrapNotifications();
+
+    // Rehydrate the shared Tamagotchi (muscle mass + core fullness) from
+    // SQLite so the blueprint avatar survives app restarts. Dev/mock flavors
+    // stay in-memory for test isolation.
+    final tamagotchiRepository = widget.config.useMockApi
+        ? null
+        : LocalTamagotchiProgressRepository();
+    sharedMuscleTamagotchiState.attachRepository(tamagotchiRepository);
+    if (tamagotchiRepository != null) {
+      unawaited(sharedMuscleTamagotchiState.restore());
+    }
   }
 
   DailyLogRepository _dailyLogRepository() => widget.config.useMockApi

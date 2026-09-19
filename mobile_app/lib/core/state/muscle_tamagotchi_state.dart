@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../data/tamagotchi_progress_repository.dart';
 import '../models/log_parse_response.dart';
+import '../models/tamagotchi_progress.dart';
 
 /// The four gamified muscle groups of the tamagotchi avatar.
 enum MuscleTamagotchiGroup { core, arms, chest, legs }
@@ -18,10 +22,20 @@ class MuscleTamagotchiState extends ChangeNotifier {
     Map<MuscleTamagotchiGroup, double> initialMass = const {},
     this.growthDelta = 0.08,
     this.decayPerDay = 0.05,
-  }) {
+    TamagotchiProgressRepository? repository,
+  }) : _repository = repository {
     for (final group in MuscleTamagotchiGroup.values) {
       _mass[group] = (initialMass[group] ?? baseline).clamp(0.0, 1.0);
     }
+  }
+
+  /// Optional SQLite-backed store. When attached, every mutation is persisted
+  /// and [restore] rehydrates the avatar after an app restart.
+  TamagotchiProgressRepository? _repository;
+
+  /// Attaches (or clears) the persistence store used by [restore]/[toProgress].
+  void attachRepository(TamagotchiProgressRepository? repository) {
+    _repository = repository;
   }
 
   /// Neutral starting mass for every group.
@@ -87,6 +101,41 @@ class MuscleTamagotchiState extends ChangeNotifier {
   /// Whether the core is currently mid-bloat (transient) after eating.
   bool get coreIsBloating => _coreBloating;
 
+  /// Snapshots the persisted subset of this state (mass + core fullness).
+  TamagotchiProgress toProgress() => TamagotchiProgress(
+        coreFullness: _coreFullness,
+        mass: {
+          for (final group in MuscleTamagotchiGroup.values)
+            group.name: _mass[group] ?? baseline,
+        },
+        updatedAt: DateTime.now(),
+      );
+
+  /// Loads the persisted masses and core fullness and notifies listeners.
+  ///
+  /// A no-op when no repository is attached or nothing has been stored yet, so
+  /// fresh installs keep their neutral baseline.
+  Future<void> restore() async {
+    final repository = _repository;
+    if (repository == null) return;
+    final progress = await repository.get();
+    if (progress == null) return;
+
+    for (final group in MuscleTamagotchiGroup.values) {
+      final stored = progress.mass[group.name];
+      if (stored != null) _mass[group] = stored.clamp(0.0, 1.0);
+    }
+    _coreFullness = progress.coreFullness.clamp(0.0, 1.0);
+    notifyListeners();
+  }
+
+  /// Fire-and-forget persistence of [toProgress] to the attached repository.
+  void _persist() {
+    final repository = _repository;
+    if (repository == null) return;
+    unawaited(repository.save(toProgress()));
+  }
+
   /// Fires the "just ate" reaction: temporarily bloats the core and raises its
   /// permanent fullness in proportion to [calories].
   void applyNutrition(int calories) {
@@ -94,6 +143,7 @@ class MuscleTamagotchiState extends ChangeNotifier {
     _coreBloating = true;
     _mealCount++;
     _lastMealAt = DateTime.now();
+    _persist();
     notifyListeners();
   }
 
@@ -146,6 +196,7 @@ class MuscleTamagotchiState extends ChangeNotifier {
   void applySlimming({double amount = slimmingPerExercise}) {
     _coreFullness = coreFullnessAfterSlimming(_coreFullness, amount: amount);
     _coreBloating = false;
+    _persist();
     notifyListeners();
   }
 
@@ -167,6 +218,7 @@ class MuscleTamagotchiState extends ChangeNotifier {
       _mass[group] = (_mass[group] ?? baseline).clamp(0.0, 1.0);
       _mass[group] = (_mass[group]! + growthDelta).clamp(0.0, 1.0);
     }
+    _persist();
     notifyListeners();
   }
 
@@ -178,6 +230,7 @@ class MuscleTamagotchiState extends ChangeNotifier {
       _mass[group] =
           ((_mass[group] ?? baseline) - growthDelta).clamp(0.0, 1.0);
     }
+    _persist();
     notifyListeners();
   }
 
@@ -186,6 +239,7 @@ class MuscleTamagotchiState extends ChangeNotifier {
   void restoreCore(double amount) {
     _coreFullness = (_coreFullness + amount).clamp(0.0, 1.0);
     _coreBloating = false;
+    _persist();
     notifyListeners();
   }
 
@@ -196,6 +250,7 @@ class MuscleTamagotchiState extends ChangeNotifier {
     for (final group in MuscleTamagotchiGroup.values) {
       _mass[group] = ((_mass[group] ?? baseline) - amount).clamp(0.0, 1.0);
     }
+    _persist();
     notifyListeners();
   }
 }

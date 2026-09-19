@@ -23,6 +23,7 @@ void main() {
               CREATE TABLE tamagotchi_progress (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
                 core_fullness REAL NOT NULL,
+                mass_json TEXT NOT NULL DEFAULT '{}',
                 updated_at TEXT NOT NULL
               )
             ''');
@@ -42,6 +43,19 @@ void main() {
       final restored = await repo.get();
       expect(restored, isNotNull);
       expect(restored!.coreFullness, 0.5);
+    });
+
+    test('persists the per-group muscle mass', () async {
+      await repo.save(
+        const TamagotchiProgress(
+          coreFullness: 0.5,
+          mass: {'chest': 0.9, 'legs': 0.2},
+        ),
+      );
+
+      final restored = await repo.get();
+      expect(restored!.mass['chest'], 0.9);
+      expect(restored.mass['legs'], 0.2);
     });
 
     test('save replaces the previous value', () async {

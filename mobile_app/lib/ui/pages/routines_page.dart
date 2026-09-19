@@ -61,6 +61,7 @@ class _RoutinesPageState extends State<RoutinesPage> {
       if (!mounted) return;
       widget.controller.load();
       widget.detailController.loadOverview();
+      widget.workoutCompletionController?.restore();
     });
   }
 

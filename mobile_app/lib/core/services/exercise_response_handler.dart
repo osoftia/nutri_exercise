@@ -85,10 +85,15 @@ class ExerciseResponseHandler {
     final burnedNames = completed.map((exercise) => exercise.name).toList();
     final burned = caloriesBurnedFor(burnedNames);
 
-    final current = (await progress.get())?.coreFullness ?? 0.0;
+    final persisted = await progress.get();
+    final current = persisted?.coreFullness ?? 0.0;
     final slimmed = slimmedFullness(current, burnedNames);
     await progress.save(
-      TamagotchiProgress(coreFullness: slimmed, updatedAt: DateTime.now()),
+      TamagotchiProgress(
+        coreFullness: slimmed,
+        mass: persisted?.mass ?? const {},
+        updatedAt: DateTime.now(),
+      ),
     );
 
     await entries.save(

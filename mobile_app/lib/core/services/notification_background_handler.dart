@@ -84,13 +84,18 @@ Future<void> handleNotificationResponse(
     ),
   );
 
-  final current = (await progress.get())?.coreFullness ?? 0.0;
+  final persisted = await progress.get();
+  final current = persisted?.coreFullness ?? 0.0;
   final updated = MuscleTamagotchiState.coreFullnessAfterNutrition(
     current,
     defaultMealCalories,
   );
   await progress.save(
-    TamagotchiProgress(coreFullness: updated, updatedAt: DateTime.now()),
+    TamagotchiProgress(
+      coreFullness: updated,
+      mass: persisted?.mass ?? const {},
+      updatedAt: DateTime.now(),
+    ),
   );
 
   await _cancelNotification(pluginInstance, response);

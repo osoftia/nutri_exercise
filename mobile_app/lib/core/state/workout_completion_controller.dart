@@ -93,6 +93,19 @@ class WorkoutCompletionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Rehydrates the toggle from today's persisted completions after a restart.
+  ///
+  /// Unlike [confirm] it never re-applies growth/slimming: the Tamagotchi is
+  /// restored independently from its own persisted mass, so a restart cannot
+  /// double-count the workout.
+  Future<void> restore() async {
+    final repository = _repository;
+    if (repository == null) return;
+    final exercises = await repository.loadCompletedExercises();
+    if (exercises.isEmpty) return;
+    present(exercises);
+  }
+
   ExerciseCompletionSummary _summarize(List<CompletedExercise> exercises) {
     return _calculator.summarize(
       date: DailyEntry.dateKey(DateTime.now()),
