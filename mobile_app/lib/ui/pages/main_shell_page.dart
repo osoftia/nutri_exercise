@@ -71,6 +71,7 @@ class _MainShellPageState extends State<MainShellPage> {
       controller: widget.projectionController,
       detailController: widget.bodyDetailController,
       workoutCompletionController: widget.workoutCompletionController,
+      dailyEntryRepository: widget.dailyEntryRepository,
     ),
     NutritionPage(
       controller: widget.nutritionController,

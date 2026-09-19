@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../../core/data/daily_entry_repository.dart';
 import '../../core/state/body_detail_controller.dart';
 import '../../core/state/projection_controller.dart';
 import '../../core/state/workout_completion_controller.dart';
 import '../../core/theme/app_theme.dart';
+import '../atoms/blueprint_fab.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/neumorphic_timeline.dart';
 import '../atoms/typography.dart';
 import '../molecules/body_segment_sheet.dart';
 import '../molecules/exercise_completion_sheet.dart';
 import '../organisms/body_blueprint/body_blueprint_diagram.dart';
+import '../organisms/calendar_history_dialog.dart';
 
 /// Routines tab: the blueprint Body Projection card plus the weekly plan.
 ///
@@ -22,6 +25,7 @@ class RoutinesPage extends StatefulWidget {
     required this.controller,
     required this.detailController,
     this.workoutCompletionController,
+    this.dailyEntryRepository,
   });
 
   /// Owns the long-term projection plan and selected milestone.
@@ -32,6 +36,9 @@ class RoutinesPage extends StatefulWidget {
 
   /// Optional workout completion controller; enables the check-in button.
   final WorkoutCompletionController? workoutCompletionController;
+
+  /// Optional history repository; enables the blueprint History FAB.
+  final DailyEntryRepository? dailyEntryRepository;
 
   @override
   State<RoutinesPage> createState() => _RoutinesPageState();
@@ -130,14 +137,29 @@ class _RoutinesPageState extends State<RoutinesPage> {
                   SizedBox(
                     height: 320,
                     width: double.infinity,
-                    child: BodyBlueprintDiagram(
-                      viewModel: viewModel,
-                      onSegmentSelected: (segment) =>
-                          showBodySegmentDetailSheet(
-                        context,
-                        segment: segment,
-                        controller: widget.detailController,
-                      ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: BodyBlueprintDiagram(
+                            viewModel: viewModel,
+                            onSegmentSelected: (segment) =>
+                                showBodySegmentDetailSheet(
+                              context,
+                              segment: segment,
+                              controller: widget.detailController,
+                            ),
+                          ),
+                        ),
+                        if (widget.dailyEntryRepository != null)
+                          BlueprintFab(
+                            key: const Key('body_history_fab'),
+                            tooltip: 'History',
+                            onPressed: () => showCalendarHistoryDialog(
+                              context,
+                              repository: widget.dailyEntryRepository!,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
