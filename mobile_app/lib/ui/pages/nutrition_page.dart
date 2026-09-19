@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/data/daily_entry_repository.dart';
 import '../../core/models/food_entry.dart';
 import '../../core/services/notification_service.dart';
+import '../../core/state/body_detail_controller.dart';
 import '../../core/state/nutrition_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/custom_button.dart';
@@ -11,6 +12,7 @@ import '../atoms/neumorphic_bar_chart.dart';
 import '../atoms/neumorphic_circular_progress.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
+import '../molecules/body_segment_sheet.dart';
 import '../organisms/calendar_history_dialog.dart';
 
 class NutritionPage extends StatefulWidget {
@@ -19,6 +21,7 @@ class NutritionPage extends StatefulWidget {
     required this.controller,
     this.dailyEntryRepository,
     this.notificationService,
+    this.bodyDetailController,
   });
 
   final NutritionController controller;
@@ -28,6 +31,9 @@ class NutritionPage extends StatefulWidget {
 
   /// Optional notification service; enables reactive meal notifications.
   final NotificationService? notificationService;
+
+  /// Optional blueprint controller; enables the daily nutrition action button.
+  final BodyDetailController? bodyDetailController;
 
   @override
   State<NutritionPage> createState() => _NutritionPageState();
@@ -216,6 +222,17 @@ class _NutritionPageState extends State<NutritionPage> {
             NeumorphicContainer(
               child: DynamicAvatar(morph: c.morphFactor),
             ),
+            if (widget.bodyDetailController != null) ...[
+              const SizedBox(height: AppSpacing.lg),
+              CustomButton(
+                key: const Key('nutrition_action_button'),
+                label: 'Daily nutrition summary',
+                onPressed: () => showNutritionSummarySheet(
+                  context,
+                  controller: widget.bodyDetailController!,
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.lg),
             Row(
               children: [
