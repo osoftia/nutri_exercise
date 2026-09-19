@@ -13,32 +13,22 @@ public class OllamaAiService : IAiService
         _httpClient = httpClientFactory.CreateClient("Ollama");
     }
 
-    public async Task<string> GenerateRoutineAsync(string userPreferences, CancellationToken cancellationToken = default)
+    public Task<string> GenerateRoutineAsync(string userPreferences, CancellationToken cancellationToken = default)
+        => GenerateAsync(BuildPrompt(userPreferences), "json", cancellationToken);
+
+    public Task<string> GenerateJsonAsync(string userInput, CancellationToken cancellationToken = default)
+        => GenerateAsync(BuildLogExtractionPrompt(userInput), "json", cancellationToken);
+
+    public Task<string> GenerateChatAsync(string prompt, CancellationToken cancellationToken = default)
+        => GenerateAsync(prompt, format: null, cancellationToken);
+
+    private async Task<string> GenerateAsync(string prompt, string? format, CancellationToken cancellationToken)
     {
         var request = new OllamaGenerateRequest
         {
             Model = "llama3",
-            Prompt = BuildPrompt(userPreferences),
-            Format = "json",
-            Stream = false
-        };
-
-        using var response = await _httpClient.PostAsJsonAsync("api/generate", request, cancellationToken);
-
-        response.EnsureSuccessStatusCode();
-
-        var result = await response.Content.ReadFromJsonAsync<OllamaGenerateResponse>(cancellationToken);
-
-        return result?.Response ?? string.Empty;
-    }
-
-    public async Task<string> GenerateJsonAsync(string userInput, CancellationToken cancellationToken = default)
-    {
-        var request = new OllamaGenerateRequest
-        {
-            Model = "llama3",
-            Prompt = BuildLogExtractionPrompt(userInput),
-            Format = "json",
+            Prompt = prompt,
+            Format = format,
             Stream = false
         };
 
@@ -105,7 +95,8 @@ Usa nombres de músculos en inglés estandarizados (Chest, Back, Shoulders, Bice
         public string Prompt { get; set; } = string.Empty;
 
         [JsonPropertyName("format")]
-        public string Format { get; set; } = string.Empty;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Format { get; set; }
 
         [JsonPropertyName("stream")]
         public bool Stream { get; set; }
