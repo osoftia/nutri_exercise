@@ -9,16 +9,16 @@ import 'callout_placement.dart';
 
 /// The interactive blueprint diagram: schematic figure plus gutter callouts.
 ///
-/// The widget owns no business state (`StatelessWidget`) — it maps taps to
-/// [BodySegment]s via [BodySegmentGeometry.hitTest] and reports them through
-/// [onSegmentSelected], which the host uses to open the detail popup. Both the
-/// segment tap and the matching callout tap report the same segment.
-class BodyBlueprintDiagram extends StatelessWidget {
+/// Segment thicknesses animate toward the [BodyDiagramViewModel]'s scale
+/// factors, so tamagotchi muscle growth, stomach bloat and projection changes
+/// morph the figure smoothly. The widget owns no business state.
+class BodyBlueprintDiagram extends StatefulWidget {
   /// Creates a diagram for [viewModel].
   const BodyBlueprintDiagram({
     super.key,
     required this.viewModel,
     this.onSegmentSelected,
+    this.animationDuration = const Duration(milliseconds: 400),
   });
 
   /// The immutable snapshot to render.
@@ -26,6 +26,66 @@ class BodyBlueprintDiagram extends StatelessWidget {
 
   /// Called with the segment whose body or callout was tapped.
   final ValueChanged<BodySegment>? onSegmentSelected;
+
+  /// How long segment thicknesses take to animate to their new values.
+  final Duration animationDuration;
+
+  @override
+  State<BodyBlueprintDiagram> createState() => _BodyBlueprintDiagramState();
+}
+
+class _BodyBlueprintDiagramState extends State<BodyBlueprintDiagram>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: widget.animationDuration,
+    value: 1,
+  );
+
+  late Map<BodySegment, double> _from = widget.viewModel.scaleFactors;
+  late Map<BodySegment, double> _to = widget.viewModel.scaleFactors;
+
+  @override
+  void didUpdateWidget(covariant BodyBlueprintDiagram oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_scalesEqual(
+      oldWidget.viewModel.scaleFactors,
+      widget.viewModel.scaleFactors,
+    )) {
+      _from = _interpolatedScales(_controller.value);
+      _to = widget.viewModel.scaleFactors;
+      _controller.forward(from: 0);
+    } else {
+      _to = widget.viewModel.scaleFactors;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Map<BodySegment, double> _interpolatedScales(double t) {
+    final keys = {..._from.keys, ..._to.keys};
+    return {
+      for (final key in keys)
+        key: _lerp(_from[key] ?? 1.0, _to[key] ?? 1.0, t),
+    };
+  }
+
+  static double _lerp(double a, double b, double t) => a + (b - a) * t;
+
+  bool _scalesEqual(
+    Map<BodySegment, double> a,
+    Map<BodySegment, double> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (final entry in a.entries) {
+      if (b[entry.key] != entry.value) return false;
+    }
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,40 +97,52 @@ class BodyBlueprintDiagram extends StatelessWidget {
         );
         final placements = layoutBodyCallouts(size);
 
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            GestureDetector(
-              key: const Key('body_blueprint_canvas'),
-              behavior: HitTestBehavior.opaque,
-              onTapUp: (details) {
-                final segment = BodySegmentGeometry.hitTest(
-                  details.localPosition,
-                  size,
-                  scaleFor: viewModel.scaleFor,
-                );
-                if (segment != null) onSegmentSelected?.call(segment);
-              },
-              child: CustomPaint(
-                painter: BodyBlueprintPainter(viewModel: viewModel),
-              ),
-            ),
-            for (final placement in placements)
-              Positioned.fromRect(
-                rect: placement.chipRect,
-                child: BodyCalloutChip(
-                  key: Key('callout_${placement.segment.name}'),
-                  callout: viewModel.calloutFor(placement.segment) ??
-                      BodyCallout(
-                        segment: placement.segment,
-                        label: placement.segment.name,
-                        value: '—',
-                      ),
-                  status: viewModel.statusFor(placement.segment),
-                  onTap: () => onSegmentSelected?.call(placement.segment),
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            final viewModel = widget.viewModel.copyWith(
+              scaleFactors: _interpolatedScales(_controller.value),
+            );
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                GestureDetector(
+                  key: const Key('body_blueprint_canvas'),
+                  behavior: HitTestBehavior.opaque,
+                  onTapUp: (details) {
+                    final segment = BodySegmentGeometry.hitTest(
+                      details.localPosition,
+                      size,
+                      scaleFor: viewModel.scaleFor,
+                    );
+                    if (segment != null) {
+                      widget.onSegmentSelected?.call(segment);
+                    }
+                  },
+                  child: CustomPaint(
+                    key: const Key('body_blueprint_paint'),
+                    painter: BodyBlueprintPainter(viewModel: viewModel),
+                  ),
                 ),
-              ),
-          ],
+                for (final placement in placements)
+                  Positioned.fromRect(
+                    rect: placement.chipRect,
+                    child: BodyCalloutChip(
+                      key: Key('callout_${placement.segment.name}'),
+                      callout: viewModel.calloutFor(placement.segment) ??
+                          BodyCallout(
+                            segment: placement.segment,
+                            label: placement.segment.name,
+                            value: '—',
+                          ),
+                      status: viewModel.statusFor(placement.segment),
+                      onTap: () =>
+                          widget.onSegmentSelected?.call(placement.segment),
+                    ),
+                  ),
+              ],
+            );
+          },
         );
       },
     );
