@@ -35,7 +35,7 @@ abstract final class BodySegmentGeometry {
   static const double _neckTop = 0.132;
   static const double _neckBottom = 0.166;
   static const double _neckHalf = 0.030;
-  static const double _chestTop = 0.170;
+  static const double _chestTop = 0.160;
   static const double _chestBottom = 0.400;
   static const double _chestTopHalf = 0.200;
   static const double _chestBottomHalf = 0.135;
@@ -46,14 +46,14 @@ abstract final class BodySegmentGeometry {
   static const double _upperArmTop = 0.185;
   static const double _upperArmBottom = 0.350;
   static const double _upperArmHalf = 0.052;
-  static const double _forearmTop = 0.375;
+  static const double _forearmTop = 0.350;
   static const double _forearmBottom = 0.545;
   static const double _forearmHalf = 0.045;
   static const double _legX = 0.075;
-  static const double _thighTop = 0.575;
+  static const double _thighTop = 0.548;
   static const double _thighBottom = 0.800;
   static const double _thighHalf = 0.075;
-  static const double _calfTop = 0.825;
+  static const double _calfTop = 0.800;
   static const double _calfBottom = 0.970;
   static const double _calfHalf = 0.058;
 
