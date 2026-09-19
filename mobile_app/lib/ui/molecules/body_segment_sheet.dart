@@ -5,6 +5,21 @@ import '../../core/state/body_detail_controller.dart';
 import 'body_exercise_detail_sheet.dart';
 import 'body_food_detail_sheet.dart';
 
+/// Opens the daily nutrition summary (the abdomen food sheet).
+///
+/// Mirrors [showBodySegmentDetailSheet] for the abdomen segment, so the
+/// Nutrition tab and the blueprint callout share one surface.
+Future<void> showNutritionSummarySheet(
+  BuildContext context, {
+  required BodyDetailController controller,
+}) {
+  return showBodySegmentDetailSheet(
+    context,
+    segment: BodySegment.abdomen,
+    controller: controller,
+  );
+}
+
 /// Opens the detail popup for [segment]: the food list for the abdomen and the
 /// exercise/gap advice sheet for every muscle segment.
 ///

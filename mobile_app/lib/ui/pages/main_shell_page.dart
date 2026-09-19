@@ -76,6 +76,7 @@ class _MainShellPageState extends State<MainShellPage> {
       controller: widget.nutritionController,
       dailyEntryRepository: widget.dailyEntryRepository,
       notificationService: widget.notificationService,
+      bodyDetailController: widget.bodyDetailController,
     ),
     SchedulePage(controller: widget.scheduleController),
     ProfilePage(controller: widget.profileController),
