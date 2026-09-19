@@ -170,6 +170,25 @@ class MuscleTamagotchiState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Shrinks the given groups by [growthDelta], clamped at `0.0`.
+  ///
+  /// Used to reverse a workout confirmation when the user unchecks it.
+  void applyShrink(Iterable<MuscleTamagotchiGroup> groups) {
+    for (final group in groups) {
+      _mass[group] =
+          ((_mass[group] ?? baseline) - growthDelta).clamp(0.0, 1.0);
+    }
+    notifyListeners();
+  }
+
+  /// Adds [amount] back to the permanent core fullness and clears transient
+  /// bloat, reversing a prior slimming.
+  void restoreCore(double amount) {
+    _coreFullness = (_coreFullness + amount).clamp(0.0, 1.0);
+    _coreBloating = false;
+    notifyListeners();
+  }
+
   /// Decays every group by [decayPerDay] scaled to [elapsed], clamped at `0.0`.
   void applyDecay(Duration elapsed) {
     final days = elapsed.inMilliseconds / Duration.millisecondsPerDay;

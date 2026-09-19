@@ -4,7 +4,6 @@ import '../../core/state/body_detail_controller.dart';
 import '../../core/state/projection_controller.dart';
 import '../../core/state/workout_completion_controller.dart';
 import '../../core/theme/app_theme.dart';
-import '../atoms/custom_button.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/neumorphic_timeline.dart';
 import '../atoms/typography.dart';
@@ -82,21 +81,33 @@ class _RoutinesPageState extends State<RoutinesPage> {
     );
   }
 
-  /// Confirms the planned workout and opens the completion summary popup.
-  Future<void> _confirmWorkout() async {
+  /// Confirms or reverses the workout when the toggle changes.
+  Future<void> _toggleWorkout(bool value) async {
     final completion = widget.workoutCompletionController;
     if (completion == null) return;
 
-    await completion.confirm(widget.detailController.plannedExercises());
-    final summary = completion.summary;
-    if (!mounted || summary == null) return;
-    await showExerciseCompletionSheet(context, summary);
+    if (value) {
+      await completion.confirm(widget.detailController.plannedExercises());
+      final summary = completion.summary;
+      if (!mounted || summary == null) return;
+      await showExerciseCompletionSheet(context, summary);
+    } else {
+      await completion.undo();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final completion = widget.workoutCompletionController;
+    final listenable = completion == null
+        ? Listenable.merge([widget.controller, widget.detailController])
+        : Listenable.merge([
+            widget.controller,
+            widget.detailController,
+            completion,
+          ]);
     return ListenableBuilder(
-      listenable: Listenable.merge([widget.controller, widget.detailController]),
+      listenable: listenable,
       builder: (context, _) {
         final controller = widget.controller;
         final milestone = controller.selectedMilestone;
@@ -140,11 +151,16 @@ class _RoutinesPageState extends State<RoutinesPage> {
                     ),
                   ],
                   if (widget.workoutCompletionController != null) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    CustomButton(
-                      key: const Key('confirm_workout_button'),
-                      label: 'Confirm workout',
-                      onPressed: _confirmWorkout,
+                    const SizedBox(height: AppSpacing.sm),
+                    SwitchListTile(
+                      key: const Key('confirm_workout_toggle'),
+                      contentPadding: EdgeInsets.zero,
+                      title: const AppText('Workout completed'),
+                      subtitle: const AppCaption(
+                        'Records today\'s workout and grows your avatar',
+                      ),
+                      value: widget.workoutCompletionController!.isConfirmed,
+                      onChanged: _toggleWorkout,
                     ),
                   ],
                 ],
