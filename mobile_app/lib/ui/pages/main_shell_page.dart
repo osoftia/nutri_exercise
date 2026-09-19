@@ -130,9 +130,13 @@ class _MainShellPageState extends State<MainShellPage> {
     if (service == null || widget.bodyDetailController.workouts.isEmpty) return;
 
     _exerciseReminderSynced = true;
-    service.scheduleDailyExerciseReminder(
-      payload: widget.bodyDetailController.exerciseCheckInPayload(),
-    );
+    // Notifications are non-critical: rescheduling must never crash the UI
+    // (e.g. when the platform channel is unavailable under test).
+    service
+        .scheduleDailyExerciseReminder(
+          payload: widget.bodyDetailController.exerciseCheckInPayload(),
+        )
+        .catchError((Object _) {});
   }
 
   /// Confirms the workout and opens the post-workout summary popup.
