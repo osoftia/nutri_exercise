@@ -55,23 +55,27 @@ void main() {
     expect(find.byKey(const Key('body_food_sheet')), findsOneWidget);
   });
 
-  testWidgets('adding a food from the summary bloats the stomach segment', (
+  testWidgets('the summary is deletion-only and slims the stomach segment', (
     tester,
   ) async {
-    final tamagotchi = MuscleTamagotchiState();
+    final tamagotchi = MuscleTamagotchiState()..applyNutrition(1000);
     final detail = await _pump(tester, tamagotchi: tamagotchi);
-    final before = detail.buildViewModel().scaleFor(BodySegment.abdomen);
 
     await tester.tap(find.byKey(const Key('nutrition_action_button')));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('body_add_food')));
+
+    expect(find.byKey(const Key('body_add_food')), findsNothing);
+    expect(find.byKey(const Key('food_delete_0')), findsOneWidget);
+
+    final before = detail.buildViewModel().scaleFor(BodySegment.abdomen);
+    await tester.ensureVisible(find.byKey(const Key('food_delete_0')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('body_add_food')));
+    await tester.tap(find.byKey(const Key('food_delete_0')));
     await tester.pumpAndSettle();
 
     expect(
       detail.buildViewModel().scaleFor(BodySegment.abdomen),
-      greaterThan(before),
+      lessThan(before),
     );
   });
 }

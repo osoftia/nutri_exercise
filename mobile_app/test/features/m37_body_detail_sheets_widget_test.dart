@@ -141,24 +141,19 @@ void main() {
       expect(find.text('Yogurt'), findsOneWidget);
       expect(find.textContaining('1 bowl'), findsOneWidget);
       expect(find.text('1310 kcal'), findsOneWidget);
-      expect(find.byKey(const Key('body_add_food')), findsOneWidget);
+      expect(find.byKey(const Key('body_add_food')), findsNothing);
     });
 
-    testWidgets('the Add food action appends an item and updates the total', (
+    testWidgets('offers no add action; food can only be deleted', (
       tester,
     ) async {
       final controller = _controller();
       await tester.pumpWidget(_wrap(BodyFoodDetailSheet(controller: controller)));
       await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.byKey(const Key('body_add_food')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('body_add_food')));
-      await tester.pumpAndSettle();
-
-      expect(controller.foodLog.entries, hasLength(4));
-      expect(find.text('1460 kcal'), findsOneWidget);
-      expect(find.text('1310 kcal'), findsNothing);
+      expect(find.byKey(const Key('body_add_food')), findsNothing);
+      expect(find.byKey(const Key('food_delete_0')), findsOneWidget);
+      expect(controller.foodLog.entries, hasLength(3));
     });
 
     testWidgets('shows an empty state when nothing was logged', (tester) async {
@@ -168,7 +163,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('food_empty_state')), findsOneWidget);
-      expect(find.byKey(const Key('body_add_food')), findsOneWidget);
+      expect(find.byKey(const Key('body_add_food')), findsNothing);
     });
 
     testWidgets('shows a spinner while the log is loading', (tester) async {

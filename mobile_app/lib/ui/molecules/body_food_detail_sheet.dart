@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import '../../core/domain/body_projection/nutrition_log.dart';
 import '../../core/state/body_detail_controller.dart';
 import '../../core/theme/app_theme.dart';
-import '../atoms/custom_button.dart';
 import '../atoms/typography.dart';
 
-/// Draggable blueprint sheet listing today's logged foods with inline add /
-/// delete controls and a sticky total row.
+/// Draggable blueprint sheet listing today's logged foods with inline delete
+/// controls and a sticky total row.
+///
+/// Management is **deletion-only**: food can be removed (reducing calorie
+/// surplus and stomach bloat), while additions stay bound to the preset
+/// suggestions or the RAG AI advisor pipeline.
 class BodyFoodDetailSheet extends StatefulWidget {
   /// Creates the food sheet for [controller].
   const BodyFoodDetailSheet({super.key, required this.controller});
@@ -91,10 +94,7 @@ class _BodyFoodDetailSheetState extends State<BodyFoodDetailSheet> {
                       ],
                     ),
                   ),
-                  _StickyTotals(
-                    log: log,
-                    onAdd: controller.addQuickFood,
-                  ),
+                  _StickyTotals(log: log),
                 ],
               );
             },
@@ -172,10 +172,9 @@ class _FoodTile extends StatelessWidget {
 }
 
 class _StickyTotals extends StatelessWidget {
-  const _StickyTotals({required this.log, required this.onAdd});
+  const _StickyTotals({required this.log});
 
   final DailyFoodLog log;
-  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -205,11 +204,7 @@ class _StickyTotals extends StatelessWidget {
               ],
             ),
           ),
-          CustomButton(
-            key: const Key('body_add_food'),
-            label: 'Add food',
-            onPressed: onAdd,
-          ),
+          const AppCaption('Deletion only'),
         ],
       ),
     );

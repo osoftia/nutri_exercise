@@ -88,7 +88,7 @@ void main() {
       expect(tamagotchi.coreFullness, lessThan(fullnessBefore));
     });
 
-    testWidgets('adding a food updates the total and the avatar', (
+    testWidgets('restricts the sheet to deletion only (no add action)', (
       tester,
     ) async {
       final tamagotchi = MuscleTamagotchiState();
@@ -101,13 +101,9 @@ void main() {
       await tester.pumpWidget(_wrap(BodyFoodDetailSheet(controller: controller)));
       await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.byKey(const Key('body_add_food')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('body_add_food')));
-      await tester.pumpAndSettle();
-
-      expect(controller.foodLog.entries, hasLength(4));
-      expect(tamagotchi.coreFullness, greaterThan(0));
+      expect(find.byKey(const Key('body_add_food')), findsNothing);
+      expect(find.byKey(const Key('food_delete_0')), findsOneWidget);
+      expect(controller.foodLog.entries, hasLength(3));
     });
   });
 }
