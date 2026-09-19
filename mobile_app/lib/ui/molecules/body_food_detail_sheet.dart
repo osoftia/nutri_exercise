@@ -27,7 +27,11 @@ class _BodyFoodDetailSheetState extends State<BodyFoodDetailSheet> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) widget.controller.loadFoodLog();
+      if (!mounted) return;
+      // Only hydrate from the repository when the shared controller has not
+      // loaded yet; otherwise keep the live in-memory log so a just-added food
+      // is never clobbered by a stale read.
+      if (!widget.controller.foodLogLoaded) widget.controller.loadFoodLog();
     });
   }
 
@@ -186,25 +190,40 @@ class _StickyTotals extends StatelessWidget {
         ),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Row(
+      child: Column(
         key: const Key('nutrition_total_row'),
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const AppCaption('Total'),
-                AppText(
-                  '${log.totalCalories} kcal',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary400,
-                  ),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const AppCaption('Total'),
+                    AppText(
+                      '${log.totalCalories} kcal',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary400,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              AppCaption(
+                '${log.entries.length} '
+                '${log.entries.length == 1 ? 'item' : 'items'}',
+                key: const Key('nutrition_total_items'),
+              ),
+            ],
           ),
-          const AppCaption('Deletion only'),
+          const SizedBox(height: AppSpacing.xs),
+          AppCaption(
+            'P ${log.totalProteinG}g · C ${log.totalCarbsG}g · '
+            'F ${log.totalFatG}g',
+            key: const Key('nutrition_total_macros'),
+          ),
         ],
       ),
     );

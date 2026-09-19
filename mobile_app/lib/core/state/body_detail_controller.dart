@@ -52,6 +52,7 @@ class BodyDetailController extends ChangeNotifier {
   }.toList(growable: false);
 
   DailyFoodLog _foodLog = const DailyFoodLog();
+  bool _foodLogLoaded = false;
   Map<BodySegment, MuscleWorkoutLog> _workouts = const {};
   bool _isLoadingOverview = false;
   String? _overviewError;
@@ -84,6 +85,11 @@ class BodyDetailController extends ChangeNotifier {
 
   /// Today's food log.
   DailyFoodLog get foodLog => _foodLog;
+
+  /// Whether [foodLog] has been hydrated from the repository (or mutated
+  /// in-memory). The nutrition summary uses this to avoid clobbering a
+  /// just-added item with a stale repository read.
+  bool get foodLogLoaded => _foodLogLoaded;
 
   /// Cached workout logs for the overview segments.
   Map<BodySegment, MuscleWorkoutLog> get workouts => _workouts;
@@ -172,6 +178,7 @@ class BodyDetailController extends ChangeNotifier {
     notifyListeners();
     try {
       _foodLog = await _repository.loadTodayFoodLog();
+      _foodLogLoaded = true;
       final workouts = <BodySegment, MuscleWorkoutLog>{};
       for (final segment in overviewSegments) {
         workouts[segment] = await _repository.loadWorkoutLog(segment);
@@ -301,6 +308,7 @@ class BodyDetailController extends ChangeNotifier {
     notifyListeners();
     try {
       _foodLog = await _repository.loadTodayFoodLog();
+      _foodLogLoaded = true;
     } catch (_) {
       _foodError = 'Could not load today\'s food.';
     }
@@ -321,6 +329,7 @@ class BodyDetailController extends ChangeNotifier {
   /// the avatar reacts instantly.
   Future<void> addFood(LoggedFood food) async {
     _foodLog = _foodLog.copyWith(entries: [..._foodLog.entries, food]);
+    _foodLogLoaded = true;
     _tamagotchi?.applyNutrition(food.calories);
     notifyListeners();
     await _repository.saveTodayFoodLog(_foodLog);
@@ -335,6 +344,7 @@ class BodyDetailController extends ChangeNotifier {
     final removed = _foodLog.entries[index];
     final remaining = [..._foodLog.entries]..removeAt(index);
     _foodLog = _foodLog.copyWith(entries: remaining);
+    _foodLogLoaded = true;
     _tamagotchi?.applySlimming(amount: removed.calories / 2000);
     notifyListeners();
     await _repository.saveTodayFoodLog(_foodLog);
