@@ -1,0 +1,61 @@
+# M42 Execution Changes Log — Persistence, Deletion-Only Nutrition, Reactivity & History FAB
+
+Autonomous sprint following the TDD loop: per task → failing tests → implementation →
+targeted tests → backlog check-off → git commit, plus a final `fvm flutter analyze`
+and full `fvm flutter test`. All work committed to `main`.
+
+## Task 1: Fix SQLite Persistence for Workouts & Tamagotchi State
+- `lib/core/models/tamagotchi_progress.dart` — added a per-group `mass` map serialized
+  as `mass_json`; `fromMap` tolerates legacy rows without the column.
+- `lib/core/database/database_helper.dart` — bumped to schema v10 and added
+  `ensureTamagotchiMassColumn` (ALTER TABLE guarded by `PRAGMA table_info`) so existing
+  installs migrate without data loss; `tamagotchi_progress` creation now includes the
+  column.
+- `lib/core/state/muscle_tamagotchi_state.dart` — optional `TamagotchiProgressRepository`,
+  `attachRepository`, `restore()` (hydrates mass + core fullness) and fire-and-forget
+  `_persist()` on every mutation (growth, shrink, nutrition, slimming, restore, decay).
+- `lib/core/state/workout_completion_controller.dart` — `restore()` rehydrates the
+  confirmed toggle from today's persisted completions without re-applying growth.
+- `lib/core/services/exercise_response_handler.dart` and
+  `lib/core/services/notification_background_handler.dart` — preserve the stored mass
+  when writing slimming so the background isolate never wipes muscle weights.
+- `lib/app.dart` — attaches the SQLite progress repository to the shared Tamagotchi and
+  restores it at startup (mock flavors stay in-memory).
+- `lib/ui/pages/routines_page.dart` — calls `restore()` on the completion controller.
+- Tests: `test/features/m42_task1_persistence_test.dart` (serialization, v10 migration,
+  restore/auto-persist, toggle hydration) and new mass round-trip coverage in
+  `test/data/notification_history_repositories_test.dart`.
+
+## Task 2: Restrict Nutrition Management to Deletion Only
+- `lib/ui/molecules/body_food_detail_sheet.dart` — removed the `Add food` action from
+  the sticky totals row; deletion is the only management affordance. Additions remain
+  available through the preset quick-adds / RAG pipeline (`BodyDetailController.addFood`).
+- Tests: `test/features/m42_task2_nutrition_deletion_test.dart`; updated conflicting
+  expectations in `m37_body_detail_sheets_widget_test.dart`,
+  `m38_consumption_list_widget_test.dart` and `m41_task4_nutrition_action_test.dart`.
+
+## Task 3: Live Weight & Mass Reactivity
+- `lib/core/state/body_detail_controller.dart` — added `refreshWorkouts()` which re-reads
+  the persisted per-segment overlay (and re-runs an active forecast) so scaling and set
+  callouts update on the same frame.
+- `lib/ui/pages/routines_page.dart` — the workout toggle now refreshes the overlay after
+  confirming or reversing, so the avatar morphs instantly.
+- Tests: `test/features/m42_task3_reactivity_test.dart` (controller-level chest scale
+  growth/reversal, persisted-mass restore drives the diagram, and a widget test that the
+  painted blueprint chest scale grows after toggling).
+
+## Task 4: Floating History Action Button
+- `lib/ui/atoms/blueprint_fab.dart` — new blueprint-styled circular FAB (surface disc,
+  primary outline, concentric registration ring).
+- `lib/ui/pages/routines_page.dart` — the FAB sits beside the animated figure and opens
+  the historical progress view; hidden when no history repository is supplied.
+- `lib/ui/pages/main_shell_page.dart` — passes the shell's daily-entry repository to the
+  Routines tab.
+- Tests: `test/ui/blueprint_fab_test.dart` and `test/features/m42_task4_history_fab_test.dart`.
+
+## Verification
+- `fvm flutter analyze` (Flutter 3.29.0): No issues found.
+- `fvm flutter test` (full suite): 641 passed, 0 failed.
+- Note: verification used the project's pinned FVM SDK (3.29.0); the system Flutter
+  (3.24.3) cannot compile `Color.withValues` and must not be used for pub resolution
+  (it downgrades `pubspec.lock`).
