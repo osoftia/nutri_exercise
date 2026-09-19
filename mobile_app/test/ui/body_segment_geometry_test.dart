@@ -15,23 +15,40 @@ void main() {
       expect(paths.keys.toSet(), BodySegment.values.toSet());
     });
 
-    test('arms and legs expose an upper and a lower segment with a joint gap',
-        () {
+    test('arms and legs connect at the elbow and knee', () {
       final leftArmUpper = paths[BodySegment.leftUpperArm]!.getBounds();
       final leftArmLower = paths[BodySegment.leftForearm]!.getBounds();
-      expect(leftArmUpper.bottom, lessThan(leftArmLower.top));
+      expect(leftArmUpper.bottom, greaterThanOrEqualTo(leftArmLower.top));
 
       final rightArmUpper = paths[BodySegment.rightUpperArm]!.getBounds();
       final rightArmLower = paths[BodySegment.rightForearm]!.getBounds();
-      expect(rightArmUpper.bottom, lessThan(rightArmLower.top));
+      expect(rightArmUpper.bottom, greaterThanOrEqualTo(rightArmLower.top));
 
       final leftLegUpper = paths[BodySegment.leftThigh]!.getBounds();
       final leftLegLower = paths[BodySegment.leftCalf]!.getBounds();
-      expect(leftLegUpper.bottom, lessThan(leftLegLower.top));
+      expect(leftLegUpper.bottom, greaterThanOrEqualTo(leftLegLower.top));
 
       final rightLegUpper = paths[BodySegment.rightThigh]!.getBounds();
       final rightLegLower = paths[BodySegment.rightCalf]!.getBounds();
-      expect(rightLegUpper.bottom, lessThan(rightLegLower.top));
+      expect(rightLegUpper.bottom, greaterThanOrEqualTo(rightLegLower.top));
+    });
+
+    test('the torso chain is connected at the neck and hips', () {
+      final head = paths[BodySegment.head]!.getBounds();
+      final neck = paths[BodySegment.neck]!.getBounds();
+      final chest = paths[BodySegment.chest]!.getBounds();
+      final abdomen = paths[BodySegment.abdomen]!.getBounds();
+      final thigh = paths[BodySegment.leftThigh]!.getBounds();
+
+      expect(neck.top, lessThanOrEqualTo(head.bottom));
+      expect(chest.top, lessThanOrEqualTo(neck.bottom));
+      expect(thigh.top, lessThanOrEqualTo(abdomen.bottom));
+    });
+
+    test('the shoulders connect the arms to the chest', () {
+      final arm = paths[BodySegment.leftUpperArm]!.getBounds();
+      final chest = paths[BodySegment.chest]!.getBounds();
+      expect(arm.overlaps(chest), isTrue);
     });
 
     test('keeps the figure aspect ratio at any width', () {

@@ -24,10 +24,10 @@ Feature: Blueprint body diagram with split limbs and annotation callouts
       | rightThigh | critical | #EF4444 |
       | head       | noData   | #475569 |
 
-  Scenario: Arms and legs are split with a visible joint gap
+  Scenario: Arms and legs are split with connected joints
     When the figure is laid out at "720x420"
-    Then the "leftUpperArm" and "leftForearm" paths leave a joint gap
-    And the "leftThigh" and "leftCalf" paths leave a joint gap
+    Then the "leftUpperArm" and "leftForearm" paths connect at the elbow
+    And the "leftThigh" and "leftCalf" paths connect at the knee
 
   Scenario: The figure keeps its aspect ratio at any width
     Given the figure is laid out at "300x400" as layout "A"
