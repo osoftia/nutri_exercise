@@ -6,6 +6,10 @@ enum SegmentStatus {
   /// On target (`|imbalanceScore| <= balancedThreshold`).
   balanced,
 
+  /// A *healthy* surplus: the abdomen is in caloric surplus but protein is the
+  /// dominant macro (a high-protein / healthy day). Rendered green.
+  healthy,
+
   /// Mild imbalance (`balancedThreshold < |score| <= warningThreshold`).
   warning,
 

@@ -8,6 +8,9 @@ abstract final class BodySegmentPalette {
   /// Colour used for an on-target segment.
   static const Color balanced = Color(0xFF3B82F6);
 
+  /// Colour used for a healthy, protein-led calorie surplus (`#10B981`).
+  static const Color healthy = Color(0xFF10B981);
+
   /// Colour used for a mildly imbalanced segment.
   static const Color warning = Color(0xFFF59E0B);
 
@@ -25,6 +28,8 @@ abstract final class BodySegmentPalette {
     switch (status) {
       case SegmentStatus.balanced:
         return balanced;
+      case SegmentStatus.healthy:
+        return healthy;
       case SegmentStatus.warning:
         return warning;
       case SegmentStatus.critical:

@@ -51,9 +51,28 @@ class SegmentBalanceCalculator {
     final score = _scoreFor(input).clamp(-1.0, 1.0);
     return SegmentBalance(
       segment: input.segment,
-      status: statusForScore(score),
+      status: isHealthySurplus(input, score)
+          ? SegmentStatus.healthy
+          : statusForScore(score),
       imbalanceScore: score,
     );
+  }
+
+  /// Whether [input] is a *healthy*, protein-led calorie surplus.
+  ///
+  /// The abdomen renders green ([SegmentStatus.healthy]) when the day is in
+  /// caloric surplus ([score] above [balancedThreshold]) and the surplus is
+  /// protein-led: protein is at/above target and its delta is at least as large
+  /// as the carbohydrate and fat deltas. A carb- or fat-led surplus keeps its
+  /// amber/red imbalance status.
+  bool isHealthySurplus(SegmentBalanceInput input, double score) {
+    if (input.segment != BodySegment.abdomen) return false;
+    if (input.calorieBalance <= 0) return false;
+    if (score <= balancedThreshold) return false;
+    final macro = input.macroBalance;
+    return macro.proteinDeltaG > 0 &&
+        macro.proteinDeltaG >= macro.carbsDeltaG &&
+        macro.proteinDeltaG >= macro.fatDeltaG;
   }
 
   /// Maps a signed, already-clamped [score] to a [SegmentStatus].
