@@ -15,22 +15,26 @@ void main() {
       expect(paths.keys.toSet(), BodySegment.values.toSet());
     });
 
-    test('arms and legs connect at the elbow and knee', () {
-      final leftArmUpper = paths[BodySegment.leftUpperArm]!.getBounds();
-      final leftArmLower = paths[BodySegment.leftForearm]!.getBounds();
-      expect(leftArmUpper.bottom, greaterThanOrEqualTo(leftArmLower.top));
+    test('arms and legs articulate with a visible elbow and knee gap', () {
+      final figure = BodySegmentGeometry.figureRect(size);
+      final gap = BodySegmentGeometry.jointGap * figure.height;
 
-      final rightArmUpper = paths[BodySegment.rightUpperArm]!.getBounds();
-      final rightArmLower = paths[BodySegment.rightForearm]!.getBounds();
-      expect(rightArmUpper.bottom, greaterThanOrEqualTo(rightArmLower.top));
-
-      final leftLegUpper = paths[BodySegment.leftThigh]!.getBounds();
-      final leftLegLower = paths[BodySegment.leftCalf]!.getBounds();
-      expect(leftLegUpper.bottom, greaterThanOrEqualTo(leftLegLower.top));
-
-      final rightLegUpper = paths[BodySegment.rightThigh]!.getBounds();
-      final rightLegLower = paths[BodySegment.rightCalf]!.getBounds();
-      expect(rightLegUpper.bottom, greaterThanOrEqualTo(rightLegLower.top));
+      for (final pair in [
+        (BodySegment.leftUpperArm, BodySegment.leftForearm),
+        (BodySegment.rightUpperArm, BodySegment.rightForearm),
+        (BodySegment.leftThigh, BodySegment.leftCalf),
+        (BodySegment.rightThigh, BodySegment.rightCalf),
+      ]) {
+        final upper = paths[pair.$1]!.getBounds();
+        final lower = paths[pair.$2]!.getBounds();
+        expect(
+          upper.bottom,
+          lessThan(lower.top),
+          reason: '${pair.$1.name} must clear ${pair.$2.name}',
+        );
+        expect(upper.overlaps(lower), isFalse);
+        expect(lower.top - upper.bottom, closeTo(gap, 0.001));
+      }
     });
 
     test('the torso chain is connected at the neck and hips', () {

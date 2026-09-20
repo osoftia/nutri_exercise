@@ -11,7 +11,7 @@ import '../atoms/neumorphic_timeline.dart';
 import '../atoms/typography.dart';
 import '../molecules/body_segment_sheet.dart';
 import '../molecules/exercise_completion_sheet.dart';
-import '../organisms/body_blueprint/body_blueprint_diagram.dart';
+import '../organisms/body_blueprint/unified_body_blueprint.dart';
 import '../organisms/calendar_history_dialog.dart';
 
 /// Routines tab: the blueprint Body Projection card plus the weekly plan.
@@ -140,7 +140,7 @@ class _RoutinesPageState extends State<RoutinesPage> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: BodyBlueprintDiagram(
+                          child: UnifiedBodyBlueprint(
                             viewModel: viewModel,
                             onSegmentSelected: (segment) =>
                                 showBodySegmentDetailSheet(

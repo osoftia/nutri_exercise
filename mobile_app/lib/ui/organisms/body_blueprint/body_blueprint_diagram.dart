@@ -19,6 +19,7 @@ class BodyBlueprintDiagram extends StatefulWidget {
     required this.viewModel,
     this.onSegmentSelected,
     this.animationDuration = const Duration(milliseconds: 400),
+    this.showCallouts = true,
   });
 
   /// The immutable snapshot to render.
@@ -29,6 +30,10 @@ class BodyBlueprintDiagram extends StatefulWidget {
 
   /// How long segment thicknesses take to animate to their new values.
   final Duration animationDuration;
+
+  /// Whether to overlay the gutter callout chips. Hidden on compact surfaces
+  /// (e.g. the Nutrition avatar) that only need the articulated figure.
+  final bool showCallouts;
 
   @override
   State<BodyBlueprintDiagram> createState() => _BodyBlueprintDiagramState();
@@ -124,22 +129,23 @@ class _BodyBlueprintDiagramState extends State<BodyBlueprintDiagram>
                     painter: BodyBlueprintPainter(viewModel: viewModel),
                   ),
                 ),
-                for (final placement in placements)
-                  Positioned.fromRect(
-                    rect: placement.chipRect,
-                    child: BodyCalloutChip(
-                      key: Key('callout_${placement.segment.name}'),
-                      callout: viewModel.calloutFor(placement.segment) ??
-                          BodyCallout(
-                            segment: placement.segment,
-                            label: placement.segment.name,
-                            value: '—',
-                          ),
-                      status: viewModel.statusFor(placement.segment),
-                      onTap: () =>
-                          widget.onSegmentSelected?.call(placement.segment),
+                if (widget.showCallouts)
+                  for (final placement in placements)
+                    Positioned.fromRect(
+                      rect: placement.chipRect,
+                      child: BodyCalloutChip(
+                        key: Key('callout_${placement.segment.name}'),
+                        callout: viewModel.calloutFor(placement.segment) ??
+                            BodyCallout(
+                              segment: placement.segment,
+                              label: placement.segment.name,
+                              value: '—',
+                            ),
+                        status: viewModel.statusFor(placement.segment),
+                        onTap: () =>
+                            widget.onSegmentSelected?.call(placement.segment),
+                      ),
                     ),
-                  ),
               ],
             );
           },

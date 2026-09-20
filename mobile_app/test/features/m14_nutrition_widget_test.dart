@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nutri_mobile_app/core/domain/body_projection/body_segment.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_nutrition_repository.dart';
 import 'package:nutri_mobile_app/core/models/food_entry.dart';
 import 'package:nutri_mobile_app/core/models/nutrition_state.dart';
 import 'package:nutri_mobile_app/core/state/nutrition_controller.dart';
 import 'package:nutri_mobile_app/core/theme/app_theme.dart';
-import 'package:nutri_mobile_app/ui/atoms/dynamic_avatar.dart';
+import 'package:nutri_mobile_app/ui/organisms/body_blueprint/body_blueprint_painter.dart';
 import 'package:nutri_mobile_app/ui/pages/nutrition_page.dart';
 
 void main() {
@@ -27,11 +28,12 @@ void main() {
     return controller;
   }
 
-  DynamicAvatarPainter avatarPainter(WidgetTester tester) {
+  double abdomenScale(WidgetTester tester) {
     final customPaint = tester.widget<CustomPaint>(
-      find.byKey(const Key('dynamic_avatar')),
+      find.byKey(const Key('body_blueprint_paint')),
     );
-    return customPaint.painter! as DynamicAvatarPainter;
+    final painter = customPaint.painter! as BodyBlueprintPainter;
+    return painter.viewModel.scaleFor(BodySegment.abdomen);
   }
 
   group('Nutrition dashboard', () {
@@ -69,15 +71,15 @@ void main() {
       expect(find.text('1650 of 2000 kcal'), findsOneWidget);
     });
 
-    testWidgets('avatar morphs thinner when calories are below target', (
+    testWidgets('blueprint figure is thin when calories are below target', (
       tester,
     ) async {
       await pumpNutrition(tester);
 
-      expect(avatarPainter(tester).morph, lessThan(0.5));
+      expect(abdomenScale(tester), lessThan(1.0));
     });
 
-    testWidgets('avatar morphs wider when calories exceed target', (
+    testWidgets('blueprint figure is wide when calories exceed target', (
       tester,
     ) async {
       await pumpNutrition(
@@ -94,14 +96,14 @@ void main() {
         ),
       );
 
-      expect(avatarPainter(tester).morph, greaterThan(0.5));
+      expect(abdomenScale(tester), greaterThan(1.0));
     });
 
-    testWidgets('logging food updates avatar morph across the page', (
+    testWidgets('logging food scales the blueprint figure across the page', (
       tester,
     ) async {
       final controller = await pumpNutrition(tester);
-      final before = avatarPainter(tester).morph;
+      final before = abdomenScale(tester);
 
       await tester.tap(find.byKey(const Key('quick_add_Protein Shake')));
       await tester.pumpAndSettle();
@@ -109,7 +111,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(controller.consumedCalories, 1150);
-      expect(avatarPainter(tester).morph, greaterThan(before));
+      expect(abdomenScale(tester), greaterThan(before));
     });
 
     testWidgets('custom meal entry adds calories', (tester) async {

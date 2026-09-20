@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
+import '../../core/domain/body_projection/body_diagram_view_model.dart';
+import '../../core/domain/body_projection/nutrition_body_view_model.dart';
 import '../../core/domain/body_projection/nutrition_log.dart';
 import '../../core/domain/nutrition/portion_scaler.dart';
 import '../../core/models/food_entry.dart';
@@ -11,13 +13,13 @@ import '../../core/state/body_detail_controller.dart';
 import '../../core/state/nutrition_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/custom_button.dart';
-import '../atoms/dynamic_avatar.dart';
 import '../atoms/neumorphic_bar_chart.dart';
 import '../atoms/neumorphic_circular_progress.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
 import '../molecules/body_segment_sheet.dart';
 import '../molecules/quick_add_grams_dialog.dart';
+import '../organisms/body_blueprint/unified_body_blueprint.dart';
 import '../organisms/calendar_history_dialog.dart';
 
 class NutritionPage extends StatefulWidget {
@@ -154,6 +156,18 @@ class _NutritionPageState extends State<NutritionPage> {
     return '${two(now.hour)}:${two(now.minute)}';
   }
 
+  /// The shared blueprint snapshot: the live body-detail state when available
+  /// (so the abdomen colour tracks logged food), otherwise a calorie-derived
+  /// snapshot so the figure still responds to the day's intake.
+  BodyDiagramViewModel _blueprintViewModel(NutritionController c) {
+    final detail = widget.bodyDetailController;
+    if (detail != null) return detail.buildViewModel();
+    return nutritionBodyViewModel(
+      morph: c.morphFactor,
+      calorieRatio: c.calorieRatio,
+    );
+  }
+
   Future<void> _maybeNotifyReactive() async {
     final service = widget.notificationService;
     final repository = widget.dailyEntryRepository;
@@ -263,7 +277,20 @@ class _NutritionPageState extends State<NutritionPage> {
               const SizedBox(height: AppSpacing.lg),
             ],
             NeumorphicContainer(
-              child: DynamicAvatar(morph: c.morphFactor),
+              child: SizedBox(
+                height: 260,
+                child: UnifiedBodyBlueprint(
+                  viewModel: _blueprintViewModel(c),
+                  showCallouts: false,
+                  onSegmentSelected: widget.bodyDetailController == null
+                      ? null
+                      : (segment) => showBodySegmentDetailSheet(
+                            context,
+                            segment: segment,
+                            controller: widget.bodyDetailController!,
+                          ),
+                ),
+              ),
             ),
             if (widget.bodyDetailController != null) ...[
               const SizedBox(height: AppSpacing.lg),

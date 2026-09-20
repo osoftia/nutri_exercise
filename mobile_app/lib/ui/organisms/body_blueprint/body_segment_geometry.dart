@@ -13,6 +13,12 @@ abstract final class BodySegmentGeometry {
   /// Figure width divided by figure height.
   static const double figureAspectRatio = 0.62;
 
+  /// Width of the visible elbow / knee joint gap, in units of figure height.
+  ///
+  /// The articulated figure draws the upper and lower limb segments with this
+  /// separation so the joints read as distinct parts rather than one tube.
+  static const double jointGap = 0.016;
+
   /// Painter order (later entries are drawn on top and hit-tested first).
   static const List<BodySegment> drawOrder = [
     BodySegment.head,
@@ -46,14 +52,14 @@ abstract final class BodySegmentGeometry {
   static const double _upperArmTop = 0.185;
   static const double _upperArmBottom = 0.350;
   static const double _upperArmHalf = 0.052;
-  static const double _forearmTop = 0.350;
+  static const double _forearmTop = _upperArmBottom + jointGap;
   static const double _forearmBottom = 0.545;
   static const double _forearmHalf = 0.045;
   static const double _legX = 0.075;
   static const double _thighTop = 0.548;
   static const double _thighBottom = 0.800;
   static const double _thighHalf = 0.075;
-  static const double _calfTop = 0.800;
+  static const double _calfTop = _thighBottom + jointGap;
   static const double _calfBottom = 0.970;
   static const double _calfHalf = 0.058;
 
