@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/domain/body_projection/body_diagram_view_model.dart';
 import '../../../core/domain/body_projection/body_segment.dart';
+import 'blueprint_grid_painter.dart';
 import 'body_blueprint_painter.dart';
 import 'body_callout_chip.dart';
 import 'body_segment_geometry.dart';
@@ -20,6 +21,7 @@ class BodyBlueprintDiagram extends StatefulWidget {
     this.onSegmentSelected,
     this.animationDuration = const Duration(milliseconds: 400),
     this.showCallouts = true,
+    this.showGrid = true,
   });
 
   /// The immutable snapshot to render.
@@ -34,6 +36,9 @@ class BodyBlueprintDiagram extends StatefulWidget {
   /// Whether to overlay the gutter callout chips. Hidden on compact surfaces
   /// (e.g. the Nutrition avatar) that only need the articulated figure.
   final bool showCallouts;
+
+  /// Whether to paint the technical drafting grid behind the figure.
+  final bool showGrid;
 
   @override
   State<BodyBlueprintDiagram> createState() => _BodyBlueprintDiagramState();
@@ -111,6 +116,11 @@ class _BodyBlueprintDiagramState extends State<BodyBlueprintDiagram>
             return Stack(
               fit: StackFit.expand,
               children: [
+                if (widget.showGrid)
+                  const CustomPaint(
+                    key: Key('body_blueprint_grid'),
+                    painter: BlueprintGridPainter(),
+                  ),
                 GestureDetector(
                   key: const Key('body_blueprint_canvas'),
                   behavior: HitTestBehavior.opaque,

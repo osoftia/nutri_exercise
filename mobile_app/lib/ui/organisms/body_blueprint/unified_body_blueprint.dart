@@ -19,6 +19,7 @@ class UnifiedBodyBlueprint extends StatelessWidget {
     required this.viewModel,
     this.onSegmentSelected,
     this.showCallouts = true,
+    this.showGrid = true,
     this.animationDuration = const Duration(milliseconds: 400),
   });
 
@@ -31,6 +32,9 @@ class UnifiedBodyBlueprint extends StatelessWidget {
   /// Whether to overlay the gutter callout chips.
   final bool showCallouts;
 
+  /// Whether to paint the technical drafting grid behind the figure.
+  final bool showGrid;
+
   /// How long segment thicknesses take to animate to their new values.
   final Duration animationDuration;
 
@@ -41,6 +45,7 @@ class UnifiedBodyBlueprint extends StatelessWidget {
       viewModel: viewModel,
       onSegmentSelected: onSegmentSelected,
       showCallouts: showCallouts,
+      showGrid: showGrid,
       animationDuration: animationDuration,
     );
   }
