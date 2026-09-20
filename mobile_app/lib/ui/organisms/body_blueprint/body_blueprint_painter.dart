@@ -17,7 +17,7 @@ class BodyBlueprintPainter extends CustomPainter {
   /// The immutable snapshot to draw.
   final BodyDiagramViewModel viewModel;
 
-  static const double _strokeWidth = 1.6;
+  static const double _strokeWidth = 1.4;
   static const double _leaderWidth = 1.0;
   static const double _leaderOpacity = 0.6;
   static const double _dotRadius = 3.0;

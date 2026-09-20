@@ -17,7 +17,7 @@ abstract final class BodySegmentGeometry {
   ///
   /// The articulated figure draws the upper and lower limb segments with this
   /// separation so the joints read as distinct parts rather than one tube.
-  static const double jointGap = 0.016;
+  static const double jointGap = 0.022;
 
   /// Painter order (later entries are drawn on top and hit-tested first).
   static const List<BodySegment> drawOrder = [
@@ -51,17 +51,17 @@ abstract final class BodySegmentGeometry {
   static const double _armX = 0.235;
   static const double _upperArmTop = 0.185;
   static const double _upperArmBottom = 0.350;
-  static const double _upperArmHalf = 0.052;
+  static const double _upperArmHalf = 0.042;
   static const double _forearmTop = _upperArmBottom + jointGap;
   static const double _forearmBottom = 0.545;
-  static const double _forearmHalf = 0.045;
+  static const double _forearmHalf = 0.034;
   static const double _legX = 0.075;
   static const double _thighTop = 0.548;
   static const double _thighBottom = 0.800;
-  static const double _thighHalf = 0.075;
+  static const double _thighHalf = 0.062;
   static const double _calfTop = _thighBottom + jointGap;
   static const double _calfBottom = 0.970;
-  static const double _calfHalf = 0.058;
+  static const double _calfHalf = 0.046;
 
   /// The largest aspect-preserving rectangle the figure fits into [size],
   /// centred inside it.
@@ -275,27 +275,37 @@ abstract final class BodySegmentGeometry {
     final topRight = _p(rect, topHalf * scale, top);
     final bottomRight = _p(rect, bottomHalf * scale, bottom);
     final bottomLeft = _p(rect, -bottomHalf * scale, bottom);
-    // M44 Task 1: organic (soft) sides. The side control points are pulled out
-    // to the *wider* of the two half-widths at mid-height, so the chest and
-    // abdomen read as anatomical volumes with a gentle convex bulge instead of
-    // straight-sided trapezoids. The control never exceeds the wider baseline
-    // half-width, so the path bounds (and every hit test) stay unchanged.
-    final midY = (top + bottom) / 2;
+    // M44 Task 1: smooth organic contour. Each side is a cubic Bézier whose
+    // upper control flares to the *wider* baseline half-width (a rounded
+    // shoulder, or the belly bulge) and whose lower control returns toward the
+    // narrower half-width, so the chest/abdomen read as a continuous anatomical
+    // volume instead of a straight trapezoid. No control exceeds the wider
+    // baseline half-width, so the path bounds (and every hit test) are unchanged.
+    final span = bottom - top;
     final bulgeHalf = (topHalf > bottomHalf ? topHalf : bottomHalf) * scale;
-    final leftControl = _p(rect, -bulgeHalf, midY);
-    final rightControl = _p(rect, bulgeHalf, midY);
+    final narrowHalf = (topHalf < bottomHalf ? topHalf : bottomHalf) * scale;
+    final upper = top + span * 0.28;
+    final lower = bottom - span * 0.34;
+    final leftUpper = _p(rect, -bulgeHalf, upper);
+    final leftLower = _p(rect, -narrowHalf, lower);
+    final rightUpper = _p(rect, bulgeHalf, upper);
+    final rightLower = _p(rect, narrowHalf, lower);
     return Path()
       ..moveTo(topLeft.dx, topLeft.dy)
-      ..quadraticBezierTo(
-        leftControl.dx,
-        leftControl.dy,
+      ..cubicTo(
+        leftUpper.dx,
+        leftUpper.dy,
+        leftLower.dx,
+        leftLower.dy,
         bottomLeft.dx,
         bottomLeft.dy,
       )
       ..lineTo(bottomRight.dx, bottomRight.dy)
-      ..quadraticBezierTo(
-        rightControl.dx,
-        rightControl.dy,
+      ..cubicTo(
+        rightLower.dx,
+        rightLower.dy,
+        rightUpper.dx,
+        rightUpper.dy,
         topRight.dx,
         topRight.dy,
       )
