@@ -1,0 +1,64 @@
+# M44 (Exact) Execution Changes Log — Exact Avatar Silhouette & Data Views
+
+Autonomous sprint following the strict TDD loop per task. This pass refines the
+avatar silhouette to its exact intended proportions and re-verifies the
+green-stomach, grid and history-data work under a single M44 contract. Tasks 2–4
+were first delivered in the earlier M44 sprint (commits on `main`) and are
+re-verified here rather than rewritten.
+
+## Task 1: Exact Avatar Silhouette Restoration
+- `lib/ui/organisms/body_blueprint/body_segment_geometry.dart`
+  - Slimmer limb half-widths (units of figure height): upper arms `0.052→0.042`,
+    forearms `0.045→0.034`, thighs `0.075→0.062`, calves `0.058→0.046`.
+  - `jointGap` increased `0.016→0.022` for a cleaner, unmistakable elbow/knee
+    articulation.
+  - `_torso` sides are now cubic Béziers: the upper control flares to the wider
+    baseline half-width (rounded shoulder / belly bulge) and the lower control
+    returns toward the narrower half-width, producing a smooth continuous waist
+    contour. Controls never exceed the wider half-width, so path bounds and all
+    hit tests are unchanged.
+- `lib/ui/organisms/body_blueprint/body_blueprint_painter.dart` — outline stroke
+  `1.6→1.4` for a crisp technical line.
+- `test/ui/avatar_silhouette_test.dart` — limb-width envelopes, "slimmer than the
+  previous silhouette" contract, joint-gap assertions, and closed-contour checks.
+- `test/ui/goldens/body_blueprint_painter.png` regenerated.
+
+## Task 2: Protein & Health Green Stomach Semantics — verified (already delivered)
+- Implementation lives in `segment_status.dart` (`SegmentStatus.healthy`),
+  `body_segment_palette.dart` (`#10B981`) and `segment_balance_calculator.dart`
+  (`isHealthySurplus`), delivered in commit `24a877a`.
+- Re-verified by `test/features/m44_task2_green_stomach_test.dart` and the new
+  end-to-end widget check in
+  `test/features/m44_task5_exact_verification_test.dart` (a high-protein surplus
+  paints the Nutrition blueprint abdomen `SegmentStatus.healthy`).
+
+## Task 3: Blueprint Technical Grid Background — verified (already delivered)
+- Implementation lives in `blueprint_grid_painter.dart` +
+  `body_blueprint_diagram.dart`/`unified_body_blueprint.dart` (`showGrid`),
+  delivered in commit `8f8bdb2`.
+- Re-verified by `test/ui/blueprint_grid_painter_test.dart` and the new
+  both-tabs assertion (Routines and Nutrition each render
+  `body_blueprint_grid`).
+
+## Task 4: Fix Weekly States & Calendar Data Views — verified (already delivered)
+- Implementation lives in `weekly_stats.dart` (persisted `DailyEntry.burned`),
+  `workout_completion_controller.dart` (upsert/clear today's `DailyEntry`) and
+  `app.dart` (single shared `DailyEntryRepository`), delivered in commit
+  `31a3319`.
+- Re-verified by `test/features/m44_task4_weekly_calendar_data_test.dart`.
+
+## Task 5: Testing & Verification
+- New: `test/ui/avatar_silhouette_test.dart`,
+  `test/features/m44_task5_exact_verification_test.dart`;
+  `mobile_app/test/features/m44_exact_avatar.feature`.
+- `fvm flutter analyze` — No issues found.
+- `fvm flutter test` (full suite) — 693 passed, 0 failed.
+
+## Verification
+- Analyzer: clean (`No issues found!`).
+- Full suite: 693 tests passed.
+
+## Commits (this pass)
+- `d0192b3` feat(m44-task-1): exact avatar silhouette with slimmer limbs and smooth torso
+- `ac5aae8` test(m44-task-2-3-4): verify green stomach, grid on both tabs, and history data
+- final: test(m44-task-5): verification, full suite green (693), analyzer clean
