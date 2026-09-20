@@ -1,0 +1,72 @@
+# i18n Execution Changes Log — Persistent Controller, Dictionaries, Profile Switcher
+
+Resumed the i18n sprint after Task 1 (`AppLanguage`). Each task followed the TDD
+loop (tests → implementation → targeted tests → backlog check-off → commit),
+concluding with a full `fvm flutter analyze` and full `fvm flutter test`. All work
+committed to `main`; verification used the pinned FVM SDK (Flutter 3.29.0).
+
+## Task 2: Persistent Language Controller
+- `lib/core/data/language_repository.dart` — narrow `LanguageRepository`
+  contract (`get()` / `save(language)`), so persistence can change without
+  touching the controller.
+- `lib/core/data/local_language_repository.dart` — SQLite-backed implementation
+  storing the ISO code under the `app_settings` `language` key; unknown values
+  resolve to `null`.
+- `lib/core/mocks/mock_language_repository.dart` — in-memory implementation for
+  dev/test flavors.
+- `lib/core/state/language_controller.dart` — `ChangeNotifier` with `language`,
+  `locale`, `isLoaded`, `restore()` (hydrates the persisted choice, falls back to
+  English) and `setLanguage()` (notifies immediately then persists; same-language
+  set is a no-op).
+- `lib/core/database/database_helper.dart` — schema `10→11`; new generic
+  `app_settings(setting_key PK, setting_value)` table created in `_onCreate` and
+  the `oldVersion < 11` upgrade path, plus `getSetting`/`upsertSetting`.
+- Tests: `test/i18n/language_controller_test.dart`,
+  `test/data/local_language_repository_test.dart`.
+
+## Task 3: Translation Dictionaries
+- `lib/core/domain/i18n/app_strings.dart` — typed `AppStrings` contract; every
+  user-facing string is a getter, so adding a language is a compile-checked
+  implementation and business logic never references a language directly.
+  `AppStrings.of(language)` resolves the dictionary.
+- `english_strings.dart` / `spanish_strings.dart` — full implementations covering
+  navigation, screen headers, common actions/dialogs and quick-add labels.
+- `localization_scope.dart` — `InheritedWidget` exposing the active language /
+  dictionary; `stringsOf(context)` creates an inherited dependency so a language
+  change rebuilds dependents in place, with a safe English fallback when no scope
+  is present.
+- Wired into the live UI: `BottomNavBar` labels and the `NutritionPage`
+  header + quick-add button labels now resolve from the scope (quick-adds are
+  localized by canonical name so logged `FoodEntry` names stay stable).
+- Tests: `test/i18n/app_strings_test.dart` (contract completeness, en/es lookups,
+  scope fallback and rebuild-on-change).
+
+## Task 4: Settings / Profile Language Switcher UI
+- `lib/ui/molecules/language_switcher.dart` — reactive switcher: one
+  `OutlinedButton` chip per `AppLanguage.supported` (`language_option_en`,
+  `language_option_es`), selected state highlighted, calling
+  `LanguageController.setLanguage` for instant switching.
+- `lib/ui/pages/profile_page.dart` — renders the switcher when a
+  `LanguageController` is provided; the title is localized.
+- `lib/ui/pages/main_shell_page.dart` — accepts and forwards an optional
+  `languageController` to the Profile tab.
+- `lib/app.dart` — creates the `LanguageController` (SQLite or mock repository),
+  restores it at startup, and wraps the shell in a `ListenableBuilder` +
+  `LocalizationScope` so switching rebuilds the whole app.
+- Tests: `test/features/i18n_language_switcher_test.dart` (hidden without a
+  controller, both options listed, instant Spanish refresh, persistence and
+  restore on relaunch).
+
+## Task 5: Testing & Verification
+- `fvm flutter analyze` — No issues found.
+- `fvm flutter test` (full suite) — 715 passed, 0 failed.
+- Docs: `docs/i18n_completion_backlog.md` (all checked),
+  `docs/i18n_completion_plan.md`,
+  `mobile_app/test/features/i18n_infrastructure.feature`.
+
+## Commits (this sprint)
+- `bd91679` feat(i18n-task-1): AppLanguage domain enum with locale parsing and fallback
+- `feat(i18n-task-2): persistent LanguageController backed by SQLite`
+- `feat(i18n-task-3): typed en/es dictionaries, localization scope and live nav/quick-add wiring`
+- `feat(i18n-task-4): reactive profile language switcher and app wiring`
+- final: `test(i18n-task-5): verification, full suite green (715), analyzer clean`
