@@ -275,11 +275,30 @@ abstract final class BodySegmentGeometry {
     final topRight = _p(rect, topHalf * scale, top);
     final bottomRight = _p(rect, bottomHalf * scale, bottom);
     final bottomLeft = _p(rect, -bottomHalf * scale, bottom);
+    // M44 Task 1: organic (soft) sides. The side control points are pulled out
+    // to the *wider* of the two half-widths at mid-height, so the chest and
+    // abdomen read as anatomical volumes with a gentle convex bulge instead of
+    // straight-sided trapezoids. The control never exceeds the wider baseline
+    // half-width, so the path bounds (and every hit test) stay unchanged.
+    final midY = (top + bottom) / 2;
+    final bulgeHalf = (topHalf > bottomHalf ? topHalf : bottomHalf) * scale;
+    final leftControl = _p(rect, -bulgeHalf, midY);
+    final rightControl = _p(rect, bulgeHalf, midY);
     return Path()
       ..moveTo(topLeft.dx, topLeft.dy)
-      ..lineTo(topRight.dx, topRight.dy)
+      ..quadraticBezierTo(
+        leftControl.dx,
+        leftControl.dy,
+        bottomLeft.dx,
+        bottomLeft.dy,
+      )
       ..lineTo(bottomRight.dx, bottomRight.dy)
-      ..lineTo(bottomLeft.dx, bottomLeft.dy)
+      ..quadraticBezierTo(
+        rightControl.dx,
+        rightControl.dy,
+        topRight.dx,
+        topRight.dy,
+      )
       ..close();
   }
 }
