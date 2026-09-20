@@ -1,0 +1,93 @@
+# M43 Execution Changes Log — Quick Add Gram Popup, Nutrition Semantics, Unified Avatar & Standardized FABs
+
+Autonomous sprint following the strict TDD loop per task: feature contract →
+failing tests → implementation → targeted tests → backlog check-off → git commit,
+followed by a full `fvm flutter analyze` and full `fvm flutter test`. Delivered as
+per-task commits on `main` (M41/M42 convention). Verification used the project's
+pinned FVM SDK (Flutter 3.29.0).
+
+## Task 1: Quick Add Gram Scaling Dialog
+- `lib/core/domain/nutrition/portion_scaler.dart` — new pure scaler. Presets are
+  authored per 100 g; `scaleFood`/`scaleLogged` multiply calories and macros by
+  `grams / 100` and round to whole units. Scaling the calories is what drives the
+  Tamagotchi stomach mass via the existing `applyNutrition` path.
+- `lib/ui/molecules/quick_add_grams_dialog.dart` — new centered confirmation
+  dialog (`showQuickAddGramsDialog`). Numeric `TextField` (`quick_add_grams_field`)
+  defaults to `100`, validates `> 0` and finite, exposes `quick_add_confirm` /
+  `quick_add_cancel`, and shows the per-100 g baseline.
+- `lib/ui/pages/nutrition_page.dart` — quick-add buttons now call `_addQuick`,
+  which awaits the dialog, proportionally scales the preset and calls `_logFood`.
+  `_logFood` now also mirrors the scaled entry onto the shared
+  `BodyDetailController` as a `LoggedFood` (annotated `"<n> g"`), so the blueprint
+  abdomen status and the Tamagotchi stomach react on the same frame.
+- Tests: `test/features/m43_task1_quick_add_grams_test.dart` (scaler units +
+  dialog default/cancel/confirm/invalid + blueprint reach). Updated the two
+  affected `test/features/m14_nutrition_widget_test.dart` quick-add flows to
+  confirm through the dialog.
+
+## Task 2: Nutrition Color Semantics & Summary Fix
+- `lib/core/state/body_detail_controller.dart` — added `foodLogLoaded`, set by
+  `loadOverview`, `loadFoodLog`, `addFood` and `removeFood`. The summary now treats
+  the live in-memory log as authoritative after a mutation instead of re-reading a
+  potentially stale repository row.
+- `lib/ui/molecules/body_food_detail_sheet.dart` — `initState` only hydrates from
+  the repository when `!foodLogLoaded`; `_StickyTotals` now aggregates and displays
+  summed calories (`1310 kcal`), item count (`nutrition_total_items`) and summed
+  macros (`nutrition_total_macros`).
+- Abdomen semantics: logging food moves the abdomen from `noData` to a computed
+  `balanced`/`warning`/`critical` status, which `BodySegmentPalette` renders in the
+  matching colour.
+- Tests: `test/features/m43_task2_nutrition_color_summary_test.dart` (status
+  transition + palette colour, removal reversal, end-to-end summary aggregation).
+
+## Task 3: Unified Body Blueprint Component
+- `lib/ui/organisms/body_blueprint/body_segment_geometry.dart` — introduced
+  `jointGap = 0.016` (units of figure height); the forearms and calves now start
+  `jointGap` below their upper limb, producing visible elbow/knee articulation.
+  This intentionally reverses M41 Task 1's "close the gaps" decision at the user's
+  request.
+- `lib/ui/organisms/body_blueprint/body_blueprint_diagram.dart` — added
+  `showCallouts` (default `true`) so compact surfaces can render the figure alone.
+- `lib/ui/organisms/body_blueprint/unified_body_blueprint.dart` — new single shared
+  widget used by both tabs, delegating to the blueprint diagram (aspect-preserving
+  responsive geometry, status colouring, animated per-segment mass scaling).
+- `lib/core/domain/body_projection/nutrition_body_view_model.dart` — new helper
+  deriving a uniformly scaled, surplus-coloured snapshot for the Nutrition tab when
+  no body-detail controller is supplied; otherwise the live body-detail view model
+  is used.
+- `lib/ui/pages/routines_page.dart` and `lib/ui/pages/nutrition_page.dart` — both
+  render `UnifiedBodyBlueprint`. Nutrition hides the callouts and lets a segment tap
+  open the matching detail sheet when a controller is present.
+- Removed `lib/ui/atoms/dynamic_avatar.dart` (superseded); moved the still-relevant
+  `morphFactorFor` unit coverage to `test/ui/body_morph_test.dart`.
+- Tests: `test/ui/unified_body_blueprint_test.dart`; updated
+  `test/ui/body_segment_geometry_test.dart` to assert the joint gap and no overlap;
+  updated `test/features/m14_nutrition_widget_test.dart` avatar assertions to read
+  the blueprint painter's abdomen scale. Regenerated
+  `test/ui/goldens/body_blueprint_painter.png` (`--update-goldens`) for the
+  articulated geometry.
+
+## Task 4: Standardized Floating Action Buttons
+- `lib/ui/molecules/blueprint_action_rail.dart` — new reusable vertical rail of
+  circular blueprint FABs: optional History FAB plus the tab's summary action,
+  collapsing to nothing when no action is available.
+- `lib/ui/molecules/routine_summary_sheet.dart` — new Daily Routine Summary sheet
+  (`routine_summary_sheet`, `routine_summary_total`) aggregating completed/planned
+  sets and each exercise's sets × reps × load.
+- `lib/ui/pages/routines_page.dart` — the diagram is now flanked by the rail:
+  `body_history_fab` + `routine_summary_button` (History hidden when no repository).
+- `lib/ui/pages/nutrition_page.dart` — removed the header History ghost button and
+  the standalone full-width summary button; the rail now sits beside the avatar
+  with `nutrition_history_fab` + `nutrition_action_button` (opens the existing food
+  sheet). Legacy key preserved so the M41 action test still applies.
+- Tests: `test/features/m43_task4_standardized_fabs_test.dart`.
+
+## Task 5: Testing & Verification
+- `fvm flutter analyze` — No issues found.
+- `fvm flutter test` (full suite) — 664 passed, 0 failed.
+- Docs: `docs/m43_avatar_nutrition_backlog.md` (all tasks checked),
+  `docs/milestone_43_plan.md`, `mobile_app/test/features/m43_avatar_nutrition.feature`.
+
+## Verification
+- Analyzer: clean (`No issues found!`).
+- Full suite: 664 tests passed (up from 641 at sprint start; +23 net tests).
