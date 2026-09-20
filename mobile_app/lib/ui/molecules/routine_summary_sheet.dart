@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/domain/body_projection/body_segment.dart';
 import '../../core/domain/body_projection/muscle_workout_log.dart';
+import '../../core/domain/i18n/app_strings.dart';
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/state/body_detail_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/typography.dart';
@@ -50,6 +52,7 @@ class RoutineSummarySheet extends StatelessWidget {
           child: ListenableBuilder(
             listenable: controller,
             builder: (context, _) {
+              final strings = LocalizationScope.stringsOf(context);
               final sections = controller.workouts.values
                   .where((workout) => workout.entries.isNotEmpty)
                   .toList(growable: false);
@@ -69,26 +72,30 @@ class RoutineSummarySheet extends StatelessWidget {
                       children: [
                         const _SheetHandle(),
                         const SizedBox(height: AppSpacing.md),
-                        const AppHeading(
-                          'Daily Routine Summary',
+                        AppHeading(
+                          strings.dailyRoutineSummary,
                           size: AppHeadingSize.h3,
                         ),
-                        const AppCaption('Planned vs completed sets'),
+                        AppCaption(strings.routineSummaryCaption),
                         const SizedBox(height: AppSpacing.lg),
                         if (sections.isEmpty)
-                          const AppText(
-                            'No routine planned for today.',
-                            key: Key('routine_summary_empty'),
+                          AppText(
+                            strings.noRoutinePlanned,
+                            key: const Key('routine_summary_empty'),
                           )
                         else
                           for (final workout in sections)
-                            _WorkoutSection(workout: workout),
+                            _WorkoutSection(
+                              workout: workout,
+                              strings: strings,
+                            ),
                       ],
                     ),
                   ),
                   _SummaryTotals(
                     completed: completed,
                     planned: planned,
+                    strings: strings,
                   ),
                 ],
               );
@@ -119,9 +126,10 @@ class _SheetHandle extends StatelessWidget {
 }
 
 class _WorkoutSection extends StatelessWidget {
-  const _WorkoutSection({required this.workout});
+  const _WorkoutSection({required this.workout, required this.strings});
 
   final MuscleWorkoutLog workout;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +139,7 @@ class _WorkoutSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppText(
-            _labelFor(workout.segment),
+            strings.regionLabel(regionForSegment(workout.segment)),
             style: const TextStyle(
               fontWeight: FontWeight.w700,
               color: AppColors.primary400,
@@ -145,8 +153,12 @@ class _WorkoutSection extends StatelessWidget {
                 children: [
                   Expanded(child: AppText(entry.name)),
                   AppCaption(
-                    '${entry.completedSets}/${entry.plannedSets} × '
-                    '${entry.reps} · ${_formatLoad(entry.loadKg)}kg',
+                    strings.setsRepsLoad(
+                      entry.completedSets,
+                      entry.plannedSets,
+                      entry.reps,
+                      _formatLoad(entry.loadKg),
+                    ),
                   ),
                 ],
               ),
@@ -158,24 +170,34 @@ class _WorkoutSection extends StatelessWidget {
 
   static String _formatLoad(double load) =>
       load == load.roundToDouble() ? load.toInt().toString() : '$load';
-
-  static String _labelFor(BodySegment segment) => switch (segment) {
-        BodySegment.chest => 'CHEST',
-        BodySegment.leftUpperArm || BodySegment.leftForearm => 'ARM L',
-        BodySegment.rightUpperArm || BodySegment.rightForearm => 'ARM R',
-        BodySegment.leftThigh || BodySegment.leftCalf => 'LEG L',
-        BodySegment.rightThigh || BodySegment.rightCalf => 'LEG R',
-        BodySegment.abdomen => 'CORE',
-        BodySegment.head => 'HEAD',
-        BodySegment.neck => 'NECK',
-      };
 }
 
+/// Maps a blueprint [BodySegment] to its structural [BodyRegion] label.
+BodyRegion regionForSegment(BodySegment segment) => switch (segment) {
+      BodySegment.chest => BodyRegion.chest,
+      BodySegment.leftUpperArm || BodySegment.leftForearm => BodyRegion.armLeft,
+      BodySegment.rightUpperArm ||
+      BodySegment.rightForearm =>
+        BodyRegion.armRight,
+      BodySegment.leftThigh || BodySegment.leftCalf => BodyRegion.legLeft,
+      BodySegment.rightThigh ||
+      BodySegment.rightCalf =>
+        BodyRegion.legRight,
+      BodySegment.abdomen => BodyRegion.core,
+      BodySegment.head => BodyRegion.head,
+      BodySegment.neck => BodyRegion.neck,
+    };
+
 class _SummaryTotals extends StatelessWidget {
-  const _SummaryTotals({required this.completed, required this.planned});
+  const _SummaryTotals({
+    required this.completed,
+    required this.planned,
+    required this.strings,
+  });
 
   final int completed;
   final int planned;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -189,9 +211,9 @@ class _SummaryTotals extends StatelessWidget {
         key: const Key('routine_summary_total'),
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const AppCaption('Total sets'),
+          AppCaption(strings.totalSetsLabel),
           AppText(
-            '$completed / $planned',
+            strings.completedOfPlanned(completed, planned),
             style: const TextStyle(
               fontWeight: FontWeight.w700,
               color: AppColors.primary400,

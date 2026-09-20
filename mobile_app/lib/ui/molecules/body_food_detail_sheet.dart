@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/domain/body_projection/nutrition_log.dart';
+import '../../core/domain/i18n/app_strings.dart';
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/state/body_detail_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/typography.dart';
@@ -57,6 +59,7 @@ class _BodyFoodDetailSheetState extends State<BodyFoodDetailSheet> {
           child: ListenableBuilder(
             listenable: widget.controller,
             builder: (context, _) {
+              final strings = LocalizationScope.stringsOf(context);
               final controller = widget.controller;
               final log = controller.foodLog;
               return Column(
@@ -68,8 +71,11 @@ class _BodyFoodDetailSheetState extends State<BodyFoodDetailSheet> {
                       children: [
                         const _SheetHandle(),
                         const SizedBox(height: AppSpacing.md),
-                        const AppHeading('Stomach', size: AppHeadingSize.h3),
-                        const AppCaption('Food logged today'),
+                        AppHeading(
+                          strings.stomachTitle,
+                          size: AppHeadingSize.h3,
+                        ),
+                        AppCaption(strings.foodLoggedToday),
                         const SizedBox(height: AppSpacing.lg),
                         if (controller.isLoadingFood && log.isEmpty)
                           const Center(
@@ -83,9 +89,9 @@ class _BodyFoodDetailSheetState extends State<BodyFoodDetailSheet> {
                         else if (controller.foodError != null && log.isEmpty)
                           AppText(controller.foodError!)
                         else if (log.isEmpty)
-                          const AppText(
-                            'No food logged today.',
-                            key: Key('food_empty_state'),
+                          AppText(
+                            strings.noFoodLoggedToday,
+                            key: const Key('food_empty_state'),
                           )
                         else
                           for (var i = 0; i < log.entries.length; i++)
@@ -93,12 +99,13 @@ class _BodyFoodDetailSheetState extends State<BodyFoodDetailSheet> {
                               key: Key('food_item_$i'),
                               deleteKey: Key('food_delete_$i'),
                               food: log.entries[i],
+                              strings: strings,
                               onDelete: () => controller.removeFood(i),
                             ),
                       ],
                     ),
                   ),
-                  _StickyTotals(log: log),
+                  _StickyTotals(log: log, strings: strings),
                 ],
               );
             },
@@ -132,11 +139,13 @@ class _FoodTile extends StatelessWidget {
     super.key,
     required this.deleteKey,
     required this.food,
+    required this.strings,
     required this.onDelete,
   });
 
   final Key deleteKey;
   final LoggedFood food;
+  final AppStrings strings;
   final VoidCallback onDelete;
 
   @override
@@ -153,15 +162,19 @@ class _FoodTile extends StatelessWidget {
                 AppText(food.name),
                 AppCaption('${food.portion} · ${food.time}'),
                 AppCaption(
-                  'P ${food.proteinG}g · C ${food.carbsG}g · F ${food.fatG}g',
+                  strings.macroSummary(
+                    food.proteinG,
+                    food.carbsG,
+                    food.fatG,
+                  ),
                 ),
               ],
             ),
           ),
-          AppText('${food.calories} kcal'),
+          AppText(strings.kcal(food.calories)),
           IconButton(
             key: deleteKey,
-            tooltip: 'Remove ${food.name}',
+            tooltip: strings.removeItemTooltip(food.name),
             onPressed: onDelete,
             icon: const Icon(
               Icons.close,
@@ -176,9 +189,10 @@ class _FoodTile extends StatelessWidget {
 }
 
 class _StickyTotals extends StatelessWidget {
-  const _StickyTotals({required this.log});
+  const _StickyTotals({required this.log, required this.strings});
 
   final DailyFoodLog log;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -200,9 +214,9 @@ class _StickyTotals extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const AppCaption('Total'),
+                    AppCaption(strings.totalLabel),
                     AppText(
-                      '${log.totalCalories} kcal',
+                      strings.kcal(log.totalCalories),
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         color: AppColors.primary400,
@@ -212,16 +226,18 @@ class _StickyTotals extends StatelessWidget {
                 ),
               ),
               AppCaption(
-                '${log.entries.length} '
-                '${log.entries.length == 1 ? 'item' : 'items'}',
+                strings.itemCount(log.entries.length),
                 key: const Key('nutrition_total_items'),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
           AppCaption(
-            'P ${log.totalProteinG}g · C ${log.totalCarbsG}g · '
-            'F ${log.totalFatG}g',
+            strings.macroSummary(
+              log.totalProteinG,
+              log.totalCarbsG,
+              log.totalFatG,
+            ),
             key: const Key('nutrition_total_macros'),
           ),
         ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/domain/i18n/app_strings.dart';
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/domain/popups/exercise_completion.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/custom_button.dart';
@@ -36,6 +38,7 @@ class ExerciseCompletionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = LocalizationScope.stringsOf(context);
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.55,
@@ -67,26 +70,36 @@ class ExerciseCompletionSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              const AppHeading('Workout Complete', size: AppHeadingSize.h3),
+              AppHeading(
+                strings.workoutCompleteTitle,
+                size: AppHeadingSize.h3,
+              ),
               AppCaption(
                 summary.isEmpty
-                    ? 'Nothing logged yet'
-                    : '${summary.totalSets} sets · ${summary.totalReps} reps',
+                    ? strings.nothingLoggedYet
+                    : strings.setsAndReps(
+                        summary.totalSets,
+                        summary.totalReps,
+                      ),
               ),
               const SizedBox(height: AppSpacing.lg),
               if (summary.isEmpty)
-                const AppText(
-                  'No exercises were completed for this check-in.',
-                  key: Key('exercise_completion_empty'),
+                AppText(
+                  strings.completionEmptyBody,
+                  key: const Key('exercise_completion_empty'),
                 )
               else
                 for (var i = 0; i < summary.exercises.length; i++)
                   _ExerciseRow(
                     key: Key('completion_exercise_$i'),
                     exercise: summary.exercises[i],
+                    strings: strings,
                   ),
               const SizedBox(height: AppSpacing.md),
-              _BurnedRow(calories: summary.caloriesBurned),
+              _BurnedRow(
+                calories: summary.caloriesBurned,
+                strings: strings,
+              ),
               const SizedBox(height: AppSpacing.md),
               if (summary.recovery.isNotEmpty)
                 Wrap(
@@ -98,13 +111,14 @@ class ExerciseCompletionSheet extends StatelessWidget {
                         key: Key('recovery_${entry.key}'),
                         region: entry.key,
                         level: entry.value,
+                        strings: strings,
                       ),
                   ],
                 ),
               const SizedBox(height: AppSpacing.lg),
               CustomButton(
                 key: const Key('exercise_completion_close'),
-                label: 'Done',
+                label: strings.doneButton,
                 onPressed:
                     onClose ?? () => Navigator.of(context).maybePop(),
               ),
@@ -117,9 +131,14 @@ class ExerciseCompletionSheet extends StatelessWidget {
 }
 
 class _ExerciseRow extends StatelessWidget {
-  const _ExerciseRow({super.key, required this.exercise});
+  const _ExerciseRow({
+    super.key,
+    required this.exercise,
+    required this.strings,
+  });
 
   final CompletedExercise exercise;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -137,8 +156,12 @@ class _ExerciseRow extends StatelessWidget {
               children: [
                 AppText(exercise.name),
                 AppCaption(
-                  '${exercise.completedSets}/${exercise.plannedSets} × '
-                  '${exercise.reps} · ${load}kg',
+                  strings.setsRepsLoad(
+                    exercise.completedSets,
+                    exercise.plannedSets,
+                    exercise.reps,
+                    load,
+                  ),
                 ),
               ],
             ),
@@ -157,9 +180,10 @@ class _ExerciseRow extends StatelessWidget {
 }
 
 class _BurnedRow extends StatelessWidget {
-  const _BurnedRow({required this.calories});
+  const _BurnedRow({required this.calories, required this.strings});
 
   final int calories;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -167,9 +191,9 @@ class _BurnedRow extends StatelessWidget {
       key: const Key('burned_calories_row'),
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const AppText('Calories burned'),
+        AppText(strings.caloriesBurnedLabel),
         AppText(
-          '$calories kcal',
+          strings.kcal(calories),
           style: const TextStyle(
             fontWeight: FontWeight.w700,
             color: AppColors.accent,
@@ -185,10 +209,12 @@ class _RecoveryChip extends StatelessWidget {
     super.key,
     required this.region,
     required this.level,
+    required this.strings,
   });
 
   final String region;
   final RecoveryLevel level;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +233,7 @@ class _RecoveryChip extends StatelessWidget {
         border: Border.all(color: color),
       ),
       child: Text(
-        '${region.toUpperCase()} · ${level.name.toUpperCase()}',
+        strings.recoveryLabel(region, level),
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,

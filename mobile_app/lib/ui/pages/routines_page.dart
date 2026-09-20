@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/state/body_detail_controller.dart';
 import '../../core/state/projection_controller.dart';
 import '../../core/state/workout_completion_controller.dart';
@@ -120,6 +121,7 @@ class _RoutinesPageState extends State<RoutinesPage> {
     return ListenableBuilder(
       listenable: listenable,
       builder: (context, _) {
+        final strings = LocalizationScope.stringsOf(context);
         final controller = widget.controller;
         final milestone = controller.selectedMilestone;
         final viewModel = widget.detailController.buildViewModel();
@@ -127,13 +129,13 @@ class _RoutinesPageState extends State<RoutinesPage> {
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           children: [
-            const AppHeading('Routines', size: AppHeadingSize.h2),
+            AppHeading(strings.routinesTitle, size: AppHeadingSize.h2),
             const SizedBox(height: AppSpacing.lg),
             NeumorphicContainer(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const AppText('Body Projection'),
+                  AppText(strings.bodyProjectionLabel),
                   const SizedBox(height: AppSpacing.md),
                   SizedBox(
                     height: 320,
@@ -190,9 +192,9 @@ class _RoutinesPageState extends State<RoutinesPage> {
                     SwitchListTile(
                       key: const Key('confirm_workout_toggle'),
                       contentPadding: EdgeInsets.zero,
-                      title: const AppText('Workout completed'),
-                      subtitle: const AppCaption(
-                        'Records today\'s workout and grows your avatar',
+                      title: AppText(strings.workoutCompletedTitle),
+                      subtitle: AppCaption(
+                        strings.workoutCompletedSubtitle,
                       ),
                       value: widget.workoutCompletionController!.isConfirmed,
                       onChanged: _toggleWorkout,

@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
+import '../../core/domain/i18n/app_strings.dart';
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/daily_entry.dart';
 import '../../core/state/daily_entry_controller.dart';
 import '../../core/theme/app_theme.dart';
@@ -48,16 +50,6 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
   late final DailyEntryController _controller;
   late DateTime _month;
 
-  static const List<String> _weekdays = [
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat',
-    'Sun',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -81,13 +73,7 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
     setState(() => _month = DateTime(_month.year, _month.month + 1));
   }
 
-  String _monthLabel() {
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
-    ];
-    return '${months[_month.month - 1]} ${_month.year}';
-  }
+  String _monthLabel(AppStrings strings) => strings.monthYear(_month);
 
   Future<void> _openEditor(String date) async {
     // M36 Task 1: exact-match lookup through the controller so the tapped
@@ -122,6 +108,7 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
           child: ListenableBuilder(
             listenable: _controller,
             builder: (context, _) {
+              final strings = LocalizationScope.stringsOf(context);
               return ConstrainedBox(
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.of(context).size.height * 0.75,
@@ -133,13 +120,13 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const AppHeading('History', size: AppHeadingSize.h3),
+                        AppHeading(strings.history, size: AppHeadingSize.h3),
                         const SizedBox(height: AppSpacing.md),
-                        _buildMonthHeader(),
+                        _buildMonthHeader(strings),
                         const SizedBox(height: AppSpacing.sm),
-                        _buildWeekdayHeader(),
+                        _buildWeekdayHeader(strings),
                         const SizedBox(height: AppSpacing.xs),
-                        _buildDayGrid(),
+                        _buildDayGrid(strings),
                       ],
                     ),
                   ),
@@ -152,7 +139,7 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
     );
   }
 
-  Widget _buildMonthHeader() {
+  Widget _buildMonthHeader(AppStrings strings) {
     return Row(
       children: [
         IconButton(
@@ -165,7 +152,7 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: AppText(
-                _monthLabel(),
+                _monthLabel(strings),
                 key: const Key('history_month_label'),
               ),
             ),
@@ -180,20 +167,20 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
     );
   }
 
-  Widget _buildWeekdayHeader() {
+  Widget _buildWeekdayHeader(AppStrings strings) {
     return Row(
       children: [
-        for (final day in _weekdays)
+        for (var i = 1; i <= 7; i++)
           Expanded(
             child: Center(
-              child: AppCaption(day),
+              child: AppCaption(strings.weekdayShort(i)),
             ),
           ),
       ],
     );
   }
 
-  Widget _buildDayGrid() {
+  Widget _buildDayGrid(AppStrings strings) {
     final daysInMonth = DateTime(_month.year, _month.month + 1, 0).day;
     final leadingBlanks = DateTime(_month.year, _month.month, 1).weekday - 1;
     final totalCells = leadingBlanks + daysInMonth;
@@ -343,6 +330,7 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = LocalizationScope.stringsOf(context);
     final hasExisting = widget.existing != null;
     final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
@@ -360,15 +348,15 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                AppText('Edit ${widget.date}'),
+                AppText(strings.editEntryTitleFor(widget.date)),
                 const SizedBox(height: AppSpacing.md),
                 TextField(
                   key: const Key('history_calories_field'),
                   controller: _calories,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Calories',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: strings.calorieLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -379,9 +367,10 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                         key: const Key('history_protein_field'),
                         controller: _protein,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Protein (g)',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText:
+                              '${strings.proteinLabel} (g)',
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                     ),
@@ -391,9 +380,9 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                         key: const Key('history_carbs_field'),
                         controller: _carbs,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Carbs (g)',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: '${strings.carbsLabel} (g)',
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                     ),
@@ -403,9 +392,9 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                         key: const Key('history_fat_field'),
                         controller: _fat,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Fat (g)',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: '${strings.fatLabel} (g)',
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                     ),
@@ -415,9 +404,9 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                 TextField(
                   key: const Key('history_exercises_field'),
                   controller: _exercises,
-                  decoration: const InputDecoration(
-                    labelText: 'Exercises (comma separated)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: strings.exercisesFieldLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -435,7 +424,7 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                           Icons.delete_outline,
                           color: AppColors.danger,
                         ),
-                        label: const Text('Delete Record'),
+                        label: Text(strings.deleteRecordButton),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.danger,
                           side: const BorderSide(color: AppColors.danger),
@@ -453,7 +442,7 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                     ],
                     CustomButton(
                       key: const Key('history_save_button'),
-                      label: 'Save',
+                      label: strings.save,
                       onPressed: _save,
                     ),
                   ],

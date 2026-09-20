@@ -101,17 +101,4 @@ class _LanguageChip extends StatelessWidget {
   }
 }
 
-/// Localizes the section heading used above the [LanguageSwitcher].
-class LanguageSectionHeading extends StatelessWidget {
-  /// Creates a localized heading.
-  const LanguageSectionHeading({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    final strings = LocalizationScope.stringsOf(context);
-    return AppText(
-      strings.languageSectionTitle,
-      style: const TextStyle(fontWeight: FontWeight.w700),
-    );
-  }
-}

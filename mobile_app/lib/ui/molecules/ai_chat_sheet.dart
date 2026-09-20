@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/domain/i18n/app_strings.dart';
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/services/ai_interceptor.dart';
 import '../../core/state/ai_chat_controller.dart';
 import '../../core/theme/app_theme.dart';
@@ -61,7 +63,9 @@ class _AiChatSheetState extends State<AiChatSheet> {
     } catch (_) {
       if (!mounted) return;
       widget.controller.appendUserMessage(text);
-      widget.controller.appendErrorMessage('AI service unavailable right now.');
+      widget.controller.appendErrorMessage(
+        LocalizationScope.stringsOf(context).aiServiceUnavailable,
+      );
       return;
     }
 
@@ -82,19 +86,18 @@ class _AiChatSheetState extends State<AiChatSheet> {
           child: ListenableBuilder(
             listenable: widget.controller,
             builder: (context, _) {
+              final strings = LocalizationScope.stringsOf(context);
               final messages = widget.controller.messages;
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildHeader(),
+                  _buildHeader(strings),
                   Flexible(
                     child: messages.isEmpty
-                        ? const Padding(
-                            padding: EdgeInsets.all(AppSpacing.xl),
-                            child: AppText(
-                              'Ask me to build a workout routine.',
-                            ),
+                        ? Padding(
+                            padding: const EdgeInsets.all(AppSpacing.xl),
+                            child: AppText(strings.aiChatEmptyPrompt),
                           )
                         : ListView.builder(
                             shrinkWrap: true,
@@ -132,7 +135,7 @@ class _AiChatSheetState extends State<AiChatSheet> {
                         style: const TextStyle(color: AppColors.danger),
                       ),
                     ),
-                  _buildInputRow(),
+                  _buildInputRow(strings),
                 ],
               );
             },
@@ -142,7 +145,7 @@ class _AiChatSheetState extends State<AiChatSheet> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppStrings strings) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -152,12 +155,15 @@ class _AiChatSheetState extends State<AiChatSheet> {
       ),
       child: Row(
         children: [
-          const Expanded(
-            child: AppHeading('AI Assistant', size: AppHeadingSize.h3),
+          Expanded(
+            child: AppHeading(
+              strings.aiAssistantTitle,
+              size: AppHeadingSize.h3,
+            ),
           ),
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            tooltip: 'Close',
+            tooltip: strings.close,
             icon: const Icon(Icons.close, color: AppColors.textLow),
           ),
         ],
@@ -191,7 +197,7 @@ class _AiChatSheetState extends State<AiChatSheet> {
     );
   }
 
-  Widget _buildInputRow() {
+  Widget _buildInputRow(AppStrings strings) {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
@@ -207,8 +213,8 @@ class _AiChatSheetState extends State<AiChatSheet> {
                 maxLines: 1,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _send(),
-                decoration: const InputDecoration(
-                  hintText: 'Ask for a workout routine…',
+                decoration: InputDecoration(
+                  hintText: strings.aiChatInputHint,
                   border: InputBorder.none,
                 ),
               ),
@@ -216,7 +222,7 @@ class _AiChatSheetState extends State<AiChatSheet> {
           ),
           const SizedBox(width: AppSpacing.md),
           NeumorphicFab(
-            tooltip: 'Send',
+            tooltip: strings.sendLabel,
             icon: Icons.send,
             size: 48,
             onPressed: _send,

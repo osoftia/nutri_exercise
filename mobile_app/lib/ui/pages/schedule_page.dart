@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/domain/i18n/app_strings.dart';
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/schedule_event.dart';
 import '../../core/state/schedule_controller.dart';
 import '../../core/theme/app_theme.dart';
@@ -18,41 +20,6 @@ class SchedulePage extends StatefulWidget {
 }
 
 class _SchedulePageState extends State<SchedulePage> {
-  static const List<String> _monthNames = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-
-  static const List<String> _weekdayHeader = [
-    'Mo',
-    'Tu',
-    'We',
-    'Th',
-    'Fr',
-    'Sa',
-    'Su',
-  ];
-
-  static const List<String> _weekdayShort = [
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat',
-    'Sun',
-  ];
-
   static const double _tileSize = 40;
   static const double _tileSpacing = 6;
 
@@ -67,23 +34,24 @@ class _SchedulePageState extends State<SchedulePage> {
     return ListenableBuilder(
       listenable: widget.controller,
       builder: (context, _) {
+        final strings = LocalizationScope.stringsOf(context);
         final month = widget.controller.visibleMonth;
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           children: [
-            const AppHeading('Schedule', size: AppHeadingSize.h2),
+            AppHeading(strings.scheduleTitle, size: AppHeadingSize.h2),
             const SizedBox(height: AppSpacing.lg),
-            _buildCalendar(context, month),
+            _buildCalendar(context, month, strings),
             const SizedBox(height: AppSpacing.lg),
-            _buildAgenda(context),
+            _buildAgenda(context, strings),
           ],
         );
       },
     );
   }
 
-  Widget _buildCalendar(BuildContext context, DateTime month) {
-    final label = '${_monthNames[month.month - 1]} ${month.year}';
+  Widget _buildCalendar(BuildContext context, DateTime month, AppStrings strings) {
+    final label = strings.monthYear(month);
 
     return NeumorphicContainer(
       key: const Key('calendar_grid'),
@@ -108,13 +76,14 @@ class _SchedulePageState extends State<SchedulePage> {
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
-            children: _weekdayHeader
-                .map(
-                  (day) => Expanded(
-                    child: Center(child: AppCaption(day)),
+            children: [
+              for (var i = 1; i <= 7; i++)
+                Expanded(
+                  child: Center(
+                    child: AppCaption(strings.weekdayNarrow(i)),
                   ),
-                )
-                .toList(),
+                ),
+            ],
           ),
           const SizedBox(height: AppSpacing.sm),
           _buildGrid(context, month),
@@ -186,7 +155,7 @@ class _SchedulePageState extends State<SchedulePage> {
     );
   }
 
-  Widget _buildAgenda(BuildContext context) {
+  Widget _buildAgenda(BuildContext context, AppStrings strings) {
     final date = widget.controller.selectedDate;
     final events = widget.controller.eventsForSelectedDate;
 
@@ -195,10 +164,13 @@ class _SchedulePageState extends State<SchedulePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppText(_agendaTitle(date), style: Theme.of(context).textTheme.titleLarge),
+          AppText(
+            strings.agendaTitle(date),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: AppSpacing.md),
           if (events.isEmpty)
-            const AppText('No events scheduled')
+            AppText(strings.noEventsScheduled)
           else
             for (final event in events)
               Padding(
@@ -216,10 +188,6 @@ class _SchedulePageState extends State<SchedulePage> {
       ),
     );
   }
-
-  String _agendaTitle(DateTime date) =>
-      '${_weekdayShort[date.weekday - 1]}, ${date.day} '
-      '${_monthNames[date.month - 1]}';
 
   IconData _typeIcon(ScheduleEventType type) => switch (type) {
     ScheduleEventType.workout => Icons.fitness_center,

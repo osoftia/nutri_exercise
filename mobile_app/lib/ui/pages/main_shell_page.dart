@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/domain/notifications/exercise_check_in.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/state/ai_chat_controller.dart';
@@ -177,9 +178,10 @@ class _MainShellPageState extends State<MainShellPage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = LocalizationScope.stringsOf(context);
     return Scaffold(
       appBar: AppBar(
-        title: const AppHeading('NutriExercise', size: AppHeadingSize.h3),
+        title: AppHeading(strings.appTitle, size: AppHeadingSize.h3),
         actions: [
           if (widget.dailyEntryRepository != null) ...[
             IconButton(
@@ -188,7 +190,7 @@ class _MainShellPageState extends State<MainShellPage> {
                 Icons.bar_chart_outlined,
                 color: AppColors.textMedium,
               ),
-              tooltip: 'Weekly Stats',
+              tooltip: strings.weeklyStats,
               onPressed: () => showWeeklyStatsSheet(
                 context,
                 repository: widget.dailyEntryRepository!,
@@ -200,7 +202,7 @@ class _MainShellPageState extends State<MainShellPage> {
                 Icons.calendar_month_outlined,
                 color: AppColors.textMedium,
               ),
-              tooltip: 'History',
+              tooltip: strings.history,
               onPressed: () => showCalendarHistoryDialog(
                 context,
                 repository: widget.dailyEntryRepository!,
@@ -221,8 +223,8 @@ class _MainShellPageState extends State<MainShellPage> {
             backgroundColor: AppColors.primary500,
             foregroundColor: AppColors.textHigh,
             icon: const Icon(Icons.edit_note),
-            label: const Text('Daily Log'),
-            tooltip: 'Daily Log',
+            label: Text(strings.dailyLogFabLabel),
+            tooltip: strings.dailyLogFabLabel,
           ),
           if (widget.aiChatController != null) ...[
             const SizedBox(height: AppSpacing.md),

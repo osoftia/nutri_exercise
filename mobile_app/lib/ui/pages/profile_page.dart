@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/user_profile.dart';
 import '../../core/state/language_controller.dart';
@@ -98,17 +99,17 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildNameField(),
+                _buildNameField(strings),
                 const SizedBox(height: AppSpacing.lg),
-                _buildAgeField(),
+                _buildAgeField(strings),
                 const SizedBox(height: AppSpacing.lg),
-                _buildWeightField(),
+                _buildWeightField(strings),
                 const SizedBox(height: AppSpacing.lg),
-                _buildHeightField(),
+                _buildHeightField(strings),
                 const SizedBox(height: AppSpacing.lg),
-                _buildGoalField(),
+                _buildGoalField(strings),
                 const SizedBox(height: AppSpacing.xl),
-                _buildSaveButton(),
+                _buildSaveButton(strings),
               ],
             ),
           ),
@@ -117,71 +118,74 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildNameField() {
+  Widget _buildNameField(AppStrings strings) {
     return TextFormField(
       key: const Key('profile_name_field'),
       controller: _nameController,
       textInputAction: TextInputAction.next,
-      decoration: const InputDecoration(labelText: 'Name'),
+      decoration: InputDecoration(labelText: strings.nameFieldLabel),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Name is required';
+          return strings.requiredField(strings.nameFieldLabel);
         }
         return null;
       },
     );
   }
 
-  Widget _buildAgeField() {
+  Widget _buildAgeField(AppStrings strings) {
     return TextFormField(
       key: const Key('profile_age_field'),
       controller: _ageController,
       keyboardType: TextInputType.number,
       textInputAction: TextInputAction.next,
-      decoration: const InputDecoration(labelText: 'Age'),
-      validator: (value) => _positiveNumberValidator(value, 'Age'),
+      decoration: InputDecoration(labelText: strings.ageFieldLabel),
+      validator: (value) =>
+          _positiveNumberValidator(strings, value, strings.ageFieldLabel),
     );
   }
 
-  Widget _buildWeightField() {
+  Widget _buildWeightField(AppStrings strings) {
     return TextFormField(
       key: const Key('profile_weight_field'),
       controller: _weightController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       textInputAction: TextInputAction.next,
-      decoration: const InputDecoration(
-        labelText: 'Weight',
+      decoration: InputDecoration(
+        labelText: strings.weightFieldLabel,
         suffixText: 'kg',
       ),
-      validator: (value) => _positiveNumberValidator(value, 'Weight'),
+      validator: (value) =>
+          _positiveNumberValidator(strings, value, strings.weightFieldLabel),
     );
   }
 
-  Widget _buildHeightField() {
+  Widget _buildHeightField(AppStrings strings) {
     return TextFormField(
       key: const Key('profile_height_field'),
       controller: _heightController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       textInputAction: TextInputAction.done,
-      decoration: const InputDecoration(
-        labelText: 'Height',
+      decoration: InputDecoration(
+        labelText: strings.heightFieldLabel,
         suffixText: 'cm',
       ),
-      validator: (value) => _positiveNumberValidator(value, 'Height'),
+      validator: (value) =>
+          _positiveNumberValidator(strings, value, strings.heightFieldLabel),
     );
   }
 
-  Widget _buildGoalField() {
+  Widget _buildGoalField(AppStrings strings) {
     return DropdownButtonFormField<FitnessGoal>(
       key: const Key('profile_goal_field'),
       // ignore: deprecated_member_use
       value: _goal,
-      decoration: const InputDecoration(labelText: 'Fitness Goal'),
+      decoration: InputDecoration(labelText: strings.fitnessGoalLabel),
       items: FitnessGoal.values
           .map(
             (goal) => DropdownMenuItem(
               value: goal,
-              child: AppText(goal.label),
+              child: AppText(strings.fitnessGoal(goal)),
             ),
           )
           .toList(),
@@ -191,7 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildSaveButton() {
+  Widget _buildSaveButton(AppStrings strings) {
     return NeumorphicContainer(
       inset: true,
       borderRadius: AppRadius.md,
@@ -201,18 +205,22 @@ class _ProfilePageState extends State<ProfilePage> {
         child: TextButton(
           key: const Key('profile_save_button'),
           onPressed: _save,
-          child: const AppText('Save Profile'),
+          child: AppText(strings.saveProfileButton),
         ),
       ),
     );
   }
 
-  String? _positiveNumberValidator(String? value, String label) {
+  String? _positiveNumberValidator(
+    AppStrings strings,
+    String? value,
+    String label,
+  ) {
     final trimmed = value?.trim() ?? '';
-    if (trimmed.isEmpty) return '$label is required';
+    if (trimmed.isEmpty) return strings.requiredField(label);
     final number = double.tryParse(trimmed);
-    if (number == null) return 'Enter a valid number';
-    if (number < 1) return '$label must be at least 1';
+    if (number == null) return strings.invalidNumberMessage;
+    if (number < 1) return strings.minimumOneMessage(label);
     return null;
   }
 }

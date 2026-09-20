@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/domain/body_projection/body_segment.dart';
 import '../../core/domain/body_projection/muscle_workout_log.dart';
+import '../../core/domain/i18n/app_strings.dart';
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/state/body_detail_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/typography.dart';
@@ -58,6 +60,7 @@ class _BodyExerciseDetailSheetState extends State<BodyExerciseDetailSheet> {
           child: ListenableBuilder(
             listenable: widget.controller,
             builder: (context, _) {
+              final strings = LocalizationScope.stringsOf(context);
               final controller = widget.controller;
               final log = controller.workoutLog;
               return ListView(
@@ -80,7 +83,7 @@ class _BodyExerciseDetailSheetState extends State<BodyExerciseDetailSheet> {
                   ),
                   AppCaption(
                     log == null || log.isEmpty
-                        ? 'No plan for this muscle yet'
+                        ? strings.noPlanForMuscle
                         : log.periodLabel,
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -96,17 +99,25 @@ class _BodyExerciseDetailSheetState extends State<BodyExerciseDetailSheet> {
                   else if (controller.workoutError != null && log == null)
                     AppText(controller.workoutError!)
                   else if (log == null || log.isEmpty)
-                    const AppText(
-                      'No exercises planned for this muscle group.',
-                      key: Key('exercise_empty_state'),
+                    AppText(
+                      strings.noExercisesPlanned,
+                      key: const Key('exercise_empty_state'),
                     )
                   else ...[
-                    for (final entry in log.entries) _ExerciseTile(entry: entry),
+                    for (final entry in log.entries)
+                      _ExerciseTile(entry: entry, strings: strings),
                     const SizedBox(height: AppSpacing.sm),
-                    _ProgressRow(key: const Key('exercise_progress_row'), log: log),
+                    _ProgressRow(
+                      key: const Key('exercise_progress_row'),
+                      log: log,
+                      strings: strings,
+                    ),
                   ],
                   const SizedBox(height: AppSpacing.lg),
-                  _SuggestionSection(controller: controller),
+                  _SuggestionSection(
+                    controller: controller,
+                    strings: strings,
+                  ),
                 ],
               );
             },
@@ -118,9 +129,10 @@ class _BodyExerciseDetailSheetState extends State<BodyExerciseDetailSheet> {
 }
 
 class _ExerciseTile extends StatelessWidget {
-  const _ExerciseTile({required this.entry});
+  const _ExerciseTile({required this.entry, required this.strings});
 
   final MuscleExerciseLog entry;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +155,14 @@ class _ExerciseTile extends StatelessWidget {
               ],
             ),
           ),
-          AppText(entry.isCompleted ? '✓ ${entry.completedSets}/${entry.plannedSets} sets' : '${entry.completedSets} / ${entry.plannedSets} sets'),
+          AppText(
+            entry.isCompleted
+                ? strings.setsOfPlanned(entry.completedSets, entry.plannedSets)
+                : strings.setsProgress(
+                    entry.completedSets,
+                    entry.plannedSets,
+                  ),
+          ),
         ],
       ),
     );
@@ -151,9 +170,10 @@ class _ExerciseTile extends StatelessWidget {
 }
 
 class _ProgressRow extends StatelessWidget {
-  const _ProgressRow({super.key, required this.log});
+  const _ProgressRow({super.key, required this.log, required this.strings});
 
   final MuscleWorkoutLog log;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -162,10 +182,12 @@ class _ProgressRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const AppText('Completed vs planned'),
+          AppText(strings.completedVsPlanned),
           AppText(
-            '${log.completedVolume.toStringAsFixed(0)} / '
-            '${log.plannedVolume.toStringAsFixed(0)} kg',
+            strings.volumeOfPlanned(
+              log.completedVolume.toStringAsFixed(0),
+              log.plannedVolume.toStringAsFixed(0),
+            ),
             style: const TextStyle(
               fontWeight: FontWeight.w700,
               color: AppColors.primary400,
@@ -178,9 +200,10 @@ class _ProgressRow extends StatelessWidget {
 }
 
 class _SuggestionSection extends StatelessWidget {
-  const _SuggestionSection({required this.controller});
+  const _SuggestionSection({required this.controller, required this.strings});
 
   final BodyDetailController controller;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +211,7 @@ class _SuggestionSection extends StatelessWidget {
       key: const Key('body_ai_suggestion'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AppText('AI suggestion'),
+        AppText(strings.aiSuggestionLabel),
         const SizedBox(height: AppSpacing.sm),
         if (controller.isLoadingSuggestion)
           const SizedBox(

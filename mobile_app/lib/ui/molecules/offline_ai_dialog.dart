@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/custom_button.dart';
 import '../atoms/typography.dart';
@@ -16,19 +17,18 @@ class OfflineAiDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = LocalizationScope.stringsOf(context);
     return AlertDialog(
       backgroundColor: AppColors.surface800,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       icon: const Icon(Icons.cloud_off, color: AppColors.primary400, size: 40),
-      title: const AppHeading('Offline AI', size: AppHeadingSize.h3),
-      content: const AppText(
-        'To consult the AI, please connect to the internet.',
-      ),
+      title: AppHeading(strings.offlineAiTitle, size: AppHeadingSize.h3),
+      content: AppText(strings.offlineAiBody),
       actions: [
         CustomButton(
-          label: 'Got it',
+          label: strings.gotItButton,
           onPressed: () => Navigator.of(context).pop(),
         ),
       ],

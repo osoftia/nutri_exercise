@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/domain/nutrition/portion_scaler.dart';
 import '../../core/models/food_entry.dart';
 import '../../core/theme/app_theme.dart';
@@ -61,6 +62,7 @@ class _QuickAddGramsDialogState extends State<_QuickAddGramsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = LocalizationScope.stringsOf(context);
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(AppSpacing.lg),
@@ -70,12 +72,19 @@ class _QuickAddGramsDialogState extends State<_QuickAddGramsDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AppHeading('Add ${widget.food.name}', size: AppHeadingSize.h3),
+            AppHeading(
+              strings.addFoodTitle(widget.food.name),
+              size: AppHeadingSize.h3,
+            ),
             const SizedBox(height: AppSpacing.sm),
             AppCaption(
-              '${widget.food.calories} kcal · '
-              'P${widget.food.proteinG} C${widget.food.carbsG} '
-              'F${widget.food.fatG} per ${PortionScaler.baseGrams.toInt()} g',
+              '${strings.kcal(widget.food.calories)} · '
+              '${strings.macroSummary(
+                widget.food.proteinG,
+                widget.food.carbsG,
+                widget.food.fatG,
+              )} '
+              'per ${PortionScaler.baseGrams.toInt()} g',
             ),
             const SizedBox(height: AppSpacing.lg),
             TextField(
@@ -87,7 +96,7 @@ class _QuickAddGramsDialogState extends State<_QuickAddGramsDialog> {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               decoration: InputDecoration(
-                labelText: 'Portion (g)',
+                labelText: strings.portionLabel,
                 hintText: '100',
                 suffixText: 'g',
                 errorText: _error,
@@ -103,14 +112,14 @@ class _QuickAddGramsDialogState extends State<_QuickAddGramsDialog> {
               children: [
                 CustomButton(
                   key: const Key('quick_add_cancel'),
-                  label: 'Cancel',
+                  label: strings.cancel,
                   variant: CustomButtonVariant.ghost,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 CustomButton(
                   key: const Key('quick_add_confirm'),
-                  label: 'Add',
+                  label: strings.add,
                   onPressed: _confirm,
                 ),
               ],

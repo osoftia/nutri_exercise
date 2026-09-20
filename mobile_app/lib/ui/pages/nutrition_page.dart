@@ -220,9 +220,12 @@ class _NutritionPageState extends State<NutritionPage> {
                 key: const Key('calorie_summary'),
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const AppText('Calories'),
+                  AppText(strings.calorieLabel),
                   AppText(
-                    '${c.consumedCalories} of ${c.targetCalories} kcal',
+                    strings.caloriesOfTarget(
+                      c.consumedCalories,
+                      c.targetCalories,
+                    ),
                   ),
                 ],
               ),
@@ -236,9 +239,9 @@ class _NutritionPageState extends State<NutritionPage> {
                   children: [
                     SwitchListTile(
                       key: const Key('reactive_notifications_toggle'),
-                      title: const AppText('Reactive meal notifications'),
-                      subtitle: const AppCaption(
-                        'Notify right after logging a meal',
+                      title: AppText(strings.reactiveNotificationsTitle),
+                      subtitle: AppCaption(
+                        strings.reactiveNotificationsSubtitle,
                       ),
                       value: _reactiveEnabled,
                       onChanged: (value) =>
@@ -255,7 +258,7 @@ class _NutritionPageState extends State<NutritionPage> {
                         children: [
                           CustomButton(
                             key: const Key('exercise_not_button'),
-                            label: 'EXERCISE NOT',
+                            label: strings.exerciseNotButton,
                             variant: CustomButtonVariant.ghost,
                             onPressed: () =>
                                 widget.notificationService
@@ -264,7 +267,7 @@ class _NutritionPageState extends State<NutritionPage> {
                           const SizedBox(height: AppSpacing.sm),
                           CustomButton(
                             key: const Key('test_notifications_button'),
-                            label: 'Test Notifications',
+                            label: strings.testNotificationsButton,
                             variant: CustomButtonVariant.ghost,
                             onPressed: _testNotifications,
                           ),
@@ -325,26 +328,34 @@ class _NutritionPageState extends State<NutritionPage> {
               children: [
                 Expanded(
                   child: NeumorphicCircularProgress(
-                    title: 'Protein',
+                    title: strings.proteinLabel,
                     progress: c.proteinProgress,
-                    valueLabel:
-                        '${c.proteinG} / ${macroTargets.protein}g',
+                    valueLabel: strings.macroOfTarget(
+                      c.proteinG,
+                      macroTargets.protein,
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: NeumorphicCircularProgress(
-                    title: 'Carbs',
+                    title: strings.carbsLabel,
                     progress: c.carbsProgress,
-                    valueLabel: '${c.carbsG} / ${macroTargets.carbs}g',
+                    valueLabel: strings.macroOfTarget(
+                      c.carbsG,
+                      macroTargets.carbs,
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: NeumorphicCircularProgress(
-                    title: 'Fat',
+                    title: strings.fatLabel,
                     progress: c.fatProgress,
-                    valueLabel: '${c.fatG} / ${macroTargets.fat}g',
+                    valueLabel: strings.macroOfTarget(
+                      c.fatG,
+                      macroTargets.fat,
+                    ),
                   ),
                 ),
               ],
@@ -355,7 +366,7 @@ class _NutritionPageState extends State<NutritionPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const AppText('Weekly Calories'),
+                  AppText(strings.weeklyCaloriesTitle),
                   const SizedBox(height: AppSpacing.md),
                   NeumorphicBarChart(
                     values: c.weeklyCalories,
@@ -393,14 +404,14 @@ class _NutritionPageState extends State<NutritionPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const AppText('Log a meal'),
+                  AppText(strings.logAMealTitle),
                   const SizedBox(height: AppSpacing.md),
                   TextField(
                     key: const Key('food_name_field'),
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      hintText: 'e.g. Banana',
+                    decoration: InputDecoration(
+                      labelText: strings.nameFieldLabel,
+                      hintText: strings.nameFieldHint,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -408,15 +419,15 @@ class _NutritionPageState extends State<NutritionPage> {
                     key: const Key('food_calories_field'),
                     controller: _caloriesController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Calories',
-                      hintText: 'e.g. 120',
+                    decoration: InputDecoration(
+                      labelText: strings.caloriesFieldLabel,
+                      hintText: strings.caloriesFieldHint,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   CustomButton(
                     key: const Key('food_add_button'),
-                    label: 'Add',
+                    label: strings.add,
                     onPressed: _addCustomEntry,
                   ),
                 ],

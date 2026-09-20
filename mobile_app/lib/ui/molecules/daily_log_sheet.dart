@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/log_parse_response.dart';
 import '../../core/state/daily_log_controller.dart';
 import '../../core/theme/app_theme.dart';
@@ -70,6 +71,7 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
   Future<void> _submit() async {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final strings = LocalizationScope.stringsOf(context);
 
     final saved = await widget.controller.submit(_fieldController?.text ?? '');
     if (!saved || !mounted) return;
@@ -81,7 +83,7 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
 
     if (result != null) {
       messenger.showSnackBar(
-        SnackBar(content: Text('Saved — ${_formatResult(result)}')),
+        SnackBar(content: Text(strings.savedSummary(_formatResult(result)))),
       );
     } else if (parseError != null) {
       messenger.showSnackBar(SnackBar(content: Text(parseError)));
@@ -111,6 +113,7 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
           child: ListenableBuilder(
             listenable: widget.controller,
             builder: (context, _) {
+              final strings = LocalizationScope.stringsOf(context);
               final isParsing = widget.controller.isParsing;
               return Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -118,9 +121,12 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const AppHeading('Daily Check-in', size: AppHeadingSize.h3),
+                    AppHeading(
+                      strings.dailyCheckInTitle,
+                      size: AppHeadingSize.h3,
+                    ),
                     const SizedBox(height: AppSpacing.xs),
-                    const AppCaption('What did you eat and train today?'),
+                    AppCaption(strings.dailyCheckInSubtitle),
                     const SizedBox(height: AppSpacing.lg),
                     Autocomplete<String>(
                       optionsBuilder: (TextEditingValue value) {
@@ -150,9 +156,9 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
                           focusNode: focusNode,
                           maxLines: 5,
                           textInputAction: TextInputAction.newline,
-                          decoration: const InputDecoration(
-                            hintText: 'Type your summary…',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            hintText: strings.dailyLogHint,
+                            border: const OutlineInputBorder(),
                           ),
                         );
                       },
@@ -162,7 +168,7 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         CustomButton(
-                          label: 'Cancel',
+                          label: strings.cancel,
                           variant: CustomButtonVariant.ghost,
                           onPressed: isParsing
                               ? null
@@ -171,7 +177,9 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
                         const SizedBox(width: AppSpacing.md),
                         CustomButton(
                           key: const Key('daily_log_save'),
-                          label: isParsing ? 'Analyzing…' : 'Save',
+                          label: isParsing
+                              ? strings.analyzingLabel
+                              : strings.save,
                           disabled: isParsing,
                           onPressed: _submit,
                         ),

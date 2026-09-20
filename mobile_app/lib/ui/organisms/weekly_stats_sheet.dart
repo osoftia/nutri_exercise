@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
+import '../../core/domain/i18n/app_strings.dart';
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/weekly_stat.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/weekly_stats.dart';
@@ -61,6 +63,7 @@ class _WeeklyStatsSheetState extends State<WeeklyStatsSheet> {
           child: FutureBuilder<List<WeeklyStat>>(
             future: _stats,
             builder: (context, snapshot) {
+              final strings = LocalizationScope.stringsOf(context);
               final stats = snapshot.data;
               return Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -68,9 +71,9 @@ class _WeeklyStatsSheetState extends State<WeeklyStatsSheet> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const AppHeading('Weekly Stats', size: AppHeadingSize.h3),
+                    AppHeading(strings.weeklyStats, size: AppHeadingSize.h3),
                     const SizedBox(height: AppSpacing.xs),
-                    const AppCaption('Calories consumed vs burned (7 days)'),
+                    AppCaption(strings.weeklyStatsCaption),
                     const SizedBox(height: AppSpacing.lg),
                     if (stats == null)
                       const Padding(
@@ -78,7 +81,7 @@ class _WeeklyStatsSheetState extends State<WeeklyStatsSheet> {
                         child: Center(child: CircularProgressIndicator()),
                       )
                     else ...[
-                      _WeeklySummary(stats: stats),
+                      _WeeklySummary(stats: stats, strings: strings),
                       const SizedBox(height: AppSpacing.lg),
                       // M36 Task 1: labels come from the real stat dates
                       // (weekdayLabel), never a static list, so each bar is
@@ -97,9 +100,10 @@ class _WeeklyStatsSheetState extends State<WeeklyStatsSheet> {
 }
 
 class _WeeklySummary extends StatelessWidget {
-  const _WeeklySummary({required this.stats});
+  const _WeeklySummary({required this.stats, required this.strings});
 
   final List<WeeklyStat> stats;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -111,8 +115,8 @@ class _WeeklySummary extends StatelessWidget {
         Expanded(
           child: _SummaryTile(
             key: const Key('weekly_consumed_total'),
-            title: 'Consumed',
-            value: '$consumed kcal',
+            title: strings.consumedLabel,
+            value: strings.kcal(consumed),
             color: AppColors.primary400,
           ),
         ),
@@ -120,8 +124,8 @@ class _WeeklySummary extends StatelessWidget {
         Expanded(
           child: _SummaryTile(
             key: const Key('weekly_burned_total'),
-            title: 'Burned',
-            value: '$burned kcal',
+            title: strings.burnedLabel,
+            value: strings.kcal(burned),
             color: AppColors.success,
           ),
         ),
@@ -129,8 +133,8 @@ class _WeeklySummary extends StatelessWidget {
         Expanded(
           child: _SummaryTile(
             key: const Key('weekly_balance_total'),
-            title: 'Balance',
-            value: balance >= 0 ? '+$balance' : '$balance',
+            title: strings.balanceLabel,
+            value: strings.signedKcal(balance),
             color: balance > 0 ? AppColors.warning : AppColors.success,
           ),
         ),

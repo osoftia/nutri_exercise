@@ -1,3 +1,5 @@
+import '../../models/user_profile.dart';
+import '../popups/exercise_completion.dart';
 import 'app_language.dart';
 import 'english_strings.dart';
 import 'spanish_strings.dart';
@@ -64,4 +66,175 @@ abstract class AppStrings {
 
   /// Localized display name of a supported [language].
   String languageName(AppLanguage language);
+
+  // --- Routines tab -----------------------------------------------------
+  String get bodyProjectionLabel;
+  String get workoutCompletedTitle;
+  String get workoutCompletedSubtitle;
+
+  // --- Schedule tab -----------------------------------------------------
+  String get scheduleTitle;
+  String get noEventsScheduled;
+
+  /// Localized "Month YYYY" label (e.g. `August 2026` / `agosto de 2026`).
+  String monthYear(DateTime date);
+
+  /// Narrow Monday-first weekday header (`1 = Monday`).
+  String weekdayNarrow(int weekday);
+
+  /// Short Monday-first weekday label (`1 = Monday`, e.g. `Mon` / `lun`).
+  String weekdayShort(int weekday);
+
+  /// Localized agenda title (`"Mon, 5 May"` / `"lun, 5 de mayo"`).
+  String agendaTitle(DateTime date);
+
+  // --- Nutrition dashboard ---------------------------------------------
+  String get reactiveNotificationsTitle;
+  String get reactiveNotificationsSubtitle;
+  String get exerciseNotButton;
+  String get testNotificationsButton;
+  String get weeklyCaloriesTitle;
+  String get logAMealTitle;
+  String get nameFieldLabel;
+  String get nameFieldHint;
+  String get caloriesFieldLabel;
+  String get caloriesFieldHint;
+
+  /// The `"<consumed> of <target> kcal"` summary.
+  String caloriesOfTarget(int consumed, int target);
+
+  /// A `"<value> / <target>g"` macro ring value label.
+  String macroOfTarget(int value, int target);
+
+  // --- Workout completion sheet ----------------------------------------
+  String get workoutCompleteTitle;
+  String get nothingLoggedYet;
+  String get completionEmptyBody;
+  String get doneButton;
+
+  /// `"<sets> sets · <reps> reps"`.
+  String setsAndReps(int sets, int reps);
+
+  /// `"<completed>/<planned> × <reps> · <load>kg"`.
+  String setsRepsLoad(int completed, int planned, int reps, String load);
+
+  String get caloriesBurnedLabel;
+
+  /// Localized recovery chip label for [level] (`REGION · LEVEL`).
+  String recoveryLabel(String region, RecoveryLevel level);
+
+  // --- Food / stomach sheet --------------------------------------------
+  String get stomachTitle;
+  String get foodLoggedToday;
+  String get noFoodLoggedToday;
+
+  /// `"P <protein>g · C <carbs>g · F <fat>g"`.
+  String macroSummary(int protein, int carbs, int fat);
+
+  String get totalLabel;
+
+  /// `"<count> item"` / `"<count> items"` (singular-aware).
+  String itemCount(int count);
+
+  String removeItemTooltip(String name);
+  String get deletionOnlyLabel;
+
+  /// `"<calories> kcal"`.
+  String kcal(int calories);
+
+  /// `"<count> kcal"` from a numeric amount.
+  String kcalAmount(num calories);
+
+  // --- Exercise detail sheet -------------------------------------------
+  String get noPlanForMuscle;
+  String get noExercisesPlanned;
+  String get completedVsPlanned;
+  String get aiSuggestionLabel;
+
+  /// `"✓ <completed>/<planned> sets"` for a fully completed exercise.
+  String setsOfPlanned(int completed, int planned);
+
+  /// `"<completed> / <planned> sets"` for a partially completed exercise.
+  String setsProgress(int completed, int planned);
+
+  /// `"<completed> / <planned> kg"` volume row.
+  String volumeOfPlanned(String completed, String planned);
+
+  // --- Routine summary sheet -------------------------------------------
+  String get routineSummaryCaption;
+  String get noRoutinePlanned;
+  String get totalSetsLabel;
+
+  /// `"<completed> / <planned>"`.
+  String completedOfPlanned(int completed, int planned);
+
+  /// Localized blueprint region label (e.g. `CHEST`, `ARM L`).
+  String regionLabel(BodyRegion region);
+
+  // --- Weekly stats sheet ----------------------------------------------
+  String get weeklyStatsCaption;
+  String get consumedLabel;
+  String get burnedLabel;
+  String get balanceLabel;
+
+  /// A signed balance value (`+200` / `-200`).
+  String signedKcal(int balance);
+
+  // --- History dialog / editor -----------------------------------------
+  String get editEntryTitle;
+
+  /// `"Edit <date>"`.
+  String editEntryTitleFor(String date);
+
+  String get deleteRecordButton;
+
+  /// `"Delete "<weekday>" routine?"`.
+  String deleteRecordConfirm(String weekday);
+
+  String get exercisesFieldLabel;
+  String get historyTodayEmpty;
+  String get logAMealAction;
+
+  // --- Daily log sheet -------------------------------------------------
+  String get dailyCheckInTitle;
+  String get dailyCheckInSubtitle;
+  String get dailyLogHint;
+  String get analyzingLabel;
+
+  /// `"Saved — <summary>"`.
+  String savedSummary(String summary);
+
+  // --- AI chat ---------------------------------------------------------
+  String get aiAssistantTitle;
+  String get aiChatEmptyPrompt;
+  String get aiChatInputHint;
+  String get aiServiceUnavailable;
+  String get sendLabel;
+  String get offlineAiTitle;
+  String get offlineAiBody;
+  String get gotItButton;
+
+  // --- Profile form / validation ---------------------------------------
+  String get ageFieldLabel;
+  String get weightFieldLabel;
+  String get heightFieldLabel;
+  String get fitnessGoalLabel;
+  String get saveProfileButton;
+  String requiredField(String label);
+  String get invalidNumberMessage;
+
+  /// `"<label> must be at least 1"`.
+  String minimumOneMessage(String label);
+
+  /// Localized fitness goal label.
+  String fitnessGoal(FitnessGoal goal);
+
+  // --- Main shell ------------------------------------------------------
+  String get dailyLogFabLabel;
 }
+
+/// Structural blueprint regions used by the routine summary labels.
+///
+/// Kept in the domain layer so dictionaries can localize them without the UI
+/// leaking anatomy strings into hardcoded maps.
+enum BodyRegion { chest, armLeft, armRight, legLeft, legRight, core, head, neck }
