@@ -1,0 +1,74 @@
+# M44 Execution Changes Log — Avatar Restoration, Green Stomach, Grid & History Data
+
+Autonomous sprint following the strict TDD loop per task: feature contract →
+tests → implementation → targeted tests → backlog check-off → git commit,
+followed by a full `fvm flutter analyze` and full `fvm flutter test`. Delivered
+as per-task commits on `main` (M41–M43 convention). Verification used the
+project's pinned FVM SDK (Flutter 3.29.0).
+
+## Task 1: Restore & Harmonize Nutrition Avatar
+- `lib/ui/organisms/body_blueprint/body_segment_geometry.dart` — `_torso` now
+  renders organic, convex sides using quadratic Bézier curves. Each side bulges
+  toward the wider of its two baseline half-widths at mid-height (chest "pecs",
+  abdomen "belly") while never exceeding the baseline bounds, so the articulated
+  elbow/knee `jointGap` is retained and both tabs share the exact silhouette.
+- Bounds and hit tests are unchanged: `body_segment_geometry_test.dart` (twelve
+  paths, articulation gap, torso chain, hit tests, anchors) still passes.
+- `test/ui/goldens/body_blueprint_painter.png` regenerated for the curved torso.
+
+## Task 2: Protein & Health Green Stomach Semantics
+- `lib/core/domain/body_projection/segment_status.dart` — added
+  `SegmentStatus.healthy`.
+- `lib/ui/organisms/body_blueprint/body_segment_palette.dart` — maps `healthy`
+  to `#10B981` (fill at the standard 18% opacity).
+- `lib/core/domain/body_projection/segment_balance_calculator.dart` — added
+  `isHealthySurplus(input, score)`: the abdomen is healthy only when it is in
+  caloric surplus (score above the balanced threshold, `calorieBalance > 0`) and
+  protein is at/above target and >= the carb and fat deltas. Carb/fat-led
+  surpluses keep warning/critical, and trained muscles are never recoloured.
+- Tests: `test/features/m44_task2_green_stomach_test.dart` (palette mapping,
+  calculator semantics, diagram-builder integration for healthy vs carb-led
+  days).
+
+## Task 3: Blueprint Technical Grid Background
+- `lib/ui/organisms/body_blueprint/blueprint_grid_painter.dart` — new painter:
+  a fine `cell` lattice, brighter major lines every `majorEvery` (4) cells, and a
+  faint centre crosshair; anti-aliasing disabled for crisp technical lines.
+- `body_blueprint_diagram.dart` / `unified_body_blueprint.dart` — added
+  `showGrid` (default `true`) and render the grid as the first (backmost) layer
+  under the figure. Both tabs therefore show it automatically.
+- Tests: `test/ui/blueprint_grid_painter_test.dart` (repaint semantics, pixel
+  alphas for fine/major/axis lines vs transparent background, widget presence,
+  and disabling).
+
+## Task 4: Fix Weekly States & Calendar Data Views
+- `lib/core/utils/weekly_stats.dart` — `computeWeeklyStats` now uses the
+  persisted `DailyEntry.burned` when recorded, falling back to the flat
+  `250 kcal × exercises` estimate only when absent. Previously it always
+  recomputed from exercise names, diverging from the post-workout popup and the
+  notification check-in.
+- `lib/core/state/workout_completion_controller.dart` — optional
+  `DailyEntryRepository dailyEntries`. `confirm` upserts today's `DailyEntry`
+  with the confirmed exercise names and `summary.caloriesBurned`, preserving any
+  nutrition already recorded; `undo` clears the names/burn (also preserving
+  nutrition). This is the root cause of the calendar not marking in-app
+  workouts.
+- `lib/app.dart` — caches a single `DailyEntryRepository` and shares it between
+  the calendar, the Weekly Stats view and `WorkoutCompletionController`, so dev
+  flavor no longer forks per-call mock stores.
+- `lib/core/services/notification_service.dart` — `mealLoggedNotificationBody`
+  prefers the persisted burn for consistency.
+- Tests: `test/features/m44_task4_weekly_calendar_data_test.dart` (persisted burn
+  vs estimate; confirm upserts + preserves nutrition; undo clears; confirmed day
+  appears in `getAll()` and feeds `computeWeeklyStats`).
+
+## Task 5: Testing & Verification
+- `fvm flutter analyze` — No issues found.
+- `fvm flutter test` (full suite) — 682 passed, 0 failed (up from 664 at sprint
+  start; +18 net tests).
+- Docs: `docs/m44_adjustments_backlog.md` (all tasks checked),
+  `docs/milestone_44_plan.md`, `mobile_app/test/features/m44_adjustments.feature`.
+
+## Verification
+- Analyzer: clean (`No issues found!`).
+- Full suite: 682 tests passed.
