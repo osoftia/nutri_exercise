@@ -5,12 +5,13 @@ import '../../core/state/body_detail_controller.dart';
 import '../../core/state/projection_controller.dart';
 import '../../core/state/workout_completion_controller.dart';
 import '../../core/theme/app_theme.dart';
-import '../atoms/blueprint_fab.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/neumorphic_timeline.dart';
 import '../atoms/typography.dart';
+import '../molecules/blueprint_action_rail.dart';
 import '../molecules/body_segment_sheet.dart';
 import '../molecules/exercise_completion_sheet.dart';
+import '../molecules/routine_summary_sheet.dart';
 import '../organisms/body_blueprint/unified_body_blueprint.dart';
 import '../organisms/calendar_history_dialog.dart';
 
@@ -150,15 +151,24 @@ class _RoutinesPageState extends State<RoutinesPage> {
                             ),
                           ),
                         ),
-                        if (widget.dailyEntryRepository != null)
-                          BlueprintFab(
-                            key: const Key('body_history_fab'),
-                            tooltip: 'History',
-                            onPressed: () => showCalendarHistoryDialog(
-                              context,
-                              repository: widget.dailyEntryRepository!,
-                            ),
+                        BlueprintActionRail(
+                          showHistory: widget.dailyEntryRepository != null,
+                          historyKey: const Key('body_history_fab'),
+                          historyTooltip: 'History',
+                          onHistory: widget.dailyEntryRepository == null
+                              ? null
+                              : () => showCalendarHistoryDialog(
+                                    context,
+                                    repository: widget.dailyEntryRepository!,
+                                  ),
+                          summaryKey: const Key('routine_summary_button'),
+                          summaryTooltip: 'Daily Routine Summary',
+                          summaryIcon: Icons.fitness_center,
+                          onSummary: () => showRoutineSummarySheet(
+                            context,
+                            controller: widget.detailController,
                           ),
+                        ),
                       ],
                     ),
                   ),

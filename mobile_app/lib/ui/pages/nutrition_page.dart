@@ -17,6 +17,7 @@ import '../atoms/neumorphic_bar_chart.dart';
 import '../atoms/neumorphic_circular_progress.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
+import '../molecules/blueprint_action_rail.dart';
 import '../molecules/body_segment_sheet.dart';
 import '../molecules/quick_add_grams_dialog.dart';
 import '../organisms/body_blueprint/unified_body_blueprint.dart';
@@ -198,22 +199,7 @@ class _NutritionPageState extends State<NutritionPage> {
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const AppHeading('Nutrition', size: AppHeadingSize.h2),
-                if (widget.dailyEntryRepository != null)
-                  CustomButton(
-                    key: const Key('history_button'),
-                    label: 'History',
-                    variant: CustomButtonVariant.ghost,
-                    onPressed: () => showCalendarHistoryDialog(
-                      context,
-                      repository: widget.dailyEntryRepository!,
-                    ),
-                  ),
-              ],
-            ),
+            const AppHeading('Nutrition', size: AppHeadingSize.h2),
             const SizedBox(height: AppSpacing.lg),
             NeumorphicContainer(
               child: Row(
@@ -277,32 +263,49 @@ class _NutritionPageState extends State<NutritionPage> {
               const SizedBox(height: AppSpacing.lg),
             ],
             NeumorphicContainer(
-              child: SizedBox(
-                height: 260,
-                child: UnifiedBodyBlueprint(
-                  viewModel: _blueprintViewModel(c),
-                  showCallouts: false,
-                  onSegmentSelected: widget.bodyDetailController == null
-                      ? null
-                      : (segment) => showBodySegmentDetailSheet(
-                            context,
-                            segment: segment,
-                            controller: widget.bodyDetailController!,
-                          ),
-                ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 260,
+                      child: UnifiedBodyBlueprint(
+                        viewModel: _blueprintViewModel(c),
+                        showCallouts: false,
+                        onSegmentSelected: widget.bodyDetailController == null
+                            ? null
+                            : (segment) => showBodySegmentDetailSheet(
+                                  context,
+                                  segment: segment,
+                                  controller: widget.bodyDetailController!,
+                                ),
+                      ),
+                    ),
+                  ),
+                  if (widget.dailyEntryRepository != null ||
+                      widget.bodyDetailController != null)
+                    BlueprintActionRail(
+                      showHistory: widget.dailyEntryRepository != null,
+                      historyKey: const Key('nutrition_history_fab'),
+                      historyTooltip: 'History',
+                      onHistory: widget.dailyEntryRepository == null
+                          ? null
+                          : () => showCalendarHistoryDialog(
+                                context,
+                                repository: widget.dailyEntryRepository!,
+                              ),
+                      summaryKey: const Key('nutrition_action_button'),
+                      summaryTooltip: 'Daily Nutrition Summary',
+                      summaryIcon: Icons.restaurant_menu,
+                      onSummary: widget.bodyDetailController == null
+                          ? null
+                          : () => showNutritionSummarySheet(
+                                context,
+                                controller: widget.bodyDetailController!,
+                              ),
+                    ),
+                ],
               ),
             ),
-            if (widget.bodyDetailController != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              CustomButton(
-                key: const Key('nutrition_action_button'),
-                label: 'Daily nutrition summary',
-                onPressed: () => showNutritionSummarySheet(
-                  context,
-                  controller: widget.bodyDetailController!,
-                ),
-              ),
-            ],
             const SizedBox(height: AppSpacing.lg),
             Row(
               children: [
