@@ -360,7 +360,11 @@ class NotificationService {
     final entry = await repository.getByDate(today);
     final exercises = entry?.exercises ?? const [];
     if (exercises.isEmpty) return 'Remember to do your routine!';
-    final burned = exercises.length * caloriesBurnedPerExercise;
+    // Prefer the persisted burn (from a check-in / in-app confirmation); fall
+    // back to the flat estimate only when it was never recorded.
+    final burned = (entry?.burned ?? 0) > 0
+        ? entry!.burned
+        : exercises.length * caloriesBurnedPerExercise;
     return "You've recovered $recovered of the $burned calories you burned!";
   }
 

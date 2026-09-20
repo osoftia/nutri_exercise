@@ -36,9 +36,22 @@ List<WeeklyStat> computeWeeklyStats(List<DailyEntry> entries, {DateTime? now}) {
       WeeklyStat(
         date: day,
         consumed: entry?.calories ?? 0,
-        burned: (entry?.exercises.length ?? 0) * caloriesBurnedPerExercise,
+        burned: _burnedFor(entry),
       ),
     );
   }
   return stats;
+}
+
+/// The calories burned on a day.
+///
+/// The persisted [DailyEntry.burned] (recorded by an exercise check-in or an
+/// in-app workout confirmation) is authoritative; only when it is absent do we
+/// fall back to the flat per-exercise estimate. This keeps the historical
+/// summary consistent with the post-workout popup instead of silently
+/// recomputing a different number.
+int _burnedFor(DailyEntry? entry) {
+  if (entry == null) return 0;
+  if (entry.burned > 0) return entry.burned;
+  return entry.exercises.length * caloriesBurnedPerExercise;
 }

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../constants/tamagotchi_groups.dart';
 import '../data/body_detail_repository.dart';
+import '../data/daily_entry_repository.dart';
 import '../domain/popups/exercise_completion.dart';
 import '../models/daily_entry.dart';
 import '../services/workout_summary_calculator.dart';
@@ -19,13 +20,21 @@ class WorkoutCompletionController extends ChangeNotifier {
     WorkoutSummaryCalculator calculator = const WorkoutSummaryCalculator(),
     MuscleTamagotchiState? tamagotchi,
     BodyDetailRepository? repository,
+    DailyEntryRepository? dailyEntries,
   })  : _calculator = calculator,
         _tamagotchi = tamagotchi,
-        _repository = repository;
+        _repository = repository,
+        _dailyEntries = dailyEntries;
 
   final WorkoutSummaryCalculator _calculator;
   final MuscleTamagotchiState? _tamagotchi;
   final BodyDetailRepository? _repository;
+
+  /// Optional calendar/weekly-summary store. When attached, every confirmation
+  /// also upserts today's [DailyEntry] (exercise names + burned calories) so the
+  /// calendar markers and the Weekly Stats view reflect in-app workouts, not
+  /// only the notification check-in path.
+  final DailyEntryRepository? _dailyEntries;
 
   ExerciseCompletionSummary? _summary;
   bool _isConfirming = false;
@@ -52,6 +61,7 @@ class WorkoutCompletionController extends ChangeNotifier {
     _confirmed = exercises;
     _isConfirmed = exercises.isNotEmpty;
     _applyRecovery(exercises);
+    await _syncDailyEntry(exercises);
 
     _isConfirming = false;
     notifyListeners();
@@ -63,6 +73,7 @@ class WorkoutCompletionController extends ChangeNotifier {
     if (!_isConfirmed) return;
 
     await _repository?.saveCompletedExercises(const []);
+    await _clearDailyEntry();
 
     final tamagotchi = _tamagotchi;
     final summary = _summary;
@@ -104,6 +115,32 @@ class WorkoutCompletionController extends ChangeNotifier {
     final exercises = await repository.loadCompletedExercises();
     if (exercises.isEmpty) return;
     present(exercises);
+  }
+
+  /// Upserts today's calendar entry with the confirmed exercise names and the
+  /// burned calories, preserving any nutrition already recorded for the day.
+  Future<void> _syncDailyEntry(List<CompletedExercise> exercises) async {
+    final repository = _dailyEntries;
+    if (repository == null) return;
+    final today = DailyEntry.dateKey(DateTime.now());
+    final existing = await repository.getByDate(today);
+    await repository.save(
+      (existing ?? DailyEntry(date: today)).copyWith(
+        exercises: [for (final exercise in exercises) exercise.name],
+        burned: _summary?.caloriesBurned ?? 0,
+      ),
+    );
+  }
+
+  /// Clears today's exercise names and burned calories (preserving nutrition)
+  /// when a confirmation is reversed.
+  Future<void> _clearDailyEntry() async {
+    final repository = _dailyEntries;
+    if (repository == null) return;
+    final today = DailyEntry.dateKey(DateTime.now());
+    final existing = await repository.getByDate(today);
+    if (existing == null) return;
+    await repository.save(existing.copyWith(exercises: const [], burned: 0));
   }
 
   ExerciseCompletionSummary _summarize(List<CompletedExercise> exercises) {

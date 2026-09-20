@@ -107,9 +107,17 @@ class _NutriAppState extends State<NutriApp> {
       ? MockDailyLogRepository()
       : LocalDailyLogRepository();
 
-  DailyEntryRepository _dailyEntryRepository() => widget.config.useMockApi
-      ? MockDailyEntryRepository()
-      : LocalDailyEntryRepository();
+  DailyEntryRepository? _dailyEntryRepositoryInstance;
+
+  /// Returns the single shared calendar/weekly-summary repository.
+  ///
+  /// Cached so the calendar view, the Weekly Stats view and the workout
+  /// confirmation all read and write the *same* store (in dev/mock flavors a
+  /// per-call instance would otherwise leave the calendar empty).
+  DailyEntryRepository _dailyEntryRepository() =>
+      _dailyEntryRepositoryInstance ??= (widget.config.useMockApi
+          ? MockDailyEntryRepository()
+          : LocalDailyEntryRepository());
 
   Future<void> _bootstrapNotifications() async {
     try {
@@ -170,10 +178,14 @@ class _NutriAppState extends State<NutriApp> {
     );
 
     // Confirms workouts, persists the completions and mutates the shared
-    // Tamagotchi so the avatar reflects the recovery immediately.
+    // Tamagotchi so the avatar reflects the recovery immediately. It also
+    // upserts today's calendar entry so the Weekly Stats and calendar markers
+    // reflect the workout.
+    final dailyEntryRepository = _dailyEntryRepository();
     final workoutCompletionController = WorkoutCompletionController(
       tamagotchi: sharedMuscleTamagotchiState,
       repository: bodyDetailRepository,
+      dailyEntries: dailyEntryRepository,
     );
 
     // The AI assistant reaches the C# .NET API (and, through it, the RAG
@@ -196,7 +208,7 @@ class _NutriAppState extends State<NutriApp> {
         aiChatController: aiChatController,
         notificationNav: _notificationNav,
         dailyLogController: _dailyLogController,
-        dailyEntryRepository: _dailyEntryRepository(),
+        dailyEntryRepository: dailyEntryRepository,
         notificationService: _notificationService,
         syncExerciseReminderPayload: widget.config.enableNotifications,
       ),
