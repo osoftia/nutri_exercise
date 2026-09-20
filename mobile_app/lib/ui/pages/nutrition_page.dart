@@ -6,6 +6,8 @@ import '../../core/data/daily_entry_repository.dart';
 import '../../core/domain/body_projection/body_diagram_view_model.dart';
 import '../../core/domain/body_projection/nutrition_body_view_model.dart';
 import '../../core/domain/body_projection/nutrition_log.dart';
+import '../../core/domain/i18n/app_strings.dart';
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/domain/nutrition/portion_scaler.dart';
 import '../../core/models/food_entry.dart';
 import '../../core/services/notification_service.dart';
@@ -112,6 +114,17 @@ class _NutritionPageState extends State<NutritionPage> {
     _caloriesController.clear();
   }
 
+  /// Localized label for a preset quick-add, keyed by its canonical name.
+  static String _quickAddLabel(AppStrings strings, FoodEntry entry) =>
+      switch (entry.name) {
+        'Oatmeal & Berries' => strings.quickAddOatmealBerries,
+        'Grilled Chicken Bowl' => strings.quickAddGrilledChickenBowl,
+        'Salmon & Quinoa' => strings.quickAddSalmonQuinoa,
+        'Greek Yogurt & Almonds' => strings.quickAddGreekYogurtAlmonds,
+        'Protein Shake' => strings.quickAddProteinShake,
+        _ => entry.name,
+      };
+
   /// Intercepts a preset quick-add: asks for the portion in grams (default
   /// 100 g) and logs the proportionally scaled entry.
   Future<void> _addQuick(FoodEntry entry) async {
@@ -195,11 +208,12 @@ class _NutritionPageState extends State<NutritionPage> {
       listenable: widget.controller,
       builder: (context, _) {
         final c = widget.controller;
+        final strings = LocalizationScope.stringsOf(context);
         final macroTargets = c.macroTargets;
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           children: [
-            const AppHeading('Nutrition', size: AppHeadingSize.h2),
+            AppHeading(strings.nutritionTitle, size: AppHeadingSize.h2),
             const SizedBox(height: AppSpacing.lg),
             NeumorphicContainer(
               child: Row(
@@ -359,7 +373,7 @@ class _NutritionPageState extends State<NutritionPage> {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            const AppText('Quick Add'),
+            AppText(strings.quickAddTitle),
             const SizedBox(height: AppSpacing.sm),
             Wrap(
               spacing: AppSpacing.sm,
@@ -368,7 +382,7 @@ class _NutritionPageState extends State<NutritionPage> {
                 for (final entry in _quickAdds)
                   CustomButton(
                     key: Key('quick_add_${entry.name}'),
-                    label: entry.name,
+                    label: _quickAddLabel(strings, entry),
                     variant: CustomButtonVariant.ghost,
                     onPressed: () => _addQuick(entry),
                   ),
