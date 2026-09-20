@@ -6,6 +6,7 @@ import '../../core/services/notification_service.dart';
 import '../../core/state/ai_chat_controller.dart';
 import '../../core/state/body_detail_controller.dart';
 import '../../core/state/daily_log_controller.dart';
+import '../../core/state/language_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/state/notification_navigation_controller.dart';
 import '../../core/state/nutrition_controller.dart';
@@ -40,6 +41,7 @@ class MainShellPage extends StatefulWidget {
     this.workoutCompletionController,
     this.dailyEntryRepository,
     this.notificationService,
+    this.languageController,
     this.syncExerciseReminderPayload = false,
   });
 
@@ -54,6 +56,9 @@ class MainShellPage extends StatefulWidget {
   final WorkoutCompletionController? workoutCompletionController;
   final DailyEntryRepository? dailyEntryRepository;
   final NotificationService? notificationService;
+
+  /// Optional language controller; enables the Profile language switcher.
+  final LanguageController? languageController;
 
   /// When true, the 9 PM reminder is rescheduled with the planned-exercise
   /// payload once the blueprint overview has loaded.
@@ -80,7 +85,10 @@ class _MainShellPageState extends State<MainShellPage> {
       bodyDetailController: widget.bodyDetailController,
     ),
     SchedulePage(controller: widget.scheduleController),
-    ProfilePage(controller: widget.profileController),
+    ProfilePage(
+      controller: widget.profileController,
+      languageController: widget.languageController,
+    ),
   ];
 
   @override

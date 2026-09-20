@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/user_profile.dart';
+import '../../core/state/language_controller.dart';
 import '../../core/state/user_profile_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
+import '../molecules/language_switcher.dart';
 
 /// Profile tab: neumorphic form to view and edit personal details,
-/// backed by [UserProfileController] for immediate state reflection.
+/// backed by [UserProfileController] for immediate state reflection, plus the
+/// reactive language switcher when a [LanguageController] is provided.
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key, required this.controller});
+  const ProfilePage({super.key, required this.controller, this.languageController});
 
   final UserProfileController controller;
+
+  /// Optional language controller; enables the language switcher.
+  final LanguageController? languageController;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -73,13 +80,18 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = LocalizationScope.stringsOf(context);
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.xl),
       children: [
-        const AppHeading('Profile', size: AppHeadingSize.h2),
+        AppHeading(strings.profileTitle, size: AppHeadingSize.h2),
         const SizedBox(height: AppSpacing.xl),
         Center(child: _Avatar(controller: widget.controller)),
         const SizedBox(height: AppSpacing.xl),
+        if (widget.languageController != null) ...[
+          LanguageSwitcher(controller: widget.languageController!),
+          const SizedBox(height: AppSpacing.xl),
+        ],
         NeumorphicContainer(
           child: Form(
             key: _formKey,

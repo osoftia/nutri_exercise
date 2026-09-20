@@ -12,13 +12,17 @@ import 'core/data/local_body_detail_repository.dart';
 import 'core/data/local_daily_entry_repository.dart';
 import 'core/data/local_daily_log_repository.dart';
 import 'core/data/local_profile_repository.dart';
+import 'core/data/local_language_repository.dart';
 import 'core/data/local_projection_repository.dart';
 import 'core/data/local_tamagotchi_progress_repository.dart';
 import 'core/data/nutrition_repository.dart';
 import 'core/data/profile_repository.dart';
 import 'core/data/projection_repository.dart';
+import 'core/data/language_repository.dart';
 import 'core/data/schedule_repository.dart';
+import 'core/domain/i18n/localization_scope.dart';
 import 'core/mocks/mock_daily_entry_repository.dart';
+import 'core/mocks/mock_language_repository.dart';
 import 'core/mocks/mock_daily_log_repository.dart';
 import 'core/mocks/mock_body_detail_repository.dart';
 import 'core/mocks/mock_nutrition_repository.dart';
@@ -32,6 +36,7 @@ import 'core/services/rule_based_muscle_gap_advisor.dart';
 import 'core/services/smart_logger.dart';
 import 'core/state/body_detail_controller.dart';
 import 'core/state/daily_log_controller.dart';
+import 'core/state/language_controller.dart';
 import 'core/state/notification_navigation_controller.dart';
 import 'core/state/nutrition_controller.dart';
 import 'core/state/projection_controller.dart';
@@ -67,11 +72,20 @@ class _NutriAppState extends State<NutriApp> {
 
   late final DailyLogController _dailyLogController;
   late final NotificationService _notificationService;
+  late final LanguageController _languageController;
 
   @override
   void initState() {
     super.initState();
     configureLocalTimeZone();
+
+    // Restore the persisted language before the first frame so the app opens in
+    // the user's chosen language (falling back to English).
+    final LanguageRepository languageRepository = widget.config.useMockApi
+        ? MockLanguageRepository()
+        : LocalLanguageRepository();
+    _languageController = LanguageController(repository: languageRepository);
+    unawaited(_languageController.restore());
     final dailyLogRepository = _dailyLogRepository();
     _dailyLogController = DailyLogController(
       repository: dailyLogRepository,
@@ -198,19 +212,26 @@ class _NutriAppState extends State<NutriApp> {
       title: 'NutriExercise',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
-      home: MainShellPage(
-        profileController: profileController,
-        scheduleController: scheduleController,
-        nutritionController: nutritionController,
-        projectionController: projectionController,
-        bodyDetailController: bodyDetailController,
-        workoutCompletionController: workoutCompletionController,
-        aiChatController: aiChatController,
-        notificationNav: _notificationNav,
-        dailyLogController: _dailyLogController,
-        dailyEntryRepository: dailyEntryRepository,
-        notificationService: _notificationService,
-        syncExerciseReminderPayload: widget.config.enableNotifications,
+      home: ListenableBuilder(
+        listenable: _languageController,
+        builder: (context, _) => LocalizationScope(
+          language: _languageController.language,
+          child: MainShellPage(
+            profileController: profileController,
+            scheduleController: scheduleController,
+            nutritionController: nutritionController,
+            projectionController: projectionController,
+            bodyDetailController: bodyDetailController,
+            workoutCompletionController: workoutCompletionController,
+            aiChatController: aiChatController,
+            notificationNav: _notificationNav,
+            dailyLogController: _dailyLogController,
+            dailyEntryRepository: dailyEntryRepository,
+            notificationService: _notificationService,
+            languageController: _languageController,
+            syncExerciseReminderPayload: widget.config.enableNotifications,
+          ),
+        ),
       ),
     );
   }
