@@ -20,7 +20,7 @@ class DatabaseHelper {
   DatabaseHelper({Database? database}) : _databaseOverride = database;
 
   static const String _dbName = 'nutri_exercise.db';
-  static const int _dbVersion = 10;
+  static const int _dbVersion = 11;
 
   final Database? _databaseOverride;
   Database? _database;
@@ -87,6 +87,7 @@ class DatabaseHelper {
     await _createDailyEntryTable(db);
     await _createNotificationHistoryTables(db);
     await _createBodyDetailTables(db);
+    await _createSettingsTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -131,6 +132,19 @@ class DatabaseHelper {
     if (oldVersion < 10) {
       await ensureTamagotchiMassColumn(db);
     }
+    if (oldVersion < 11) {
+      await _createSettingsTable(db);
+    }
+  }
+
+  /// Creates the generic key/value `app_settings` table (version 11).
+  Future<void> _createSettingsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS app_settings (
+        setting_key TEXT PRIMARY KEY,
+        setting_value TEXT NOT NULL
+      )
+    ''');
   }
 
   /// Adds the `mass_json` column to `tamagotchi_progress` (version 10).
@@ -433,6 +447,28 @@ class DatabaseHelper {
   Future<void> deleteDailyEntry(String date) async {
     final db = await database;
     await db.delete('daily_entries', where: 'date = ?', whereArgs: [date]);
+  }
+
+  /// Returns the raw value stored for [key] in `app_settings`, or `null`.
+  Future<String?> getSetting(String key) async {
+    final db = await database;
+    final rows = await db.query(
+      'app_settings',
+      where: 'setting_key = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first['setting_value'] as String?;
+  }
+
+  /// Upserts the raw [value] for [key] in `app_settings`.
+  Future<void> upsertSetting(String key, String value) async {
+    final db = await database;
+    await db.insert(
+      'app_settings',
+      {'setting_key': key, 'setting_value': value},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   /// Returns the single tamagotchi progress row, or `null` when none is saved.
