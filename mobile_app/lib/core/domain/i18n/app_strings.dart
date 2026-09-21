@@ -1,3 +1,4 @@
+import '../../models/symptom_log.dart';
 import '../../models/user_profile.dart';
 import '../popups/exercise_completion.dart';
 import 'app_language.dart';
@@ -87,6 +88,26 @@ abstract class AppStrings {
 
   /// Localized agenda title (`"Mon, 5 May"` / `"lun, 5 de mayo"`).
   String agendaTitle(DateTime date);
+
+  /// Long-press tooltip for the previous-month calendar control.
+  String get previousMonthTooltip;
+
+  /// Long-press tooltip for the next-month calendar control.
+  String get nextMonthTooltip;
+
+  // --- Symptom tracker --------------------------------------------------
+  String get symptomTrackerTitle;
+  String get symptomTrackerSubtitle;
+  String get symptomNoneLogged;
+
+  /// Localized name of a tracked [type] (e.g. `Pain`, `Energy`).
+  String symptomLabel(SymptomType type);
+
+  /// Long-press tooltip explaining what a [type] control tracks.
+  String symptomTooltip(SymptomType type);
+
+  /// Localized severity label for a `0..3` [level].
+  String symptomLevel(int level);
 
   // --- Nutrition dashboard ---------------------------------------------
   String get reactiveNotificationsTitle;

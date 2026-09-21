@@ -1,3 +1,4 @@
+import '../../models/symptom_log.dart';
 import '../../models/user_profile.dart';
 import '../popups/exercise_completion.dart';
 import 'app_language.dart';
@@ -122,6 +123,40 @@ class SpanishStrings extends AppStrings {
   String agendaTitle(DateTime date) =>
       '${_weekdayShort[date.weekday - 1]}, ${date.day} de '
       '${_months[date.month - 1]}';
+
+  @override
+  String get previousMonthTooltip => 'Mes anterior';
+  @override
+  String get nextMonthTooltip => 'Mes siguiente';
+
+  // --- Symptom tracker --------------------------------------------------
+  @override
+  String get symptomTrackerTitle => 'Síntomas diarios';
+  @override
+  String get symptomTrackerSubtitle =>
+      'Mantén pulsado un icono para ver qué registra';
+  @override
+  String get symptomNoneLogged => 'No hay síntomas registrados hoy.';
+
+  @override
+  String symptomLabel(SymptomType type) => switch (type) {
+        SymptomType.pain => 'Dolor',
+        SymptomType.discomfort => 'Molestias corporales',
+        SymptomType.energy => 'Energía',
+        SymptomType.stress => 'Estrés',
+      };
+
+  @override
+  String symptomTooltip(SymptomType type) =>
+      '${symptomLabel(type)} — toca para cambiar la intensidad';
+
+  @override
+  String symptomLevel(int level) => switch (level) {
+        0 => 'Ninguno',
+        1 => 'Leve',
+        2 => 'Moderado',
+        _ => 'Severo',
+      };
 
   // --- Nutrition dashboard ---------------------------------------------
   @override

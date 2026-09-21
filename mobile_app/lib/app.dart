@@ -14,12 +14,14 @@ import 'core/data/local_daily_log_repository.dart';
 import 'core/data/local_profile_repository.dart';
 import 'core/data/local_language_repository.dart';
 import 'core/data/local_projection_repository.dart';
+import 'core/data/local_symptom_repository.dart';
 import 'core/data/local_tamagotchi_progress_repository.dart';
 import 'core/data/nutrition_repository.dart';
 import 'core/data/profile_repository.dart';
 import 'core/data/projection_repository.dart';
 import 'core/data/language_repository.dart';
 import 'core/data/schedule_repository.dart';
+import 'core/data/symptom_repository.dart';
 import 'core/domain/i18n/localization_scope.dart';
 import 'core/mocks/mock_daily_entry_repository.dart';
 import 'core/mocks/mock_language_repository.dart';
@@ -29,6 +31,7 @@ import 'core/mocks/mock_nutrition_repository.dart';
 import 'core/mocks/mock_profile_repository.dart';
 import 'core/mocks/mock_projection_repository.dart';
 import 'core/mocks/mock_schedule_repository.dart';
+import 'core/mocks/mock_symptom_repository.dart';
 import 'core/services/log_parse_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/rule_based_body_projection_forecaster.dart';
@@ -41,6 +44,7 @@ import 'core/state/notification_navigation_controller.dart';
 import 'core/state/nutrition_controller.dart';
 import 'core/state/projection_controller.dart';
 import 'core/state/schedule_controller.dart';
+import 'core/state/symptom_controller.dart';
 import 'core/state/user_profile_controller.dart';
 import 'core/state/workout_completion_controller.dart';
 import 'core/state/muscle_tamagotchi_state.dart';
@@ -133,6 +137,15 @@ class _NutriAppState extends State<NutriApp> {
           ? MockDailyEntryRepository()
           : LocalDailyEntryRepository());
 
+  SymptomRepository? _symptomRepositoryInstance;
+
+  /// Returns the single shared symptom repository (SQLite in real flavors,
+  /// in-memory in dev/mock flavors).
+  SymptomRepository _symptomRepository() =>
+      _symptomRepositoryInstance ??= (widget.config.useMockApi
+          ? MockSymptomRepository()
+          : LocalSymptomRepository());
+
   Future<void> _bootstrapNotifications() async {
     try {
       await _notificationService.initialize();
@@ -164,6 +177,11 @@ class _NutriAppState extends State<NutriApp> {
     final ScheduleRepository scheduleRepository = MockScheduleRepository();
     final scheduleController = ScheduleController(
       repository: scheduleRepository,
+    );
+
+    // Daily symptom severities are SQLite-backed (in-memory in dev/mock).
+    final symptomController = SymptomController(
+      repository: _symptomRepository(),
     );
 
     // Nutrition is mock-seeded for M14; SQLite persistence is a follow-up.
@@ -219,6 +237,7 @@ class _NutriAppState extends State<NutriApp> {
           child: MainShellPage(
             profileController: profileController,
             scheduleController: scheduleController,
+            symptomController: symptomController,
             nutritionController: nutritionController,
             projectionController: projectionController,
             bodyDetailController: bodyDetailController,

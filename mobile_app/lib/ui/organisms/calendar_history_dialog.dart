@@ -8,6 +8,7 @@ import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/daily_entry.dart';
 import '../../core/state/daily_entry_controller.dart';
 import '../../core/theme/app_theme.dart';
+import '../atoms/circular_icon_button.dart';
 import '../atoms/custom_button.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
@@ -142,9 +143,11 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
   Widget _buildMonthHeader(AppStrings strings) {
     return Row(
       children: [
-        IconButton(
+        CircularIconButton(
           key: const Key('history_prev_month'),
-          icon: const Icon(Icons.chevron_left),
+          icon: Icons.chevron_left,
+          tooltip: strings.previousMonthTooltip,
+          size: 48,
           onPressed: _previousMonth,
         ),
         Expanded(
@@ -158,9 +161,11 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
             ),
           ),
         ),
-        IconButton(
+        CircularIconButton(
           key: const Key('history_next_month'),
-          icon: const Icon(Icons.chevron_right),
+          icon: Icons.chevron_right,
+          tooltip: strings.nextMonthTooltip,
+          size: 48,
           onPressed: _nextMonth,
         ),
       ],

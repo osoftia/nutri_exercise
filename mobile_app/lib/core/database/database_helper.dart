@@ -10,6 +10,7 @@ import '../models/diet_models.dart';
 import '../models/meal_action.dart';
 import '../models/projection_models.dart';
 import '../models/routine_models.dart';
+import '../models/symptom_log.dart';
 import '../models/tamagotchi_progress.dart';
 import '../models/user_profile.dart';
 
@@ -20,7 +21,7 @@ class DatabaseHelper {
   DatabaseHelper({Database? database}) : _databaseOverride = database;
 
   static const String _dbName = 'nutri_exercise.db';
-  static const int _dbVersion = 11;
+  static const int _dbVersion = 12;
 
   final Database? _databaseOverride;
   Database? _database;
@@ -88,6 +89,7 @@ class DatabaseHelper {
     await _createNotificationHistoryTables(db);
     await _createBodyDetailTables(db);
     await _createSettingsTable(db);
+    await _createSymptomTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -135,6 +137,23 @@ class DatabaseHelper {
     if (oldVersion < 11) {
       await _createSettingsTable(db);
     }
+    if (oldVersion < 12) {
+      await _createSymptomTable(db);
+    }
+  }
+
+  /// Creates the `symptom_logs` table (version 12): one severity row per date
+  /// and symptom kind.
+  Future<void> _createSymptomTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS symptom_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        symptom TEXT NOT NULL,
+        level INTEGER NOT NULL,
+        UNIQUE(date, symptom)
+      )
+    ''');
   }
 
   /// Creates the generic key/value `app_settings` table (version 11).
@@ -447,6 +466,33 @@ class DatabaseHelper {
   Future<void> deleteDailyEntry(String date) async {
     final db = await database;
     await db.delete('daily_entries', where: 'date = ?', whereArgs: [date]);
+  }
+
+  /// Returns every symptom reading logged for [date].
+  Future<List<Map<String, Object?>>> getSymptomLogs(String date) async {
+    final db = await database;
+    return db.query(
+      'symptom_logs',
+      where: 'date = ?',
+      whereArgs: [date],
+      orderBy: 'id',
+    );
+  }
+
+  /// Returns every stored symptom reading.
+  Future<List<Map<String, Object?>>> getAllSymptomLogs() async {
+    final db = await database;
+    return db.query('symptom_logs', orderBy: 'date, id');
+  }
+
+  /// Upserts one symptom reading for its `(date, symptom)` pair.
+  Future<void> upsertSymptomLog(SymptomLog log) async {
+    final db = await database;
+    await db.insert(
+      'symptom_logs',
+      log.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   /// Returns the raw value stored for [key] in `app_settings`, or `null`.

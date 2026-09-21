@@ -4,16 +4,22 @@ import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/schedule_event.dart';
 import '../../core/state/schedule_controller.dart';
+import '../../core/state/symptom_controller.dart';
 import '../../core/theme/app_theme.dart';
+import '../atoms/circular_icon_button.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
+import '../molecules/symptom_tracker.dart';
 
 /// Schedule tab: interactive neumorphic calendar + dynamic daily agenda,
 /// backed by [ScheduleController] for date-selection state.
 class SchedulePage extends StatefulWidget {
-  const SchedulePage({super.key, required this.controller});
+  const SchedulePage({super.key, required this.controller, this.symptomController});
 
   final ScheduleController controller;
+
+  /// Optional symptom tracker controller; enables the daily symptoms view.
+  final SymptomController? symptomController;
 
   @override
   State<SchedulePage> createState() => _SchedulePageState();
@@ -27,6 +33,7 @@ class _SchedulePageState extends State<SchedulePage> {
   void initState() {
     super.initState();
     widget.controller.load();
+    widget.symptomController?.load();
   }
 
   @override
@@ -40,10 +47,14 @@ class _SchedulePageState extends State<SchedulePage> {
           padding: const EdgeInsets.all(AppSpacing.xl),
           children: [
             AppHeading(strings.scheduleTitle, size: AppHeadingSize.h2),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.xxl),
             _buildCalendar(context, month, strings),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.xxl),
             _buildAgenda(context, strings),
+            if (widget.symptomController != null) ...[
+              const SizedBox(height: AppSpacing.xxl),
+              SymptomTracker(controller: widget.symptomController!),
+            ],
           ],
         );
       },
@@ -61,15 +72,17 @@ class _SchedulePageState extends State<SchedulePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
+              CircularIconButton(
                 key: const Key('prev_month_button'),
-                icon: const Icon(Icons.chevron_left),
+                icon: Icons.chevron_left,
+                tooltip: strings.previousMonthTooltip,
                 onPressed: widget.controller.previousMonth,
               ),
               AppText(label, style: Theme.of(context).textTheme.titleLarge),
-              IconButton(
+              CircularIconButton(
                 key: const Key('next_month_button'),
-                icon: const Icon(Icons.chevron_right),
+                icon: Icons.chevron_right,
+                tooltip: strings.nextMonthTooltip,
                 onPressed: widget.controller.nextMonth,
               ),
             ],

@@ -6,6 +6,7 @@ import 'package:nutri_mobile_app/core/domain/i18n/english_strings.dart';
 import 'package:nutri_mobile_app/core/domain/i18n/localization_scope.dart';
 import 'package:nutri_mobile_app/core/domain/i18n/spanish_strings.dart';
 import 'package:nutri_mobile_app/core/models/user_profile.dart';
+import 'package:nutri_mobile_app/core/models/symptom_log.dart';
 import 'package:nutri_mobile_app/core/domain/popups/exercise_completion.dart';
 
 /// A widget that renders **every** [AppStrings] getter, so a single pump proves
@@ -60,6 +61,15 @@ class _AllStringsProbe extends StatelessWidget {
       s.weekdayNarrow(1),
       s.weekdayShort(1),
       s.agendaTitle(now),
+      s.previousMonthTooltip,
+      s.nextMonthTooltip,
+      s.symptomTrackerTitle,
+      s.symptomTrackerSubtitle,
+      s.symptomNoneLogged,
+      s.symptomLabel(SymptomType.pain),
+      s.symptomLabel(SymptomType.energy),
+      s.symptomTooltip(SymptomType.pain),
+      s.symptomLevel(2),
       s.reactiveNotificationsTitle,
       s.reactiveNotificationsSubtitle,
       s.exerciseNotButton,
@@ -245,6 +255,15 @@ List<String> _sampleKeys(AppStrings s) {
     s.weekdayNarrow(1),
     s.weekdayShort(1),
     s.agendaTitle(DateTime(2026, 8, 5)),
+    s.previousMonthTooltip,
+    s.nextMonthTooltip,
+    s.symptomTrackerTitle,
+    s.symptomTrackerSubtitle,
+    s.symptomNoneLogged,
+    s.symptomLabel(SymptomType.pain),
+    s.symptomLabel(SymptomType.energy),
+    s.symptomTooltip(SymptomType.pain),
+    s.symptomLevel(2),
     s.reactiveNotificationsTitle,
     s.reactiveNotificationsSubtitle,
     s.exerciseNotButton,
