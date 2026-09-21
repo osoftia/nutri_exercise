@@ -1,0 +1,68 @@
+# i18n Full Coverage Execution Changes Log — 100% App Localization
+
+Autonomous sweep following the TDD loop. Builds on the i18n infrastructure sprint
+(`AppLanguage`, `LanguageController`, `AppStrings`, `LocalizationScope`,
+`LanguageSwitcher`) and removes every remaining hardcoded UI literal. All work
+committed to `main`; verification used the pinned FVM SDK (Flutter 3.29.0).
+
+## Task 1: Audit & Expand Dictionaries
+- `lib/core/domain/i18n/app_strings.dart` — contract expanded from ~35 to ~120
+  typed members, grouped by surface (routines, schedule, nutrition dashboard,
+  workout completion, food/stomach sheet, exercise detail, routine summary,
+  weekly stats, history dialog/editor, daily log, AI chat, profile form,
+  main shell). Added parameterized formatters (`caloriesOfTarget`,
+  `macroOfTarget`, `setsAndReps`, `setsRepsLoad`, `macroSummary`, `itemCount`,
+  `kcal`, `kcalAmount`, `setsOfPlanned`, `setsProgress`, `volumeOfPlanned`,
+  `completedOfPlanned`, `signedKcal`, `recoveryLabel`, `regionLabel`,
+  `requiredField`, `minimumOneMessage`, `fitnessGoal`, `monthYear`,
+  `weekdayNarrow`, `weekdayShort`, `agendaTitle`, `editEntryTitleFor`,
+  `deleteRecordConfirm`, `savedSummary`) plus the new `BodyRegion` enum.
+- `lib/core/domain/i18n/english_strings.dart` & `spanish_strings.dart` — full
+  implementations; `RecoveryLevel` / `FitnessGoal` reuse the existing domain
+  enums (`core/domain/popups/exercise_completion.dart`,
+  `core/models/user_profile.dart`).
+
+## Task 2: Replace Hardcoded Strings in UI Components
+Localized in place (all via `LocalizationScope.stringsOf(context)`):
+- Pages: `routines_page.dart` (title, Body Projection, workout toggle),
+  `nutrition_page.dart` (title, calorie summary, reactive-notification toggle,
+  EXERCISE NOT / Test Notifications, Protein/Carbs/Fat rings, Weekly Calories,
+  quick-add title, log-a-meal fields + button), `schedule_page.dart` (title,
+  month/agenda labels, weekday headers, empty agenda),
+  `profile_page.dart` (all field labels, goal dropdown, save button, every
+  validation message), `main_shell_page.dart` (app title, Weekly Stats/History
+  tooltips, Daily Log FAB).
+- Sheets/dialogs: `quick_add_grams_dialog.dart`, `body_food_detail_sheet.dart`
+  (title, captions, macro/calorie totals, item count, delete tooltip),
+  `body_exercise_detail_sheet.dart` (empty states, sets progress, volume,
+  AI suggestion), `exercise_completion_sheet.dart` (title, sets/reps, burned
+  calories, recovery chips, done), `routine_summary_sheet.dart` (title, caption,
+  empty state, region labels via `regionForSegment`, totals),
+  `weekly_stats_sheet.dart` (header, caption, consumed/burned/balance tiles),
+  `calendar_history_dialog.dart` (history title, month label, weekday header,
+  editor title, macro fields, delete/save), `daily_log_sheet.dart` (title,
+  subtitle, hint, cancel/analyzing/save, saved snackbar),
+  `ai_chat_sheet.dart` (title, empty prompt, hint, close/send, availability
+  error), `offline_ai_dialog.dart`.
+- Removed the redundant `LanguageSectionHeading` from `language_switcher.dart`.
+- Intentionally left untranslated: the brand name `NutriExercise` and physical
+  unit suffixes (`kg`, `cm`, `g`), which are not language-specific words.
+
+## Task 3: Comprehensive Language Switcher Test
+- `test/i18n/full_coverage_test.dart` — an `_AllStringsProbe` widget renders a
+  representative value for **every** `AppStrings` getter; unit tests assert no
+  blank keys in either language and that English/Spanish differ on core labels;
+  widget tests pump the probe in each language.
+- `test/features/i18n_full_coverage_widget_test.dart` — live `LanguageController`
+  switch tests asserting the Nutrition, Routines and Profile tabs (including form
+  validation messages) fully re-render in Spanish.
+
+## Task 4: Testing & Verification
+- `fvm flutter analyze` — No issues found.
+- `fvm flutter test` (full suite) — 723 passed, 0 failed.
+- Docs: `docs/i18n_full_coverage_backlog.md` (all checked),
+  `docs/i18n_full_coverage_plan.md`.
+
+## Verification
+- Analyzer: clean (`No issues found!`).
+- Full suite: 723 tests passed (up from 715 at sweep start; +8 net tests).
