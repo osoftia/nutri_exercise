@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 /// Actions that a tapped (or launch) notification can request from the UI.
-enum NotificationAction { openDailyLog, exerciseCompleted }
+enum NotificationAction { openDailyLog, exerciseCompleted, openSymptoms }
 
 /// Holds a pending notification-triggered navigation request.
 ///
@@ -20,6 +20,12 @@ class NotificationNavigationController extends ChangeNotifier {
   /// Requests the daily log sheet to be shown.
   void requestDailyLog() {
     _pending = NotificationAction.openDailyLog;
+    notifyListeners();
+  }
+
+  /// Requests the daily symptom tracker to be shown.
+  void requestSymptoms() {
+    _pending = NotificationAction.openSymptoms;
     notifyListeners();
   }
 

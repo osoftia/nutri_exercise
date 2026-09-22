@@ -102,6 +102,8 @@ class _NutriAppState extends State<NutriApp> {
     _notificationService.setOnResponse((actionId, payload) {
       if (actionId == NotificationService.exerciseYesActionId) {
         _notificationNav.requestExerciseCompletion(payload: payload);
+      } else if (actionId == NotificationService.symptomCheckInActionId) {
+        _notificationNav.requestSymptoms();
       } else {
         _notificationNav.requestDailyLog();
       }
@@ -153,6 +155,10 @@ class _NutriAppState extends State<NutriApp> {
         await _notificationService.scheduleDailyReminder();
         await _notificationService.scheduleDailyMealReminders();
         await _notificationService.scheduleDailyExerciseReminder();
+        await _notificationService.scheduleNightlyCheckIn(
+          symptomRepository: _symptomRepository(),
+          entryRepository: _dailyEntryRepository(),
+        );
       }
       final launch = await _notificationService.launchDetails();
       if (launch != null && launch.didNotificationLaunchApp) {

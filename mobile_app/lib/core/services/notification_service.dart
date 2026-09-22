@@ -5,6 +5,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../constants/meal_presets.dart';
 import '../data/daily_entry_repository.dart';
 import '../data/daily_log_repository.dart';
+import '../data/symptom_repository.dart';
 import '../models/daily_entry.dart';
 import '../utils/weekly_stats.dart';
 import 'local_notification_scheduler.dart';
@@ -81,6 +82,31 @@ class NotificationService {
   static const String exerciseYesActionId = 'exercise_yes';
   static const String exerciseNoActionId = 'exercise_no';
 
+  /// Stable id for the evening nightly symptom + activity check-in.
+  static const int nightlyCheckInId = 3301;
+
+  /// Notification action ids for the nightly check-in.
+  static const String symptomCheckInActionId = 'symptom_check_in';
+  static const String activityCheckInActionId = 'activity_check_in';
+
+  /// Evening hour/minute for the nightly check-in.
+  static const int nightlyCheckInHour = 20;
+  static const int nightlyCheckInMinute = 30;
+
+  static const String _nightlyChannelId = 'nightly_check_ins';
+  static const String _nightlyChannelName = 'Nightly check-in';
+  static const String _nightlyChannelDescription =
+      'Prompts for the daily symptom and activity logs';
+
+  /// Copy for the nightly check-in.
+  static const String nightlyCheckInTitle = 'Nightly check-in';
+  static const String nightlyCheckInBodyBoth =
+      "You haven't logged your symptoms or activity today.";
+  static const String nightlyCheckInBodySymptoms =
+      "How are you feeling? Log today's symptoms.";
+  static const String nightlyCheckInBodyActivity =
+      "You haven't logged any activity today.";
+
   static const String _exerciseChannelId = 'exercise_reminders';
   static const String _exerciseChannelName = 'Workout check-in';
   static const String _exerciseChannelDescription =
@@ -148,6 +174,93 @@ class NotificationService {
       _exerciseDetails(),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: payload,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  /// Builds the nightly check-in body from what is still missing.
+  static String nightlyCheckInBody({
+    required bool needsSymptoms,
+    required bool needsActivity,
+  }) {
+    if (needsSymptoms && needsActivity) return nightlyCheckInBodyBoth;
+    if (needsSymptoms) return nightlyCheckInBodySymptoms;
+    return nightlyCheckInBodyActivity;
+  }
+
+  NotificationDetails _nightlyDetails(String body) => NotificationDetails(
+    android: AndroidNotificationDetails(
+      _nightlyChannelId,
+      _nightlyChannelName,
+      channelDescription: _nightlyChannelDescription,
+      importance: Importance.high,
+      priority: Priority.high,
+      category: AndroidNotificationCategory.reminder,
+      styleInformation: BigTextStyleInformation(
+        body,
+        contentTitle: nightlyCheckInTitle,
+      ),
+      actions: const [
+        AndroidNotificationAction(
+          symptomCheckInActionId,
+          'Log symptoms',
+          icon: DrawableResourceAndroidBitmap('ic_checkin_symptom'),
+          showsUserInterface: true,
+          cancelNotification: false,
+        ),
+        AndroidNotificationAction(
+          activityCheckInActionId,
+          'Log activity',
+          icon: DrawableResourceAndroidBitmap('ic_checkin_activity'),
+          showsUserInterface: true,
+          cancelNotification: false,
+        ),
+      ],
+    ),
+    iOS: DarwinNotificationDetails(),
+    macOS: DarwinNotificationDetails(),
+  );
+
+  /// Schedules (or clears) the evening nightly check-in.
+  ///
+  /// Prompts only for logs that have not appeared yet: when both the day's
+  /// symptoms and activity are already recorded, any existing check-in is
+  /// cancelled instead of scheduled. The reminder carries icon actions that
+  /// open the app on the matching surface.
+  Future<void> scheduleNightlyCheckIn({
+    required SymptomRepository symptomRepository,
+    required DailyEntryRepository entryRepository,
+  }) async {
+    await initialize();
+    final today = DailyEntry.dateKey(DateTime.now());
+
+    final symptoms = await symptomRepository.getForDate(today);
+    final needsSymptoms = symptoms.every((log) => log.level <= 0);
+
+    final entry = await entryRepository.getByDate(today);
+    final hasActivity =
+        (entry?.exercises.isNotEmpty ?? false) || (entry?.calories ?? 0) > 0;
+    final needsActivity = !hasActivity;
+
+    await _scheduler.cancel(nightlyCheckInId);
+    if (!needsSymptoms && !needsActivity) return;
+
+    final scheduled = nextDailyOccurrence(
+      tz.TZDateTime.now(tz.local),
+      hour: nightlyCheckInHour,
+      minute: nightlyCheckInMinute,
+    );
+    final body = nightlyCheckInBody(
+      needsSymptoms: needsSymptoms,
+      needsActivity: needsActivity,
+    );
+    await _scheduler.zonedSchedule(
+      nightlyCheckInId,
+      nightlyCheckInTitle,
+      body,
+      scheduled,
+      _nightlyDetails(body),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }

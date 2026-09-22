@@ -66,6 +66,14 @@ Future<void> handleNotificationResponse(
     return;
   }
 
+  if (actionId == NotificationService.symptomCheckInActionId ||
+      actionId == NotificationService.activityCheckInActionId) {
+    // These actions open the app on the matching surface, so there is nothing
+    // to persist here; just clear the check-in.
+    await _cancelNotification(pluginInstance, response);
+    return;
+  }
+
   final meal = NotificationService.mealNameFromActionId(actionId);
   if (meal == null) {
     // A plain tap or a non-meal action: nothing to persist in the background.

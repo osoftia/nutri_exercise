@@ -126,13 +126,17 @@ class _MainShellPageState extends State<MainShellPage> {
       final payload = widget.notificationNav.exercisePayload;
       widget.notificationNav.consume();
       _confirmWorkout(payload: payload);
+    } else if (action == NotificationAction.openSymptoms) {
+      widget.notificationNav.consume();
+      setState(() => _currentIndex = 2);
     }
   }
 
   void _handlePendingAction() {
     final action = widget.notificationNav.pending;
     if (action == NotificationAction.openDailyLog ||
-        action == NotificationAction.exerciseCompleted) {
+        action == NotificationAction.exerciseCompleted ||
+        action == NotificationAction.openSymptoms) {
       _onNotificationAction();
     }
   }
