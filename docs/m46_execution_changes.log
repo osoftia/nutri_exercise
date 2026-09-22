@@ -1,0 +1,96 @@
+# M46 Execution Changes Log — i18n, Weekly States, Profile Accordions, History Modal & Notifications
+
+Autonomous sprint following the strict TDD loop per task: failing tests →
+implementation → targeted tests → backlog check-off → git commit, followed by a
+full `fvm flutter analyze` and full `fvm flutter test`. Verification used the
+project's pinned FVM SDK (Flutter 3.29.0).
+
+## Task 1: Complete i18n Sweep
+- `lib/core/domain/i18n/app_strings.dart` (+ English/Spanish) — added
+  `weeklyMacrosTitle`, `settingsTitle`, `notificationsSectionTitle`,
+  `savedRecordsTitle`, `noSavedRecords`, `notificationPreferencesTitle`,
+  `exerciseAlertsLabel`, `foodAlertsLabel`, `dailyIntakeRemindersLabel`,
+  `deleteRecordTitle`, `editFocusTitle`, `focusAreaLabel`,
+  `nightlyCheckInTestButton`, `quickTestTitle`, `removeExerciseTooltip`.
+- `lib/ui/pages/settings_page.dart` — every hardcoded label/dialog prompt now
+  resolves through `LocalizationScope.stringsOf(context)` (English defaults
+  preserved so existing English assertions stay valid).
+- The full-coverage probe now renders the new getters.
+- Tests: `test/features/m46_settings_i18n_test.dart` (English defaults, Spanish
+  labels, localized delete dialog); `test/i18n/full_coverage_test.dart` and
+  `test/features/m10_settings_widget_test.dart` stay green.
+
+## Task 2: Weekly States Fix (Nutrition & Workouts)
+- `lib/core/models/weekly_stat.dart` — `WeeklyStat` gained `protein`, `carbs`
+  and `fat`; `lib/core/utils/weekly_stats.dart` fills them from each
+  `DailyEntry`.
+- `lib/ui/organisms/weekly_stats_sheet.dart` — new localized "Weekly macros"
+  totals row (`weekly_protein_total`, `weekly_carbs_total`, `weekly_fat_total`).
+- `lib/ui/pages/nutrition_page.dart` — food logged on the Nutrition tab now
+  upserts today's `DailyEntry` (calories + macros accumulated), so the Weekly
+  Stats and calendar reflect consumed food. This is the root cause of the
+  missing consumed-calorie summation.
+- `lib/core/state/workout_completion_controller.dart` — new
+  `removeExercise(name)` removes one completion, persists the remainder and
+  re-syncs today's calendar entry (exercise names + burned calories).
+- `lib/ui/molecules/routine_summary_sheet.dart` — per-exercise delete control
+  (`routine_delete_<name>`) wired through the completion controller plus a
+  blueprint refresh; `routines_page.dart` passes the completion controller.
+- Tests: extended `test/utils/weekly_stats_test.dart`, plus
+  `m46_weekly_stats_macros_test.dart`, `m46_nutrition_persistence_test.dart`,
+  `m46_routine_exercise_deletion_test.dart`.
+
+## Task 3: Profile Accordion Sections (Symptoms & Settings)
+- `lib/ui/molecules/accordion_section.dart` — reusable collapsible section:
+  smooth `AnimatedSize` body + rotating chevron; the body is removed from the
+  tree while collapsed.
+- `lib/ui/molecules/settings_panel.dart` — notification preference toggles
+  (`settings_toggle_*`).
+- `lib/ui/pages/profile_page.dart` — Daily Symptoms accordion
+  (`profile_symptoms_accordion`, embeds `SymptomTracker`) and Settings accordion
+  (`profile_settings_accordion`).
+- Wiring: `main_shell_page.dart` forwards the symptom controller, prefs store
+  and notification service; `app.dart` creates the shared
+  `NotificationPrefsRepository` (SQLite or mock).
+- Tests: `test/ui/accordion_section_test.dart`,
+  `test/features/m46_profile_accordions_test.dart`.
+
+## Task 4: Notifications & Test Trigger
+- `lib/core/services/notification_service.dart` — `nightlyCheckInTestId` (3302)
+  and `showNightlyCheckInTest()` that immediately presents the rich nightly
+  check-in with its icon actions.
+- `lib/ui/pages/nutrition_page.dart` — `nightly_check_in_test_button` in the
+  notifications section.
+- `lib/ui/molecules/settings_panel.dart` — Profile settings quick-test triggers
+  (`settings_nightly_test_button`, `settings_exercise_not_button`).
+- Tests: `test/features/m46_notification_triggers_test.dart` (service-level
+  platform capture + Nutrition and Profile trigger widgets).
+
+## Task 5: Centralized History Popup & Calendar Header Adjustments
+- `lib/ui/molecules/calendar_month_header.dart` — shared clean month header:
+  centered month label in a subtle pill flanked by circular navigation buttons
+  (`calendar_month_pill`).
+- `lib/ui/organisms/calendar_history_dialog.dart` — `showCalendarHistoryDialog`
+  now uses `showDialog` (centered modal, max width 440) instead of a bottom
+  sheet; the day editor is also a centered dialog. Stable keys preserved
+  (`calendar_history_dialog`, `calendar_day_*`, `history_*`, `history_month_label`).
+- `lib/ui/pages/schedule_page.dart` — calendar uses the shared month header.
+- Tests: `test/features/m46_centralized_history_test.dart`; existing M27/M31/M36/
+  M42/M43 history and calendar tests remain green.
+
+## Task 6: Testing & Verification
+- `fvm flutter analyze` — No issues found.
+- `fvm flutter test` (full suite) — **789 passed, 0 failed** (up from 766 at
+  sprint start; +23 net tests).
+
+## Verification
+- Analyzer: clean (`No issues found!`).
+- Full suite: 789 tests passed.
+
+## Commits (this sprint)
+- feat(m46-task-1): complete i18n sweep for settings, macros and prompts
+- feat(m46-task-2): weekly macros, persisted nutrition totals and exercise deletion
+- feat(m46-task-3): profile accordion sections for symptoms and settings
+- feat(m46-task-4): nightly check-in test trigger in nutrition and profile settings
+- feat(m46-task-5): centered history modal and clean calendar month header
+- final: test(m46-task-6): verification, full suite green (789), analyzer clean

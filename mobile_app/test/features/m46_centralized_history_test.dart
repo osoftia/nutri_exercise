@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nutri_mobile_app/core/data/daily_entry_repository.dart';
-import 'package:nutri_mobile_app/core/mocks/mock_daily_entry_repository.dart';
 import 'package:nutri_mobile_app/core/models/daily_entry.dart';
 import 'package:nutri_mobile_app/core/theme/app_theme.dart';
 import 'package:nutri_mobile_app/ui/molecules/calendar_month_header.dart';

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nutri_mobile_app/core/data/notification_prefs_repository.dart';
-import 'package:nutri_mobile_app/core/data/settings_repository.dart';
 import 'package:nutri_mobile_app/core/domain/i18n/app_language.dart';
 import 'package:nutri_mobile_app/core/domain/i18n/localization_scope.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_notification_prefs_repository.dart';

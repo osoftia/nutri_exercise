@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/data/notification_prefs_repository.dart';
 import '../../core/data/settings_repository.dart';
-import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/notification_pref.dart';
 import '../../core/models/routine_models.dart';
