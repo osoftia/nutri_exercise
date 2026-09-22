@@ -1,25 +1,42 @@
 import 'package:flutter/material.dart';
 
+import '../../core/data/notification_prefs_repository.dart';
 import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/user_profile.dart';
 import '../../core/state/language_controller.dart';
+import '../../core/state/symptom_controller.dart';
 import '../../core/state/user_profile_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
+import '../molecules/accordion_section.dart';
 import '../molecules/language_switcher.dart';
+import '../molecules/settings_panel.dart';
+import '../molecules/symptom_tracker.dart';
 
 /// Profile tab: neumorphic form to view and edit personal details,
 /// backed by [UserProfileController] for immediate state reflection, plus the
 /// reactive language switcher when a [LanguageController] is provided.
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key, required this.controller, this.languageController});
+  const ProfilePage({
+    super.key,
+    required this.controller,
+    this.languageController,
+    this.symptomController,
+    this.notificationPrefsRepository,
+  });
 
   final UserProfileController controller;
 
   /// Optional language controller; enables the language switcher.
   final LanguageController? languageController;
+
+  /// Optional symptom controller; enables the Daily Symptoms accordion.
+  final SymptomController? symptomController;
+
+  /// Optional prefs store; enables the Settings accordion.
+  final NotificationPrefsRepository? notificationPrefsRepository;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -114,6 +131,27 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         ),
+        if (widget.symptomController != null) ...[
+          const SizedBox(height: AppSpacing.xl),
+          AccordionSection(
+            headerKey: const Key('profile_symptoms_accordion'),
+            title: strings.symptomTrackerTitle,
+            subtitle: strings.symptomTrackerSubtitle,
+            icon: Icons.healing,
+            child: SymptomTracker(controller: widget.symptomController!),
+          ),
+        ],
+        if (widget.notificationPrefsRepository != null) ...[
+          const SizedBox(height: AppSpacing.xl),
+          AccordionSection(
+            headerKey: const Key('profile_settings_accordion'),
+            title: strings.settingsTitle,
+            icon: Icons.settings,
+            child: SettingsPanel(
+              prefsRepository: widget.notificationPrefsRepository,
+            ),
+          ),
+        ],
       ],
     );
   }

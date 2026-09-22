@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
+import '../../core/data/notification_prefs_repository.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/domain/notifications/exercise_check_in.dart';
 import '../../core/services/notification_service.dart';
@@ -45,6 +46,7 @@ class MainShellPage extends StatefulWidget {
     this.notificationService,
     this.languageController,
     this.symptomController,
+    this.notificationPrefsRepository,
     this.syncExerciseReminderPayload = false,
   });
 
@@ -65,6 +67,9 @@ class MainShellPage extends StatefulWidget {
 
   /// Optional symptom controller; enables the daily symptom tracker.
   final SymptomController? symptomController;
+
+  /// Optional prefs store; enables the Profile Settings accordion.
+  final NotificationPrefsRepository? notificationPrefsRepository;
 
   /// When true, the 9 PM reminder is rescheduled with the planned-exercise
   /// payload once the blueprint overview has loaded.
@@ -97,6 +102,8 @@ class _MainShellPageState extends State<MainShellPage> {
     ProfilePage(
       controller: widget.profileController,
       languageController: widget.languageController,
+      symptomController: widget.symptomController,
+      notificationPrefsRepository: widget.notificationPrefsRepository,
     ),
   ];
 
