@@ -83,6 +83,8 @@ class _WeeklyStatsSheetState extends State<WeeklyStatsSheet> {
                     else ...[
                       _WeeklySummary(stats: stats, strings: strings),
                       const SizedBox(height: AppSpacing.lg),
+                      _MacroTotals(stats: stats, strings: strings),
+                      const SizedBox(height: AppSpacing.lg),
                       // M36 Task 1: labels come from the real stat dates
                       // (weekdayLabel), never a static list, so each bar is
                       // tagged with its exact weekday.
@@ -137,6 +139,58 @@ class _WeeklySummary extends StatelessWidget {
             value: strings.signedKcal(balance),
             color: balance > 0 ? AppColors.warning : AppColors.success,
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Weekly protein / carbs / fat totals aggregated from the daily entries.
+class _MacroTotals extends StatelessWidget {
+  const _MacroTotals({required this.stats, required this.strings});
+
+  final List<WeeklyStat> stats;
+  final AppStrings strings;
+
+  @override
+  Widget build(BuildContext context) {
+    final protein = stats.fold<int>(0, (sum, s) => sum + s.protein);
+    final carbs = stats.fold<int>(0, (sum, s) => sum + s.carbs);
+    final fat = stats.fold<int>(0, (sum, s) => sum + s.fat);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppCaption(strings.weeklyMacrosTitle),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: _SummaryTile(
+                key: const Key('weekly_protein_total'),
+                title: strings.proteinLabel,
+                value: '${protein}g',
+                color: AppColors.primary400,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _SummaryTile(
+                key: const Key('weekly_carbs_total'),
+                title: strings.carbsLabel,
+                value: '${carbs}g',
+                color: AppColors.warning,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _SummaryTile(
+                key: const Key('weekly_fat_total'),
+                title: strings.fatLabel,
+                value: '${fat}g',
+                color: AppColors.accent,
+              ),
+            ),
+          ],
         ),
       ],
     );

@@ -174,6 +174,7 @@ class _RoutinesPageState extends State<RoutinesPage> {
                           onSummary: () => showRoutineSummarySheet(
                             context,
                             controller: widget.detailController,
+                            completion: widget.workoutCompletionController,
                           ),
                         ),
                       ],

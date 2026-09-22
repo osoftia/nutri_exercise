@@ -37,6 +37,9 @@ List<WeeklyStat> computeWeeklyStats(List<DailyEntry> entries, {DateTime? now}) {
         date: day,
         consumed: entry?.calories ?? 0,
         burned: _burnedFor(entry),
+        protein: entry?.protein ?? 0,
+        carbs: entry?.carbs ?? 0,
+        fat: entry?.fat ?? 0,
       ),
     );
   }

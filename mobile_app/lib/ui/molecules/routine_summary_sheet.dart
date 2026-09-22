@@ -5,30 +5,45 @@ import '../../core/domain/body_projection/muscle_workout_log.dart';
 import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/state/body_detail_controller.dart';
+import '../../core/state/workout_completion_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/typography.dart';
 
 /// Opens the daily routine summary: today's planned exercises with their
 /// completed sets, aggregated across every trained segment.
+///
+/// When [completion] is supplied, each exercise gains a delete control that
+/// removes its completion record and refreshes the blueprint.
 Future<void> showRoutineSummarySheet(
   BuildContext context, {
   required BodyDetailController controller,
+  WorkoutCompletionController? completion,
 }) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => RoutineSummarySheet(controller: controller),
+    builder: (_) => RoutineSummarySheet(
+      controller: controller,
+      completion: completion,
+    ),
   );
 }
 
 /// Draggable sheet summarising the day's routine.
 class RoutineSummarySheet extends StatelessWidget {
   /// Creates the summary sheet for [controller].
-  const RoutineSummarySheet({super.key, required this.controller});
+  const RoutineSummarySheet({
+    super.key,
+    required this.controller,
+    this.completion,
+  });
 
   /// The shared detail controller owning the workout logs.
   final BodyDetailController controller;
+
+  /// Optional completion controller; enables per-exercise deletion.
+  final WorkoutCompletionController? completion;
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +103,12 @@ class RoutineSummarySheet extends StatelessWidget {
                             _WorkoutSection(
                               workout: workout,
                               strings: strings,
+                              onDelete: completion == null
+                                  ? null
+                                  : (name) async {
+                                      await completion!.removeExercise(name);
+                                      await controller.refreshWorkouts();
+                                    },
                             ),
                       ],
                     ),
@@ -126,10 +147,17 @@ class _SheetHandle extends StatelessWidget {
 }
 
 class _WorkoutSection extends StatelessWidget {
-  const _WorkoutSection({required this.workout, required this.strings});
+  const _WorkoutSection({
+    required this.workout,
+    required this.strings,
+    this.onDelete,
+  });
 
   final MuscleWorkoutLog workout;
   final AppStrings strings;
+
+  /// Invoked with an exercise name when its delete control is tapped.
+  final Future<void> Function(String name)? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -160,6 +188,18 @@ class _WorkoutSection extends StatelessWidget {
                       _formatLoad(entry.loadKg),
                     ),
                   ),
+                  if (onDelete != null)
+                    IconButton(
+                      key: Key('routine_delete_${entry.name}'),
+                      tooltip: strings.removeExerciseTooltip(entry.name),
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        size: 18,
+                        color: AppColors.danger,
+                      ),
+                      onPressed: () => onDelete!(entry.name),
+                    ),
                 ],
               ),
             ),

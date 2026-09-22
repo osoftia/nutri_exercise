@@ -67,4 +67,33 @@ void main() {
       1000 - 2 * caloriesBurnedPerExercise,
     );
   });
+
+  test('aggregates protein, carbs and fat from the daily entries', () {
+    final stats = computeWeeklyStats(
+      [
+        const DailyEntry(
+          date: '2026-09-06',
+          calories: 1800,
+          protein: 120,
+          carbs: 180,
+          fat: 55,
+        ),
+        const DailyEntry(
+          date: '2026-09-07',
+          calories: 1500,
+          protein: 90,
+          carbs: 140,
+          fat: 40,
+        ),
+      ],
+      now: now,
+    );
+
+    expect(stats[5].protein, 120);
+    expect(stats[5].carbs, 180);
+    expect(stats[5].fat, 55);
+    expect(stats[6].protein, 90);
+    // Days without an entry contribute zero macros.
+    expect(stats[0].protein, 0);
+  });
 }

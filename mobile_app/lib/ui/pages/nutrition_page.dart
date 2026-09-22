@@ -9,6 +9,7 @@ import '../../core/domain/body_projection/nutrition_log.dart';
 import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/domain/nutrition/portion_scaler.dart';
+import '../../core/models/daily_entry.dart';
 import '../../core/models/food_entry.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/state/body_detail_controller.dart';
@@ -141,6 +142,9 @@ class _NutritionPageState extends State<NutritionPage> {
   /// react to the actual portion on the same frame.
   void _logFood(FoodEntry entry, {double? grams}) {
     widget.controller.logFood(entry);
+    // Persist the consumed calories/macros to the shared daily entry so the
+    // Weekly Stats and calendar reflect food logged from the Nutrition tab.
+    unawaited(_persistNutrition(entry));
     final detail = widget.bodyDetailController;
     if (detail != null) {
       unawaited(
@@ -163,6 +167,25 @@ class _NutritionPageState extends State<NutritionPage> {
   static String _formatGrams(double grams) => grams == grams.roundToDouble()
       ? '${grams.toInt()} g'
       : '${grams.toStringAsFixed(1)} g';
+
+  /// Adds [entry]'s calories and macros onto today's persisted [DailyEntry].
+  ///
+  /// The daily entry stores the day's running totals, so multiple logs on the
+  /// same day accumulate instead of overwriting one another.
+  Future<void> _persistNutrition(FoodEntry entry) async {
+    final repository = widget.dailyEntryRepository;
+    if (repository == null) return;
+    final today = DailyEntry.dateKey(DateTime.now());
+    final existing = await repository.getByDate(today) ?? DailyEntry(date: today);
+    await repository.save(
+      existing.copyWith(
+        calories: existing.calories + entry.calories,
+        protein: existing.protein + entry.proteinG,
+        carbs: existing.carbs + entry.carbsG,
+        fat: existing.fat + entry.fatG,
+      ),
+    );
+  }
 
   static String _nowHHmm() {
     final now = DateTime.now();

@@ -69,8 +69,7 @@ class WorkoutCompletionController extends ChangeNotifier {
 
   /// Reverses the confirmation: clears the stored completions, shrinks the
   /// grown muscles and restores the slimmed core.
-  Future<void> undo() async {
-    if (!_isConfirmed) return;
+  Future<void> undo() async {    if (!_isConfirmed) return;
 
     await _repository?.saveCompletedExercises(const []);
     await _clearDailyEntry();
@@ -102,6 +101,27 @@ class WorkoutCompletionController extends ChangeNotifier {
     _confirmed = exercises;
     _isConfirmed = exercises.isNotEmpty;
     notifyListeners();
+  }
+
+  /// Removes a single [name] from today's completed exercises.
+  ///
+  /// Persists the remaining completions and re-syncs today's calendar entry
+  /// (exercise names + burned calories) so the Weekly Stats stay accurate.
+  /// Returns `true` when an exercise was actually removed.
+  Future<bool> removeExercise(String name) async {
+    final remaining = [
+      for (final exercise in _confirmed)
+        if (exercise.name != name) exercise,
+    ];
+    if (remaining.length == _confirmed.length) return false;
+
+    await _repository?.saveCompletedExercises(remaining);
+    _confirmed = remaining;
+    _isConfirmed = remaining.isNotEmpty;
+    _summary = remaining.isEmpty ? null : _summarize(remaining);
+    await _syncDailyEntry(remaining);
+    notifyListeners();
+    return true;
   }
 
   /// Rehydrates the toggle from today's persisted completions after a restart.
