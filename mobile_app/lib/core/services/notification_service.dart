@@ -85,6 +85,9 @@ class NotificationService {
   /// Stable id for the evening nightly symptom + activity check-in.
   static const int nightlyCheckInId = 3301;
 
+  /// Stable id for the "nightly check-in" quick-test notification.
+  static const int nightlyCheckInTestId = 3302;
+
   /// Notification action ids for the nightly check-in.
   static const String symptomCheckInActionId = 'symptom_check_in';
   static const String activityCheckInActionId = 'activity_check_in';
@@ -175,6 +178,18 @@ class NotificationService {
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: payload,
       matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  /// Immediately shows a test nightly check-in notification (used by the
+  /// quick-test triggers in the Nutrition and Profile settings sections).
+  Future<void> showNightlyCheckInTest() async {
+    await initialize();
+    await _plugin.show(
+      nightlyCheckInTestId,
+      nightlyCheckInTitle,
+      nightlyCheckInBodyBoth,
+      _nightlyDetails(nightlyCheckInBodyBoth),
     );
   }
 

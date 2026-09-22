@@ -299,6 +299,14 @@ class _NutritionPageState extends State<NutritionPage> {
                             variant: CustomButtonVariant.ghost,
                             onPressed: _testNotifications,
                           ),
+                          const SizedBox(height: AppSpacing.sm),
+                          CustomButton(
+                            key: const Key('nightly_check_in_test_button'),
+                            label: strings.nightlyCheckInTestButton,
+                            variant: CustomButtonVariant.ghost,
+                            onPressed: () => widget.notificationService
+                                ?.showNightlyCheckInTest(),
+                          ),
                         ],
                       ),
                     ),

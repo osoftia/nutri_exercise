@@ -104,6 +104,7 @@ class _MainShellPageState extends State<MainShellPage> {
       languageController: widget.languageController,
       symptomController: widget.symptomController,
       notificationPrefsRepository: widget.notificationPrefsRepository,
+      notificationService: widget.notificationService,
     ),
   ];
 

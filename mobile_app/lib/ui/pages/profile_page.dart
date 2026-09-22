@@ -4,6 +4,7 @@ import '../../core/data/notification_prefs_repository.dart';
 import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/user_profile.dart';
+import '../../core/services/notification_service.dart';
 import '../../core/state/language_controller.dart';
 import '../../core/state/symptom_controller.dart';
 import '../../core/state/user_profile_controller.dart';
@@ -25,6 +26,7 @@ class ProfilePage extends StatefulWidget {
     this.languageController,
     this.symptomController,
     this.notificationPrefsRepository,
+    this.notificationService,
   });
 
   final UserProfileController controller;
@@ -37,6 +39,9 @@ class ProfilePage extends StatefulWidget {
 
   /// Optional prefs store; enables the Settings accordion.
   final NotificationPrefsRepository? notificationPrefsRepository;
+
+  /// Optional notification service; enables the settings quick-test triggers.
+  final NotificationService? notificationService;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -141,7 +146,8 @@ class _ProfilePageState extends State<ProfilePage> {
             child: SymptomTracker(controller: widget.symptomController!),
           ),
         ],
-        if (widget.notificationPrefsRepository != null) ...[
+        if (widget.notificationPrefsRepository != null ||
+            widget.notificationService != null) ...[
           const SizedBox(height: AppSpacing.xl),
           AccordionSection(
             headerKey: const Key('profile_settings_accordion'),
@@ -149,6 +155,7 @@ class _ProfilePageState extends State<ProfilePage> {
             icon: Icons.settings,
             child: SettingsPanel(
               prefsRepository: widget.notificationPrefsRepository,
+              notificationService: widget.notificationService,
             ),
           ),
         ],
