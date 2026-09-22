@@ -299,6 +299,8 @@ class SpanishStrings extends AppStrings {
   @override
   String get weeklyStatsCaption => 'Calorías consumidas vs quemadas (7 días)';
   @override
+  String get weeklyMacrosTitle => 'Macros semanales';
+  @override
   String get consumedLabel => 'Consumidas';
   @override
   String get burnedLabel => 'Quemadas';
@@ -310,6 +312,36 @@ class SpanishStrings extends AppStrings {
     final sign = balance >= 0 ? '+' : '';
     return '$sign$balance kcal';
   }
+
+  // --- Settings / notifications ----------------------------------------
+  @override
+  String get settingsTitle => 'Ajustes';
+  @override
+  String get notificationsSectionTitle => 'Notificaciones';
+  @override
+  String get savedRecordsTitle => 'Registros guardados';
+  @override
+  String get noSavedRecords => 'No hay registros guardados.';
+  @override
+  String get notificationPreferencesTitle => 'Preferencias de notificaciones';
+  @override
+  String get exerciseAlertsLabel => 'Alertas de ejercicio';
+  @override
+  String get foodAlertsLabel => 'Alertas de comida';
+  @override
+  String get dailyIntakeRemindersLabel => 'Recordatorios de ingesta diaria';
+  @override
+  String get deleteRecordTitle => 'Eliminar registro';
+  @override
+  String get editFocusTitle => 'Editar enfoque';
+  @override
+  String get focusAreaLabel => 'Área de enfoque';
+  @override
+  String get nightlyCheckInTestButton => 'Probar registro nocturno';
+  @override
+  String get quickTestTitle => 'Prueba rápida';
+  @override
+  String removeExerciseTooltip(String name) => 'Eliminar $name';
 
   // --- History dialog / editor -----------------------------------------
   @override

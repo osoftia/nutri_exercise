@@ -194,12 +194,31 @@ abstract class AppStrings {
 
   // --- Weekly stats sheet ----------------------------------------------
   String get weeklyStatsCaption;
+  String get weeklyMacrosTitle;
   String get consumedLabel;
   String get burnedLabel;
   String get balanceLabel;
 
   /// A signed balance value (`+200` / `-200`).
   String signedKcal(int balance);
+
+  // --- Settings / notifications ----------------------------------------
+  String get settingsTitle;
+  String get notificationsSectionTitle;
+  String get savedRecordsTitle;
+  String get noSavedRecords;
+  String get notificationPreferencesTitle;
+  String get exerciseAlertsLabel;
+  String get foodAlertsLabel;
+  String get dailyIntakeRemindersLabel;
+  String get deleteRecordTitle;
+  String get editFocusTitle;
+  String get focusAreaLabel;
+  String get nightlyCheckInTestButton;
+  String get quickTestTitle;
+
+  /// `"Remove <name>"` tooltip for an exercise's delete control.
+  String removeExerciseTooltip(String name);
 
   // --- History dialog / editor -----------------------------------------
   String get editEntryTitle;

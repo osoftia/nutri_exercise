@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/data/notification_prefs_repository.dart';
 import '../../core/data/settings_repository.dart';
+import '../../core/domain/i18n/app_strings.dart';
+import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/notification_pref.dart';
 import '../../core/models/routine_models.dart';
 import '../../core/theme/app_theme.dart';
@@ -52,19 +54,20 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _deleteRecord(WorkoutDay day) async {
+    final strings = LocalizationScope.stringsOf(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const AppHeading('Delete record', size: AppHeadingSize.h3),
-          content: AppText('Delete "${day.weekday}" routine?'),
+          title: AppHeading(strings.deleteRecordTitle, size: AppHeadingSize.h3),
+          content: AppText(strings.deleteRecordConfirm(day.weekday)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const AppText('Cancel'),
+              child: AppText(strings.cancel),
             ),
             CustomButtonText(
-              label: 'Delete',
+              label: strings.delete,
               onPressed: () => Navigator.of(dialogContext).pop(true),
             ),
           ],
@@ -80,14 +83,15 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = LocalizationScope.stringsOf(context);
     return Scaffold(
       appBar: AppBar(
-        title: const AppHeading('Settings', size: AppHeadingSize.h2),
+        title: AppHeading(strings.settingsTitle, size: AppHeadingSize.h2),
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.xl),
         children: [
-          const AppHeading('Saved Records', size: AppHeadingSize.h3),
+          AppHeading(strings.savedRecordsTitle, size: AppHeadingSize.h3),
           const SizedBox(height: AppSpacing.md),
           FutureBuilder<List<WorkoutDay>>(
             future: _recordsFuture,
@@ -97,7 +101,7 @@ class _SettingsPageState extends State<SettingsPage> {
               }
               final records = snapshot.data!;
               if (records.isEmpty) {
-                return const AppText('No saved records.');
+                return AppText(strings.noSavedRecords);
               }
               return Column(
                 children: records.map(_buildRecordTile).toList(),
@@ -105,7 +109,10 @@ class _SettingsPageState extends State<SettingsPage> {
             },
           ),
           const SizedBox(height: AppSpacing.xxl),
-          const AppHeading('Notification Preferences', size: AppHeadingSize.h3),
+          AppHeading(
+            strings.notificationPreferencesTitle,
+            size: AppHeadingSize.h3,
+          ),
           const SizedBox(height: AppSpacing.md),
           _PrefsSection(repository: widget.prefsRepository),
         ],
@@ -212,24 +219,25 @@ class _PrefsSectionState extends State<_PrefsSection> {
     if (!_loaded) {
       return const Center(child: CircularProgressIndicator());
     }
+    final strings = LocalizationScope.stringsOf(context);
     return Column(
       children: [
         SwitchListTile(
           key: const Key('toggle_exercise_alerts'),
-          title: const AppText('Exercise alerts'),
+          title: AppText(strings.exerciseAlertsLabel),
           value: _values[NotificationPrefType.exerciseAlerts] ?? false,
           onChanged: (value) =>
               _toggle(NotificationPrefType.exerciseAlerts, value),
         ),
         SwitchListTile(
           key: const Key('toggle_food_alerts'),
-          title: const AppText('Food alerts'),
+          title: AppText(strings.foodAlertsLabel),
           value: _values[NotificationPrefType.foodAlerts] ?? false,
           onChanged: (value) => _toggle(NotificationPrefType.foodAlerts, value),
         ),
         SwitchListTile(
           key: const Key('toggle_daily_intake_reminders'),
-          title: const AppText('Daily intake reminders'),
+          title: AppText(strings.dailyIntakeRemindersLabel),
           value: _values[NotificationPrefType.dailyIntakeReminders] ?? false,
           onChanged: (value) =>
               _toggle(NotificationPrefType.dailyIntakeReminders, value),
@@ -281,21 +289,22 @@ class _EditFocusDialogState extends State<_EditFocusDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = LocalizationScope.stringsOf(context);
     return AlertDialog(
-      title: const AppHeading('Edit focus', size: AppHeadingSize.h3),
+      title: AppHeading(strings.editFocusTitle, size: AppHeadingSize.h3),
       content: TextField(
         key: const Key('focus_edit_field'),
         controller: _controller,
         autofocus: true,
-        decoration: const InputDecoration(labelText: 'Focus area'),
+        decoration: InputDecoration(labelText: strings.focusAreaLabel),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const AppText('Cancel'),
+          child: AppText(strings.cancel),
         ),
         CustomButtonText(
-          label: 'Save',
+          label: strings.save,
           onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
         ),
       ],

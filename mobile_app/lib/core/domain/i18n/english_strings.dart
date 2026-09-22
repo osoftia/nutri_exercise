@@ -298,6 +298,8 @@ class EnglishStrings extends AppStrings {
   @override
   String get weeklyStatsCaption => 'Calories consumed vs burned (7 days)';
   @override
+  String get weeklyMacrosTitle => 'Weekly macros';
+  @override
   String get consumedLabel => 'Consumed';
   @override
   String get burnedLabel => 'Burned';
@@ -309,6 +311,36 @@ class EnglishStrings extends AppStrings {
     final sign = balance >= 0 ? '+' : '';
     return '$sign$balance kcal';
   }
+
+  // --- Settings / notifications ----------------------------------------
+  @override
+  String get settingsTitle => 'Settings';
+  @override
+  String get notificationsSectionTitle => 'Notifications';
+  @override
+  String get savedRecordsTitle => 'Saved Records';
+  @override
+  String get noSavedRecords => 'No saved records.';
+  @override
+  String get notificationPreferencesTitle => 'Notification Preferences';
+  @override
+  String get exerciseAlertsLabel => 'Exercise alerts';
+  @override
+  String get foodAlertsLabel => 'Food alerts';
+  @override
+  String get dailyIntakeRemindersLabel => 'Daily intake reminders';
+  @override
+  String get deleteRecordTitle => 'Delete record';
+  @override
+  String get editFocusTitle => 'Edit focus';
+  @override
+  String get focusAreaLabel => 'Focus area';
+  @override
+  String get nightlyCheckInTestButton => 'Test nightly check-in';
+  @override
+  String get quickTestTitle => 'Quick test';
+  @override
+  String removeExerciseTooltip(String name) => 'Remove $name';
 
   // --- History dialog / editor -----------------------------------------
   @override
