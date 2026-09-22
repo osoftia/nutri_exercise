@@ -8,12 +8,15 @@ import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/daily_entry.dart';
 import '../../core/state/daily_entry_controller.dart';
 import '../../core/theme/app_theme.dart';
-import '../atoms/circular_icon_button.dart';
 import '../atoms/custom_button.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
+import '../molecules/calendar_month_header.dart';
 
 /// Opens the calendar history popup backed by [repository].
+///
+/// Rendered as a centered modal dialog (not a bottom sheet) so the historical
+/// daily intake reads as a focused, self-contained card.
 ///
 /// [onChanged] fires after any successful entry save/delete inside the
 /// dialog so hosts can refresh dependent state (e.g. streak counters).
@@ -22,10 +25,8 @@ Future<void> showCalendarHistoryDialog(
   required DailyEntryRepository repository,
   VoidCallback? onChanged,
 }) {
-  return showModalBottomSheet<void>(
+  return showDialog<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (context) => CalendarHistoryDialog(
       repository: repository,
       onChanged: onChanged,
@@ -82,10 +83,8 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
     final existing = _controller.entryForDate(date);
     // M36 Task 2: the sheet reports success so dependent host state
     // (streak/stats) refreshes right after a save/delete.
-    final changed = await showModalBottomSheet<bool>(
+    final changed = await showDialog<bool>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => _EntryEditorSheet(
         controller: _controller,
         date: date,
@@ -97,43 +96,47 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: NeumorphicContainer(
-        key: const Key('calendar_history_dialog'),
-        color: AppColors.surface900,
-        padding: EdgeInsets.zero,
-        borderRadius: AppRadius.lg,
-        child: SafeArea(
-          top: false,
-          child: ListenableBuilder(
-            listenable: _controller,
-            builder: (context, _) {
-              final strings = LocalizationScope.stringsOf(context);
-              return ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.75,
-                ),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        AppHeading(strings.history, size: AppHeadingSize.h3),
-                        const SizedBox(height: AppSpacing.md),
-                        _buildMonthHeader(strings),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildWeekdayHeader(strings),
-                        const SizedBox(height: AppSpacing.xs),
-                        _buildDayGrid(strings),
-                      ],
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(AppSpacing.xl),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: NeumorphicContainer(
+          key: const Key('calendar_history_dialog'),
+          color: AppColors.surface900,
+          padding: EdgeInsets.zero,
+          borderRadius: AppRadius.lg,
+          child: SafeArea(
+            top: false,
+            child: ListenableBuilder(
+              listenable: _controller,
+              builder: (context, _) {
+                final strings = LocalizationScope.stringsOf(context);
+                return ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.75,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AppHeading(strings.history, size: AppHeadingSize.h3),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildMonthHeader(strings),
+                          const SizedBox(height: AppSpacing.md),
+                          _buildWeekdayHeader(strings),
+                          const SizedBox(height: AppSpacing.xs),
+                          _buildDayGrid(strings),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -141,34 +144,16 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
   }
 
   Widget _buildMonthHeader(AppStrings strings) {
-    return Row(
-      children: [
-        CircularIconButton(
-          key: const Key('history_prev_month'),
-          icon: Icons.chevron_left,
-          tooltip: strings.previousMonthTooltip,
-          size: 48,
-          onPressed: _previousMonth,
-        ),
-        Expanded(
-          child: Center(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: AppText(
-                _monthLabel(strings),
-                key: const Key('history_month_label'),
-              ),
-            ),
-          ),
-        ),
-        CircularIconButton(
-          key: const Key('history_next_month'),
-          icon: Icons.chevron_right,
-          tooltip: strings.nextMonthTooltip,
-          size: 48,
-          onPressed: _nextMonth,
-        ),
-      ],
+    return CalendarMonthHeader(
+      label: _monthLabel(strings),
+      previousKey: const Key('history_prev_month'),
+      nextKey: const Key('history_next_month'),
+      labelKey: const Key('history_month_label'),
+      previousTooltip: strings.previousMonthTooltip,
+      nextTooltip: strings.nextMonthTooltip,
+      buttonSize: 48,
+      onPrevious: _previousMonth,
+      onNext: _nextMonth,
     );
   }
 
@@ -337,22 +322,25 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
   Widget build(BuildContext context) {
     final strings = LocalizationScope.stringsOf(context);
     final hasExisting = widget.existing != null;
-    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
-    return Padding(
-      padding: EdgeInsets.only(bottom: keyboardInset),
-      child: NeumorphicContainer(
-        key: const Key('history_entry_editor'),
-        color: AppColors.surface900,
-        padding: EdgeInsets.zero,
-        borderRadius: AppRadius.lg,
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(AppSpacing.xl),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: NeumorphicContainer(
+          key: const Key('history_entry_editor'),
+          color: AppColors.surface900,
+          padding: EdgeInsets.zero,
+          borderRadius: AppRadius.lg,
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                 AppText(strings.editEntryTitleFor(widget.date)),
                 const SizedBox(height: AppSpacing.md),
                 TextField(
@@ -453,6 +441,8 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                   ],
                 ),
               ],
+                ),
+              ),
             ),
           ),
         ),

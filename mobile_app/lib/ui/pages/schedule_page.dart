@@ -6,9 +6,9 @@ import '../../core/models/schedule_event.dart';
 import '../../core/state/schedule_controller.dart';
 import '../../core/state/symptom_controller.dart';
 import '../../core/theme/app_theme.dart';
-import '../atoms/circular_icon_button.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
+import '../molecules/calendar_month_header.dart';
 import '../molecules/symptom_tracker.dart';
 
 /// Schedule tab: interactive neumorphic calendar + dynamic daily agenda,
@@ -74,25 +74,16 @@ class _SchedulePageState extends State<SchedulePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              CircularIconButton(
-                key: const Key('prev_month_button'),
-                icon: Icons.chevron_left,
-                tooltip: strings.previousMonthTooltip,
-                onPressed: widget.controller.previousMonth,
-              ),
-              AppText(label, style: Theme.of(context).textTheme.titleLarge),
-              CircularIconButton(
-                key: const Key('next_month_button'),
-                icon: Icons.chevron_right,
-                tooltip: strings.nextMonthTooltip,
-                onPressed: widget.controller.nextMonth,
-              ),
-            ],
+          CalendarMonthHeader(
+            label: label,
+            previousKey: const Key('prev_month_button'),
+            nextKey: const Key('next_month_button'),
+            previousTooltip: strings.previousMonthTooltip,
+            nextTooltip: strings.nextMonthTooltip,
+            onPrevious: widget.controller.previousMonth,
+            onNext: widget.controller.nextMonth,
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               for (var i = 1; i <= 7; i++)
