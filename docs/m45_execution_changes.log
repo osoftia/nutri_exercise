@@ -1,0 +1,94 @@
+# M45 Execution Changes Log — Circular Button Pattern, Tooltips, Spacing & Nightly Notifications
+
+Autonomous sprint following the strict TDD loop per task: failing tests →
+implementation → targeted tests → backlog check-off → git commit, followed by a
+full `fvm flutter analyze` and full `fvm flutter test`. Verification used the
+project's pinned FVM SDK (Flutter 3.29.0).
+
+## Task 1: Circular Icon Button Component
+- `lib/ui/atoms/circular_icon_button.dart` — reusable circular button: a clear
+  graphic glyph in a generously padded 56 dp circular hit target
+  (`minimumSize`/`defaultSize` 56, `defaultPadding` 16), a long-press `Tooltip`
+  (`TooltipTriggerMode.longPress`) explaining its exact function, and full
+  `Semantics` (button/enabled/selected/label).
+- `lib/ui/molecules/circular_icon_button_group.dart` — spaced `Wrap`
+  (`defaultSpacing` 20) so option clusters never collapse into an elongated
+  pill strip.
+- Tests: `test/ui/circular_icon_button_test.dart` (icon render, long-press
+  tooltip, tap callback, padding/min-size, selected + disabled semantics, group
+  spacing).
+
+## Task 2: Calendar & Symptom View Refactor
+- New symptom domain: `lib/core/models/symptom_log.dart` (`SymptomType`:
+  pain / discomfort / energy / stress; `SymptomLog` with `0..3` severity),
+  `lib/core/data/symptom_repository.dart`,
+  `lib/core/data/local_symptom_repository.dart`,
+  `lib/core/mocks/mock_symptom_repository.dart`, and
+  `lib/core/state/symptom_controller.dart` (load / levelOf / setLevel / cycle /
+  hasAnyLogged, persists every mutation).
+- SQLite schema `11 → 12`: `symptom_logs(id, date, symptom, level,
+  UNIQUE(date, symptom))` plus `getSymptomLogs` / `getAllSymptomLogs` /
+  `upsertSymptomLog`; created in `_onCreate` and the `oldVersion < 12` upgrade.
+- `lib/ui/molecules/symptom_tracker.dart` — the spaced-out circular symptom
+  view: one `CircularIconButton` per symptom (healing / accessibility / bolt /
+  self-improvement glyphs), tap cycles severity, long-press tooltip, and a
+  localized severity readout.
+- Calendar refactor: `schedule_page.dart` month navigation and
+  `calendar_history_dialog.dart` month navigation now use `CircularIconButton`
+  (stable keys preserved), and the Schedule tab mounts the `SymptomTracker`.
+- i18n: added `previousMonthTooltip`, `nextMonthTooltip`, `symptomTrackerTitle`,
+  `symptomTrackerSubtitle`, `symptomNoneLogged`, `symptomLabel`,
+  `symptomTooltip`, `symptomLevel` to `AppStrings` + English/Spanish
+  dictionaries; the full-coverage probe now renders them.
+- Wiring: `app.dart` builds the shared `SymptomController` (SQLite or mock) and
+  `MainShellPage` forwards it to the Schedule tab.
+- Tests: `test/models/symptom_log_test.dart`,
+  `test/data/local_symptom_repository_test.dart`,
+  `test/state/symptom_controller_test.dart`, `test/ui/symptom_tracker_test.dart`,
+  `test/features/m45_calendar_symptoms_widget_test.dart`; existing
+  `m13_schedule_widget_test.dart` and `i18n/full_coverage_test.dart` still green.
+
+## Task 3: Nightly Scheduled Notifications
+- `lib/core/services/notification_service.dart` — new evening check-in at
+  **20:30** (`nightlyCheckInId` 3301) that prompts only for the logs still
+  missing today: symptoms (`SymptomRepository`) and/or activity
+  (`DailyEntryRepository`). When both are already recorded it cancels any
+  pending check-in instead of scheduling one.
+- Rich formatting: `BigTextStyleInformation` + `AndroidNotificationCategory
+  .reminder` + two icon actions (`symptom_check_in` → "Log symptoms",
+  `activity_check_in` → "Log activity") using
+  `DrawableResourceAndroidBitmap`, both `showsUserInterface: true`.
+- Android resources added: `drawable/ic_checkin_symptom.xml`,
+  `drawable/ic_checkin_activity.xml`, `drawable/ic_notification.xml`.
+- Routing: `NotificationNavigationController.requestSymptoms()` +
+  `NotificationAction.openSymptoms`; `app.dart` routes the symptom action and
+  `MainShellPage` switches to the Schedule tab (index 2). The background handler
+  recognises both action ids and clears the notification.
+- Tests: `test/services/notification_nightly_check_in_test.dart` (20:30
+  schedule, icon actions, big-text style, cancel-before-reschedule, skip when
+  both logged, symptoms-only / activity-only copy, body builder, routing).
+
+## Task 4: UI Spacing & Anti-Saturation Polish
+- `lib/core/theme/app_theme.dart` — added `AppSpacing.section` (32) and
+  `AppSpacing.pageBottom` (48).
+- `schedule_page.dart`, `routines_page.dart`, `nutrition_page.dart` — top-level
+  section gaps raised to `AppSpacing.section` and a `pageBottom` breathing-room
+  inset added so the last card never hugs the navigation bar.
+- Test: the calendar spacing assertion in
+  `m45_calendar_symptoms_widget_test.dart`.
+
+## Task 5: Testing & Verification
+- `fvm flutter analyze` — No issues found.
+- `fvm flutter test` (full suite) — **766 passed, 0 failed** (up from 723 at
+  sprint start; +43 net tests).
+
+## Verification
+- Analyzer: clean (`No issues found!`).
+- Full suite: 766 tests passed.
+
+## Commits (this sprint)
+- `e29c242` feat(m45-task-1): reusable circular icon button with long-press tooltips
+- feat(m45-task-2): daily symptom tracking with spaced circular options in calendar
+- feat(m45-task-3): evening nightly check-in with rich icon actions
+- `b4e2aa3` style(m45-task-4): generous section spacing and bottom breathing room
+- final: test(m45-task-5): verification, full suite green (766), analyzer clean
