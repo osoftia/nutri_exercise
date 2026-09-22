@@ -127,10 +127,15 @@ class _RoutinesPageState extends State<RoutinesPage> {
         final viewModel = widget.detailController.buildViewModel();
 
         return ListView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.xl,
+            AppSpacing.xl,
+            AppSpacing.pageBottom,
+          ),
           children: [
             AppHeading(strings.routinesTitle, size: AppHeadingSize.h2),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.section),
             NeumorphicContainer(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -203,10 +208,10 @@ class _RoutinesPageState extends State<RoutinesPage> {
                 ],
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.section),
             for (final routine in _mockRoutines)
               Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                padding: const EdgeInsets.only(bottom: AppSpacing.xl),
                 child: NeumorphicContainer(
                   child: ListTile(
                     contentPadding: EdgeInsets.zero,

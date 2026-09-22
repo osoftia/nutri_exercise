@@ -211,10 +211,15 @@ class _NutritionPageState extends State<NutritionPage> {
         final strings = LocalizationScope.stringsOf(context);
         final macroTargets = c.macroTargets;
         return ListView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.xl,
+            AppSpacing.xl,
+            AppSpacing.pageBottom,
+          ),
           children: [
             AppHeading(strings.nutritionTitle, size: AppHeadingSize.h2),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.section),
             NeumorphicContainer(
               child: Row(
                 key: const Key('calorie_summary'),
@@ -230,7 +235,7 @@ class _NutritionPageState extends State<NutritionPage> {
                 ],
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.section),
             if (widget.notificationService != null &&
                 widget.dailyEntryRepository != null) ...[
               NeumorphicContainer(
@@ -277,7 +282,7 @@ class _NutritionPageState extends State<NutritionPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.section),
             ],
             NeumorphicContainer(
               child: Row(
@@ -323,7 +328,7 @@ class _NutritionPageState extends State<NutritionPage> {
                 ],
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.section),
             Row(
               children: [
                 Expanded(
@@ -360,7 +365,7 @@ class _NutritionPageState extends State<NutritionPage> {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.section),
             NeumorphicContainer(
               key: const Key('weekly_bar_chart'),
               child: Column(
@@ -383,7 +388,7 @@ class _NutritionPageState extends State<NutritionPage> {
                 ],
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.section),
             AppText(strings.quickAddTitle),
             const SizedBox(height: AppSpacing.sm),
             Wrap(
@@ -399,7 +404,7 @@ class _NutritionPageState extends State<NutritionPage> {
                   ),
               ],
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.section),
             NeumorphicContainer(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

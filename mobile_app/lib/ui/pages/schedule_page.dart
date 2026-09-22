@@ -44,15 +44,20 @@ class _SchedulePageState extends State<SchedulePage> {
         final strings = LocalizationScope.stringsOf(context);
         final month = widget.controller.visibleMonth;
         return ListView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.xl,
+            AppSpacing.xl,
+            AppSpacing.pageBottom,
+          ),
           children: [
             AppHeading(strings.scheduleTitle, size: AppHeadingSize.h2),
-            const SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.section),
             _buildCalendar(context, month, strings),
-            const SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.section),
             _buildAgenda(context, strings),
             if (widget.symptomController != null) ...[
-              const SizedBox(height: AppSpacing.xxl),
+              const SizedBox(height: AppSpacing.section),
               SymptomTracker(controller: widget.symptomController!),
             ],
           ],

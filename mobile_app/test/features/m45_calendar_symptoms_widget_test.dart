@@ -85,6 +85,18 @@ void main() {
 
       expect(controller.levelOf(SymptomType.stress), 1);
     });
+
+    testWidgets('calendar sections use generous, breathable spacing', (
+      tester,
+    ) async {
+      await pumpSchedule(tester);
+
+      final listView = tester.widget<ListView>(find.byType(ListView).first);
+      final padding = listView.padding! as EdgeInsets;
+      expect(padding.bottom, AppSpacing.pageBottom);
+      expect(AppSpacing.section, greaterThanOrEqualTo(32));
+      expect(AppSpacing.pageBottom, greaterThanOrEqualTo(40));
+    });
   });
 
   group('M45 calendar history refactor', () {

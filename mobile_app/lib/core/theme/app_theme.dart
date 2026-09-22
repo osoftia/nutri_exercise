@@ -32,6 +32,12 @@ class AppSpacing {
   static const double xl = 24;
   static const double xxl = 32;
   static const double xxxl = 48;
+
+  /// Generous gap between top-level sections (anti-saturation polish).
+  static const double section = 32;
+
+  /// Bottom breathing room so the last section never hugs the nav bar.
+  static const double pageBottom = 48;
 }
 
 class AppRadius {
