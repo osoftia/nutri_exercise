@@ -14,6 +14,7 @@ import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
 import '../molecules/accordion_section.dart';
 import '../molecules/language_switcher.dart';
+import '../molecules/profile_avatar.dart';
 import '../molecules/settings_panel.dart';
 import '../molecules/symptom_tracker.dart';
 import '../molecules/tests_panel.dart';
@@ -115,7 +116,7 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         AppHeading(strings.profileTitle, size: AppHeadingSize.h2),
         const SizedBox(height: AppSpacing.xl),
-        Center(child: _Avatar(controller: widget.controller)),
+        Center(child: ProfileAvatar(controller: widget.controller)),
         const SizedBox(height: AppSpacing.xl),
         AccordionSection(
           headerKey: const Key('profile_user_settings_accordion'),
@@ -300,49 +301,3 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-/// Neumorphic avatar whose initials derive from the saved profile name,
-/// rebuilding automatically when [UserProfileController] notifies.
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.controller});
-
-  final UserProfileController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: controller,
-      builder: (context, _) {
-        final name = controller.profile?.name ?? '';
-        final initials = _initials(name);
-        return NeumorphicContainer(
-          borderRadius: 56,
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: CircleAvatar(
-            radius: 40,
-            backgroundColor: AppColors.primary500,
-            child: Text(
-              initials,
-              style: const TextStyle(
-                color: AppColors.textHigh,
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  static String _initials(String name) {
-    final parts = name
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((p) => p.isNotEmpty)
-        .toList();
-    if (parts.isEmpty) return '?';
-    final first = parts.first.substring(0, 1).toUpperCase();
-    if (parts.length == 1) return first;
-    return first + parts.last.substring(0, 1).toUpperCase();
-  }
-}

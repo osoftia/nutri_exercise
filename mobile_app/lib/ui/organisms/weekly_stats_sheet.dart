@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
@@ -10,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/weekly_stats.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
+import 'weekly_balance_chart.dart';
 
 /// Opens the weekly statistics sheet backed by [repository].
 Future<void> showWeeklyStatsSheet(
@@ -90,7 +89,7 @@ class _WeeklyStatsSheetState extends State<WeeklyStatsSheet> {
                       // M36 Task 1: labels come from the real stat dates
                       // (weekdayLabel), never a static list, so each bar is
                       // tagged with its exact weekday.
-                      _WeeklyBalanceChart(stats: stats),
+                      WeeklyBalanceChart(stats: stats),
                     ],
                   ],
                 ),
@@ -265,80 +264,3 @@ class _SummaryTile extends StatelessWidget {
   }
 }
 
-/// Animated grouped bar chart: consumed (blue) and burned (green) per day.
-class _WeeklyBalanceChart extends StatelessWidget {
-  const _WeeklyBalanceChart({required this.stats});
-
-  final List<WeeklyStat> stats;
-
-  @override
-  Widget build(BuildContext context) {
-    var maxValue = 1;
-    for (final stat in stats) {
-      maxValue = math.max(maxValue, math.max(stat.consumed, stat.burned));
-    }
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 700),
-      curve: Curves.easeOutCubic,
-      builder: (context, t, _) {
-        return SizedBox(
-          height: 180,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              for (var i = 0; i < stats.length; i++)
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          _Bar(
-                            key: Key('weekly_bar_consumed_$i'),
-                            fraction: stats[i].consumed / maxValue * t,
-                            color: AppColors.primary400,
-                          ),
-                          const SizedBox(width: 4),
-                          _Bar(
-                            key: Key('weekly_bar_burned_$i'),
-                            fraction: stats[i].burned / maxValue * t,
-                            color: AppColors.success,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      AppCaption(weekdayLabel(stats[i].date)),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _Bar extends StatelessWidget {
-  const _Bar({super.key, required this.fraction, required this.color});
-
-  final double fraction;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 10,
-      height: math.max(2.0, fraction.clamp(0.0, 1.0) * 130),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.85),
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppRadius.sm),
-        ),
-      ),
-    );
-  }
-}

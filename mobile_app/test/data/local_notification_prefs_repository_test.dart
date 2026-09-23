@@ -5,9 +5,7 @@ import 'package:nutri_mobile_app/core/models/notification_pref.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-  });
+  setUpAll(sqfliteFfiInit);
 
   late DatabaseHelper helper;
 

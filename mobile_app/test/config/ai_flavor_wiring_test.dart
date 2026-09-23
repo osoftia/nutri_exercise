@@ -28,32 +28,32 @@ void main() {
   group('AiEndpointResolver.resolveBaseUrl', () {
     test('prefers the dart-define override over flavor and default', () {
       final resolved = AiEndpointResolver.resolveBaseUrl(
-        dartDefineOverride: 'http://define:5039',
-        flavorBaseUrl: 'http://flavor:5039',
-        defaultBaseUrl: 'http://default:5039',
+        dartDefineOverride: 'http://define:5439',
+        flavorBaseUrl: 'http://flavor:5439',
+        defaultBaseUrl: 'http://default:5439',
       );
 
-      expect(resolved, 'http://define:5039');
+      expect(resolved, 'http://define:5439');
     });
 
     test('falls back to the flavor URL when no override is set', () {
       final resolved = AiEndpointResolver.resolveBaseUrl(
         dartDefineOverride: '',
-        flavorBaseUrl: 'http://flavor:5039',
-        defaultBaseUrl: 'http://default:5039',
+        flavorBaseUrl: 'http://flavor:5439',
+        defaultBaseUrl: 'http://default:5439',
       );
 
-      expect(resolved, 'http://flavor:5039');
+      expect(resolved, 'http://flavor:5439');
     });
 
     test('falls back to the built-in default when both are empty', () {
       final resolved = AiEndpointResolver.resolveBaseUrl(
         dartDefineOverride: '',
         flavorBaseUrl: '',
-        defaultBaseUrl: 'http://default:5039',
+        defaultBaseUrl: 'http://default:5439',
       );
 
-      expect(resolved, 'http://default:5039');
+      expect(resolved, 'http://default:5439');
     });
   });
 
@@ -78,7 +78,7 @@ void main() {
       const config = EnvironmentConfig(
         name: 'staging',
         useMockApi: false,
-        apiBaseUrl: 'http://10.0.2.2:5039',
+        apiBaseUrl: 'http://10.0.2.2:5439',
         enableAI: true,
       );
 

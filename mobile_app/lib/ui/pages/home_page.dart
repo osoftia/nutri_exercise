@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/config/environment_config.dart';
-import '../../core/constants/muscle_group_map.dart';
-import '../../core/constants/tamagotchi_groups.dart';
 import '../../core/data/daily_entry_repository.dart';
 import '../../core/data/daily_log_repository.dart';
 import '../../core/data/diet_repository.dart';
@@ -21,16 +19,11 @@ import '../../core/providers/routine_provider.dart';
 import '../../core/providers/wizard_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/services/share_progress_controller.dart';
-import '../../core/utils/exercise_muscle_mapper.dart';
-import '../atoms/custom_button.dart';
 import '../atoms/typography.dart';
 import '../molecules/daily_log_sheet.dart';
-import '../molecules/daily_totals_card.dart';
-import '../molecules/exercise_card.dart';
 import '../organisms/bottom_nav_bar.dart';
 import '../organisms/calendar_history_dialog.dart';
-import '../organisms/home_dashboard_sections.dart';
-import '../organisms/muscle_group_visualizer.dart';
+import '../organisms/home_dashboard_content.dart';
 import '../organisms/social_share_card.dart';
 import 'wizard_page.dart';
 
@@ -179,7 +172,7 @@ class _HomePageState extends State<HomePage> {
   void _launchWizard() {
     context.read<RoutineWizardProvider>().reset();
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const WizardPage()),
+      MaterialPageRoute<void>(builder: (_) => const WizardPage()),
     );
   }
 
@@ -327,152 +320,20 @@ class _HomePageState extends State<HomePage> {
     RoutineProvider provider,
     List<DailyMenu> menus,
   ) {
-    final exercises = provider.selectedDayExercises;
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            CustomButton(label: 'Ask AI', onPressed: _launchWizard),
-            const SizedBox(width: AppSpacing.md),
-            CustomButton(
-              label: 'Refresh',
-              variant: CustomButtonVariant.ghost,
-              onPressed: provider.loadRoutine,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        const SizedBox.shrink(),
-        if (widget.dailyLogController != null) ...[
-          const SizedBox(height: AppSpacing.xxl),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const AppHeading('Daily Log', size: AppHeadingSize.h2),
-              IconButton(
-                key: const Key('daily_log_action'),
-                icon: const Icon(
-                  Icons.edit_note,
-                  color: AppColors.primary400,
-                ),
-                tooltip: 'Quick log today',
-                onPressed: _openDailyLog,
-              ),
-            ],
-          ),
-        ],
-        const SizedBox(height: AppSpacing.xxl),
-        const AppHeading('Daily Totals'),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: DailyTotalsCard(state: _nutrition),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            ProfileInfoCard(
-              profile: widget.profile,
-              onEdit: _navigateToProfile,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xxl),
-        const AppHeading('Muscle Map'),
-        const SizedBox(height: AppSpacing.md),
-        // M34 Task 1: explicit avatar rebuild trigger. Every tamagotchi
-        // mutation (log exercise, 9 PM "Yes" slimming, quick-add meal)
-        // calls notifyListeners(); this ListenableBuilder forces the
-        // avatar subtree to rebuild with the latest state instead of
-        // relying solely on InteractiveBodyMap's internal listener.
-        ListenableBuilder(
-          listenable: tamagotchi,
-          builder: (context, _) {
-            return MuscleGroupVisualizer(
-              tamagotchiState: tamagotchi,
-              bodyWidthFactor: _bodyWidthFactor,
-            );
-          },
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: [
-            Expanded(
-              child: CustomButton(
-                key: const Key('quick_add_button'),
-                label: 'Quick Add',
-                onPressed: _quickAdd,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: [
-            Expanded(
-              child: CustomButton(
-                label: 'Simulate Workout (Core)',
-                onPressed: _simulateCoreWorkout,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: CustomButton(
-                label: 'Simulate Meal (650 kcal)',
-                onPressed: _simulateMeal,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xxl),
-        const AppHeading('Exercises'),
-        const SizedBox(height: AppSpacing.md),
-        if (exercises.isEmpty)
-          const AppText('Select a day to view exercises.')
-        else
-          for (final exercise in exercises)
-            ExerciseCard(
-              exercise: exercise,
-              isHighlighted: provider.selectedMuscleRegion != null &&
-                  muscleGroupToRegion[exercise.muscleGroup] ==
-                      provider.selectedMuscleRegion,
-              isLogged: provider.isExerciseLogged(exercise.name),
-              onLog: () {
-                provider.toggleExerciseLog(exercise.name);
-                if (provider.isExerciseLogged(exercise.name)) {
-                  final regionId =
-                      muscleGroupToRegion[exercise.muscleGroup];
-                  final group = regionId == null
-                      ? null
-                      : tamagotchiGroupForRegion(regionId);
-                  if (group != null) {
-                    tamagotchi.applyGrowth([group]);
-                  }
-                  tamagotchi.applySlimming();
-                }
-              },
-              onTap: () {
-                final regionId =
-                    muscleGroupToRegion[exercise.muscleGroup];
-                if (regionId != null) {
-                  provider.selectMuscleRegion(regionId);
-                }
-                tamagotchi.setOverrides(
-                  ExerciseMuscleMapper.getColorsForExercise(exercise.name),
-                );
-              },
-            ),
-        const SizedBox(height: AppSpacing.xxl),
-        const AppHeading('Weekly Routines'),
-        const SizedBox(height: AppSpacing.md),
-        const SizedBox.shrink(),
-        const SizedBox(height: AppSpacing.xxl),
-        const AppHeading('Daily Menus'),
-        const SizedBox(height: AppSpacing.md),
-        DailyMenuList(menus: menus),
-      ],
+    return HomeDashboardContent(
+      provider: provider,
+      menus: menus,
+      nutrition: _nutrition,
+      tamagotchi: tamagotchi,
+      bodyWidthFactor: _bodyWidthFactor,
+      profile: widget.profile,
+      showDailyLogHeader: widget.dailyLogController != null,
+      onLaunchWizard: _launchWizard,
+      onOpenDailyLog: _openDailyLog,
+      onNavigateToProfile: _navigateToProfile,
+      onQuickAdd: _quickAdd,
+      onSimulateWorkout: _simulateCoreWorkout,
+      onSimulateMeal: _simulateMeal,
     );
   }
 }

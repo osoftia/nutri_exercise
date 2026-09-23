@@ -65,7 +65,7 @@ void main() {
         );
       });
       final service = AiChatService(
-        baseUrl: 'http://192.168.1.6:5039',
+        baseUrl: 'http://192.168.1.2:5439',
         client: client,
       );
 

@@ -45,7 +45,7 @@ void main() {
     test('applySlimming notifies and clears the bloat flag', () {
       final state = MuscleTamagotchiState()..applyNutrition(600);
 
-      expect(notificationsFor(state, () => state.applySlimming()), 1);
+      expect(notificationsFor(state, state.applySlimming), 1);
       expect(state.coreIsBloating, isFalse);
     });
 
@@ -90,10 +90,10 @@ void main() {
     test('clearOverrides notifies only when overrides exist', () {
       final state = MuscleTamagotchiState();
 
-      expect(notificationsFor(state, () => state.clearOverrides()), 0);
+      expect(notificationsFor(state, state.clearOverrides), 0);
 
       state.setOverrides(const {'chest': Colors.red});
-      expect(notificationsFor(state, () => state.clearOverrides()), 1);
+      expect(notificationsFor(state, state.clearOverrides), 1);
     });
   });
 
@@ -101,10 +101,10 @@ void main() {
     test('settleCore notifies only while bloating', () {
       final state = MuscleTamagotchiState();
 
-      expect(notificationsFor(state, () => state.settleCore()), 0);
+      expect(notificationsFor(state, state.settleCore), 0);
 
       state.applyNutrition(600);
-      expect(notificationsFor(state, () => state.settleCore()), 1);
+      expect(notificationsFor(state, state.settleCore), 1);
       expect(state.coreIsBloating, isFalse);
     });
   });

@@ -1,0 +1,73 @@
+# M48 Execution Changes Log — Line-Count Audit, Modular Decomposition & Lint Boundaries
+
+Autonomous sprint following the strict TDD loop: audit → decompose →
+`fvm flutter analyze` + full `fvm flutter test` per batch, committed to `main`.
+Verification used the project's pinned FVM SDK (Flutter 3.29.0).
+
+## Task 1: File Line-Count Audit
+- Scanned every `lib/**/*.dart` file. Fourteen files exceeded 250 lines; the
+  largest were `database_helper.dart` (653), `interactive_body_map.dart` (591),
+  `mock_routine_payload.dart` (512), `notification_service.dart` (508) and
+  `home_page.dart` (508).
+- The audit is now enforced by `test/quality/file_size_guard_test.dart`: a soft
+  **400-line ceiling** on `lib/ui/` and `lib/core/state/` files (with documented
+  exemptions for flat data payloads and the cohesive query dictionary files).
+
+## Task 2: Modular Decomposition
+- **Notification layer** — extracted `notification_config.dart`
+  (`NotificationConfig` id/channel/copy constants + `NotificationDetailsFactory`
+  builders). `NotificationService` (556 → 383 lines) now only orchestrates
+  scheduling and re-exports the constants for a stable public API.
+- **Database layer** — extracted `database_schema.dart` (`DatabaseSchema`: every
+  `CREATE TABLE`, the v1→v12 migrations and `ensureTamagotchiMassColumn`).
+  `DatabaseHelper` (653 → 443 lines) is now a pure query surface.
+- **Body map** — extracted `body_map_geometry.dart` (pure geometry/decision
+  helpers: `scaleForMass`, `coreRenderScale`, `shouldRestartBloat`,
+  `selectionBaseColor`, `sameRegionIdSet`, split-limb constants) and
+  `body_map_painter.dart` (`BodyMapPainter` + hit-testing). The widget file is
+  now 168 lines; helpers are re-exported so existing importers/tests keep working.
+- **Calendar history** — extracted `calendar_entry_editor.dart`
+  (`CalendarEntryEditor`, centered modal day editor).
+  `calendar_history_dialog.dart` fell to 231 lines.
+- **Weekly stats** — extracted `weekly_balance_chart.dart`
+  (`WeeklyBalanceChart` + bars); the sheet fell to 244 lines.
+- **Profile** — extracted `profile_avatar.dart` (`ProfileAvatar` + initial
+  derivation); the page fell to 278 lines.
+- **Nutrition** — extracted `nutrition_presets.dart` (quick-add presets +
+  localized labels); the page fell to 345 lines.
+- **Home dashboard** — extracted `home_dashboard_sections.dart`
+  (`ProfileInfoCard`, `DailyMenuList`) and `home_dashboard_content.dart`
+  (`HomeDashboardContent`, the legacy dashboard body); `home_page.dart` fell to
+  309 lines.
+- **Body detail controller** — extracted `quick_food_presets.dart`; the
+  controller fell to 327 lines.
+
+### Decomposition results (files > 400 lines, guarded layers)
+`0` remaining in `lib/ui/` and `lib/core/state/` (enforced by the guard test).
+Largest remaining files are the exempt data/dictionary/query-surface files.
+
+## Task 3: Lint / Line-Length Rules Enforcement
+- `analysis_options.yaml` now enables the analyzer's strict language modes:
+  `strict-casts`, `strict-inference`, `strict-raw-types`.
+- Added focused, non-noisy linter rules that pass on the existing codebase while
+  enforcing clean separation: `always_declare_return_types`,
+  `avoid_relative_lib_imports`, `depend_on_referenced_packages`,
+  `prefer_final_locals`, `unnecessary_lambdas`.
+- Fixed the surfaced issues (a raw `MaterialPageRoute` type argument, test
+  closures that should be tear-offs).
+- Line-length/import-ordering conventions are documented as follow-ups rather
+  than enabled, since retrofitting 190+ existing lines is out of M48 scope.
+
+## Task 4: Testing & Verification
+- `fvm flutter analyze` — No issues found (with the stricter analyzer modes).
+- `fvm flutter test` (full suite) — **807 passed, 0 failed** (806 + the new
+  file-size guard test).
+
+## Verification
+- Analyzer: clean (`No issues found!`).
+- Full suite: 807 tests passed.
+
+## Commits (this sprint)
+- refactor(m48-task-1-2): split notification, database schema, body-map geometry and history editor
+- refactor(m48-task-2-3): decompose body map, weekly stats, profile, nutrition, dashboard and controller
+- final: test(m48-task-4): verification, full suite green (807), analyzer clean

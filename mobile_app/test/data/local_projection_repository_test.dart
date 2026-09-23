@@ -6,9 +6,7 @@ import 'package:nutri_mobile_app/core/models/user_profile.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-  });
+  setUpAll(sqfliteFfiInit);
 
   late DatabaseHelper helper;
 

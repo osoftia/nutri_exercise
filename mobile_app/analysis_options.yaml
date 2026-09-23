@@ -16,6 +16,10 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
 include: package:flutter_lints/flutter.yaml
 
 linter:
@@ -29,9 +33,20 @@ linter:
   # or a specific dart file by using the `// ignore: name_of_lint` and
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
+  #
+  # --- M48 Task 3: architectural boundaries & clean separation -----------
+  # Enforce explicit, non-relative package imports (no `../lib` reach-arounds)
+  # and declared return types so the atom -> molecule -> organism -> page
+  # layering stays legible and files keep a single, obvious responsibility.
+  # (Line-length and import-ordering conventions are documented in the M48
+  # backlog rather than enabled here, since retrofitting them across the
+  # existing codebase is out of scope for this milestone.)
   rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    always_declare_return_types: true
+    avoid_relative_lib_imports: true
+    depend_on_referenced_packages: true
+    prefer_final_locals: true
+    unnecessary_lambdas: true
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

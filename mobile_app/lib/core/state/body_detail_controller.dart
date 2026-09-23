@@ -17,6 +17,7 @@ import '../models/food_entry.dart';
 import '../services/rule_based_body_projection_forecaster.dart';
 import '../services/tamagotchi_scale_mapper.dart';
 import 'muscle_tamagotchi_state.dart';
+import 'quick_food_presets.dart';
 
 /// ChangeNotifier backing the blueprint diagram and its detail popups.
 ///
@@ -138,35 +139,7 @@ class BodyDetailController extends ChangeNotifier {
   }
 
   /// Quick-add presets appended by the food sheet's "Add food" action.
-  static const List<LoggedFood> quickFoods = [
-    LoggedFood(
-      name: 'Protein Shake',
-      portion: '1 scoop',
-      calories: 150,
-      proteinG: 30,
-      carbsG: 6,
-      fatG: 1,
-      time: '18:00',
-    ),
-    LoggedFood(
-      name: 'Banana',
-      portion: '1 medium',
-      calories: 105,
-      proteinG: 1,
-      carbsG: 27,
-      fatG: 0,
-      time: '18:05',
-    ),
-    LoggedFood(
-      name: 'Almonds',
-      portion: '30 g',
-      calories: 170,
-      proteinG: 6,
-      carbsG: 6,
-      fatG: 15,
-      time: '18:10',
-    ),
-  ];
+  static const List<LoggedFood> quickFoods = quickFoodPresets;
 
   /// Loads the overview (food + every callout segment) and notifies.
   ///
