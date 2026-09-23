@@ -295,7 +295,7 @@ class _EditFocusDialogState extends State<_EditFocusDialog> {
         key: const Key('focus_edit_field'),
         controller: _controller,
         autofocus: true,
-        decoration: InputDecoration(labelText: strings.focusAreaLabel),
+        decoration: AppInputDecoration.rounded(label: strings.focusAreaLabel),
       ),
       actions: [
         TextButton(

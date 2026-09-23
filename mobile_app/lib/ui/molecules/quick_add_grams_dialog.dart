@@ -95,12 +95,11 @@ class _QuickAddGramsDialogState extends State<_QuickAddGramsDialog> {
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
-              decoration: InputDecoration(
-                labelText: strings.portionLabel,
-                hintText: '100',
-                suffixText: 'g',
-                errorText: _error,
-              ),
+              decoration: AppInputDecoration.rounded(
+                label: strings.portionLabel,
+                hint: '100',
+                suffix: 'g',
+              ).copyWith(errorText: _error),
               onSubmitted: (_) => _confirm(),
               onChanged: (_) {
                 if (_error != null) setState(() => _error = null);

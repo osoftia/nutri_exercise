@@ -198,7 +198,7 @@ class _ProfilePageState extends State<ProfilePage> {
       key: const Key('profile_name_field'),
       controller: _nameController,
       textInputAction: TextInputAction.next,
-      decoration: InputDecoration(labelText: strings.nameFieldLabel),
+      decoration: AppInputDecoration.rounded(label: strings.nameFieldLabel),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
           return strings.requiredField(strings.nameFieldLabel);
@@ -214,7 +214,7 @@ class _ProfilePageState extends State<ProfilePage> {
       controller: _ageController,
       keyboardType: TextInputType.number,
       textInputAction: TextInputAction.next,
-      decoration: InputDecoration(labelText: strings.ageFieldLabel),
+      decoration: AppInputDecoration.rounded(label: strings.ageFieldLabel),
       validator: (value) =>
           _positiveNumberValidator(strings, value, strings.ageFieldLabel),
     );
@@ -226,9 +226,9 @@ class _ProfilePageState extends State<ProfilePage> {
       controller: _weightController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: strings.weightFieldLabel,
-        suffixText: 'kg',
+      decoration: AppInputDecoration.rounded(
+        label: strings.weightFieldLabel,
+        suffix: 'kg',
       ),
       validator: (value) =>
           _positiveNumberValidator(strings, value, strings.weightFieldLabel),
@@ -241,9 +241,9 @@ class _ProfilePageState extends State<ProfilePage> {
       controller: _heightController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       textInputAction: TextInputAction.done,
-      decoration: InputDecoration(
-        labelText: strings.heightFieldLabel,
-        suffixText: 'cm',
+      decoration: AppInputDecoration.rounded(
+        label: strings.heightFieldLabel,
+        suffix: 'cm',
       ),
       validator: (value) =>
           _positiveNumberValidator(strings, value, strings.heightFieldLabel),
@@ -255,7 +255,7 @@ class _ProfilePageState extends State<ProfilePage> {
       key: const Key('profile_goal_field'),
       // ignore: deprecated_member_use
       value: _goal,
-      decoration: InputDecoration(labelText: strings.fitnessGoalLabel),
+      decoration: AppInputDecoration.rounded(label: strings.fitnessGoalLabel),
       items: FitnessGoal.values
           .map(
             (goal) => DropdownMenuItem(

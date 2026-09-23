@@ -357,7 +357,7 @@ class _NutritionPageState extends State<NutritionPage> {
               ),
             ),
             const SizedBox(height: AppSpacing.section),
-            AppText(strings.quickAddTitle),
+            AppText(strings.addFoodsTitle),
             const SizedBox(height: AppSpacing.sm),
             Wrap(
               spacing: AppSpacing.sm,
@@ -377,14 +377,14 @@ class _NutritionPageState extends State<NutritionPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppText(strings.logAMealTitle),
+                  AppText(strings.logAMealShortTitle),
                   const SizedBox(height: AppSpacing.md),
                   TextField(
                     key: const Key('food_name_field'),
                     controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: strings.nameFieldLabel,
-                      hintText: strings.nameFieldHint,
+                    decoration: AppInputDecoration.rounded(
+                      label: strings.nameFieldLabel,
+                      hint: strings.nameFieldHint,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -392,9 +392,9 @@ class _NutritionPageState extends State<NutritionPage> {
                     key: const Key('food_calories_field'),
                     controller: _caloriesController,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: strings.caloriesFieldLabel,
-                      hintText: strings.caloriesFieldHint,
+                    decoration: AppInputDecoration.rounded(
+                      label: strings.caloriesFieldLabel,
+                      hint: strings.caloriesFieldHint,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),

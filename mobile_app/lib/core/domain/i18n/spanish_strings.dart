@@ -50,6 +50,10 @@ class SpanishStrings extends AppStrings {
   @override
   String get quickAddTitle => 'Añadir rápido';
   @override
+  String get addFoodsTitle => 'Añadir alimentos';
+  @override
+  String get logAMealShortTitle => 'Registrar una comida';
+  @override
   String get calorieLabel => 'Calorías';
   @override
   String get proteinLabel => 'Proteínas';

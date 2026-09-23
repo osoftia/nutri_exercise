@@ -44,6 +44,44 @@ class AppRadius {
   static const double sm = 8;
   static const double md = 12;
   static const double lg = 20;
+
+  /// Fully-rounded ("pill") radius for text inputs and circular controls.
+  static const double pill = 24;
+}
+
+/// Shared input styling so every text field across the app matches the smooth,
+/// rounded circular-control language (M47 Task 4).
+class AppInputDecoration {
+  /// Builds a rounded, softly-bordered [InputDecoration] for [label].
+  static InputDecoration rounded({
+    required String label,
+    String? hint,
+    String? suffix,
+    Widget? suffixIcon,
+  }) {
+    OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      borderSide: BorderSide(color: color, width: width),
+    );
+
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      suffixText: suffix,
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: AppColors.surface800,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      border: border(AppColors.surface700, 1),
+      enabledBorder: border(AppColors.surface700, 1),
+      focusedBorder: border(AppColors.primary400, 1.6),
+      errorBorder: border(AppColors.danger, 1.2),
+      focusedErrorBorder: border(AppColors.danger, 1.6),
+    );
+  }
 }
 
 /// Soft light/dark shadows used by the neumorphic design language.

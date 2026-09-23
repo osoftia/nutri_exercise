@@ -347,9 +347,8 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                   key: const Key('history_calories_field'),
                   controller: _calories,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: strings.calorieLabel,
-                    border: const OutlineInputBorder(),
+                  decoration: AppInputDecoration.rounded(
+                    label: strings.calorieLabel,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -360,10 +359,8 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                         key: const Key('history_protein_field'),
                         controller: _protein,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText:
-                              '${strings.proteinLabel} (g)',
-                          border: const OutlineInputBorder(),
+                        decoration: AppInputDecoration.rounded(
+                          label: '${strings.proteinLabel} (g)',
                         ),
                       ),
                     ),
@@ -373,9 +370,8 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                         key: const Key('history_carbs_field'),
                         controller: _carbs,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: '${strings.carbsLabel} (g)',
-                          border: const OutlineInputBorder(),
+                        decoration: AppInputDecoration.rounded(
+                          label: '${strings.carbsLabel} (g)',
                         ),
                       ),
                     ),
@@ -385,9 +381,8 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                         key: const Key('history_fat_field'),
                         controller: _fat,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: '${strings.fatLabel} (g)',
-                          border: const OutlineInputBorder(),
+                        decoration: AppInputDecoration.rounded(
+                          label: '${strings.fatLabel} (g)',
                         ),
                       ),
                     ),
@@ -397,9 +392,8 @@ class _EntryEditorSheetState extends State<_EntryEditorSheet> {
                 TextField(
                   key: const Key('history_exercises_field'),
                   controller: _exercises,
-                  decoration: InputDecoration(
-                    labelText: strings.exercisesFieldLabel,
-                    border: const OutlineInputBorder(),
+                  decoration: AppInputDecoration.rounded(
+                    label: strings.exercisesFieldLabel,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),

@@ -156,9 +156,9 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
                           focusNode: focusNode,
                           maxLines: 5,
                           textInputAction: TextInputAction.newline,
-                          decoration: InputDecoration(
-                            hintText: strings.dailyLogHint,
-                            border: const OutlineInputBorder(),
+                          decoration: AppInputDecoration.rounded(
+                            label: strings.dailyCheckInTitle,
+                            hint: strings.dailyLogHint,
                           ),
                         );
                       },

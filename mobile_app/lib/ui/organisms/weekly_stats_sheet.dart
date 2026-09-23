@@ -83,8 +83,10 @@ class _WeeklyStatsSheetState extends State<WeeklyStatsSheet> {
                     else ...[
                       _WeeklySummary(stats: stats, strings: strings),
                       const SizedBox(height: AppSpacing.lg),
-                      _MacroTotals(stats: stats, strings: strings),
-                      const SizedBox(height: AppSpacing.lg),
+                      // M47 Task 4: a single overlaid bar presents the weekly
+                      // protein and fat metrics on top of the balance chart.
+                      _MacroOverlay(stats: stats, strings: strings),
+                      const SizedBox(height: AppSpacing.md),
                       // M36 Task 1: labels come from the real stat dates
                       // (weekdayLabel), never a static list, so each bar is
                       // tagged with its exact weekday.
@@ -145,9 +147,12 @@ class _WeeklySummary extends StatelessWidget {
   }
 }
 
-/// Weekly protein / carbs / fat totals aggregated from the daily entries.
-class _MacroTotals extends StatelessWidget {
-  const _MacroTotals({required this.stats, required this.strings});
+/// A single overlaid bar presenting the weekly protein and fat totals.
+///
+/// Rather than a separate row of tiles, the two macro metrics are folded into
+/// one compact capsule that sits directly above the balance chart.
+class _MacroOverlay extends StatelessWidget {
+  const _MacroOverlay({required this.stats, required this.strings});
 
   final List<WeeklyStat> stats;
   final AppStrings strings;
@@ -155,43 +160,69 @@ class _MacroTotals extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final protein = stats.fold<int>(0, (sum, s) => sum + s.protein);
-    final carbs = stats.fold<int>(0, (sum, s) => sum + s.carbs);
     final fat = stats.fold<int>(0, (sum, s) => sum + s.fat);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppCaption(strings.weeklyMacrosTitle),
-        const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: [
-            Expanded(
-              child: _SummaryTile(
-                key: const Key('weekly_protein_total'),
-                title: strings.proteinLabel,
-                value: '${protein}g',
-                color: AppColors.primary400,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _SummaryTile(
-                key: const Key('weekly_carbs_total'),
-                title: strings.carbsLabel,
-                value: '${carbs}g',
-                color: AppColors.warning,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _SummaryTile(
-                key: const Key('weekly_fat_total'),
-                title: strings.fatLabel,
-                value: '${fat}g',
-                color: AppColors.accent,
-              ),
-            ),
-          ],
+    return Container(
+      key: const Key('weekly_macro_overlay'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface800,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: AppColors.primary500.withValues(alpha: 0.2),
         ),
+      ),
+      child: Row(
+        children: [
+          AppCaption(strings.weeklyMacrosTitle),
+          const Spacer(),
+          _MacroChip(
+            key: const Key('weekly_protein_overlay'),
+            label: strings.proteinLabel,
+            value: '${protein}g',
+            color: AppColors.primary400,
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          _MacroChip(
+            key: const Key('weekly_fat_overlay'),
+            label: strings.fatLabel,
+            value: '${fat}g',
+            color: AppColors.accent,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A compact colored-dot + value metric used inside the macro overlay.
+class _MacroChip extends StatelessWidget {
+  const _MacroChip({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        AppText(value, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(width: AppSpacing.xs),
+        AppCaption(label),
       ],
     );
   }

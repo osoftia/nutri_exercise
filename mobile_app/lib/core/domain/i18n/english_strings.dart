@@ -50,6 +50,10 @@ class EnglishStrings extends AppStrings {
   @override
   String get quickAddTitle => 'Quick Add';
   @override
+  String get addFoodsTitle => 'Add foods';
+  @override
+  String get logAMealShortTitle => 'Log a meal';
+  @override
   String get calorieLabel => 'Calories';
   @override
   String get proteinLabel => 'Protein';

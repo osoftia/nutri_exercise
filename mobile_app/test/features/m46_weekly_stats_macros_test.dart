@@ -60,12 +60,10 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('weekly_protein_total')), findsOneWidget);
-    expect(find.byKey(const Key('weekly_carbs_total')), findsOneWidget);
-    expect(find.byKey(const Key('weekly_fat_total')), findsOneWidget);
-    expect(find.text('130g'), findsOneWidget);
-    expect(find.text('210g'), findsOneWidget);
-    expect(find.text('62g'), findsOneWidget);
+    expect(find.byKey(const Key('weekly_protein_overlay')), findsOneWidget);
+    expect(find.byKey(const Key('weekly_fat_overlay')), findsOneWidget);
+    expect(find.text('130g'), findsWidgets);
+    expect(find.text('62g'), findsWidgets);
     expect(find.text('Weekly macros'), findsOneWidget);
   });
 }

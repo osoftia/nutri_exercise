@@ -50,6 +50,8 @@ abstract class AppStrings {
   String get carbsLabel;
   String get fatLabel;
   String get portionLabel;
+  String get addFoodsTitle;
+  String get logAMealShortTitle;
 
   /// Title of the gram-confirmation dialog for [foodName].
   String addFoodTitle(String foodName);
