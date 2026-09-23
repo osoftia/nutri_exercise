@@ -36,6 +36,9 @@ Future<LanguageController> _pumpProfile(
     ),
   );
   await tester.pumpAndSettle();
+  // M47: the switcher now lives inside the System Settings accordion; expand it.
+  await tester.tap(find.byKey(const Key('profile_settings_accordion')));
+  await tester.pumpAndSettle();
   return controller;
 }
 

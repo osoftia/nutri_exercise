@@ -42,7 +42,7 @@ void main() {
     });
   });
 
-  testWidgets('nutrition tab shows the test button and reactive toggle', (
+  testWidgets('nutrition tab no longer hosts the notification test controls', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1000, 6000);
@@ -57,10 +57,11 @@ void main() {
     await tester.tap(find.text('Nutrition'));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('test_notifications_button')), findsOneWidget);
+    // M47 Task 3: the triggers moved to the Profile "Pruebas" section.
+    expect(find.byKey(const Key('test_notifications_button')), findsNothing);
     expect(
       find.byKey(const Key('reactive_notifications_toggle')),
-      findsOneWidget,
+      findsNothing,
     );
   });
 }

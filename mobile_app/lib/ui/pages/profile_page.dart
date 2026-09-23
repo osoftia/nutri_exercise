@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/data/daily_entry_repository.dart';
 import '../../core/data/notification_prefs_repository.dart';
 import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
@@ -15,6 +16,7 @@ import '../molecules/accordion_section.dart';
 import '../molecules/language_switcher.dart';
 import '../molecules/settings_panel.dart';
 import '../molecules/symptom_tracker.dart';
+import '../molecules/tests_panel.dart';
 
 /// Profile tab: neumorphic form to view and edit personal details,
 /// backed by [UserProfileController] for immediate state reflection, plus the
@@ -27,6 +29,7 @@ class ProfilePage extends StatefulWidget {
     this.symptomController,
     this.notificationPrefsRepository,
     this.notificationService,
+    this.dailyEntryRepository,
   });
 
   final UserProfileController controller;
@@ -37,11 +40,14 @@ class ProfilePage extends StatefulWidget {
   /// Optional symptom controller; enables the Daily Symptoms accordion.
   final SymptomController? symptomController;
 
-  /// Optional prefs store; enables the Settings accordion.
+  /// Optional prefs store; enables the System Settings accordion.
   final NotificationPrefsRepository? notificationPrefsRepository;
 
-  /// Optional notification service; enables the settings quick-test triggers.
+  /// Optional notification service; enables the Pruebas accordion.
   final NotificationService? notificationService;
+
+  /// Optional calendar store; feeds the reactive meal test notification.
+  final DailyEntryRepository? dailyEntryRepository;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -111,28 +117,30 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(height: AppSpacing.xl),
         Center(child: _Avatar(controller: widget.controller)),
         const SizedBox(height: AppSpacing.xl),
-        if (widget.languageController != null) ...[
-          LanguageSwitcher(controller: widget.languageController!),
-          const SizedBox(height: AppSpacing.xl),
-        ],
-        NeumorphicContainer(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildNameField(strings),
-                const SizedBox(height: AppSpacing.lg),
-                _buildAgeField(strings),
-                const SizedBox(height: AppSpacing.lg),
-                _buildWeightField(strings),
-                const SizedBox(height: AppSpacing.lg),
-                _buildHeightField(strings),
-                const SizedBox(height: AppSpacing.lg),
-                _buildGoalField(strings),
-                const SizedBox(height: AppSpacing.xl),
-                _buildSaveButton(strings),
-              ],
+        AccordionSection(
+          headerKey: const Key('profile_user_settings_accordion'),
+          title: strings.userSettingsTitle,
+          icon: Icons.person_outline,
+          initiallyExpanded: true,
+          child: NeumorphicContainer(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildNameField(strings),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildAgeField(strings),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildWeightField(strings),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildHeightField(strings),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildGoalField(strings),
+                  const SizedBox(height: AppSpacing.xl),
+                  _buildSaveButton(strings),
+                ],
+              ),
             ),
           ),
         ),
@@ -147,15 +155,37 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
         if (widget.notificationPrefsRepository != null ||
-            widget.notificationService != null) ...[
+            widget.languageController != null) ...[
           const SizedBox(height: AppSpacing.xl),
           AccordionSection(
             headerKey: const Key('profile_settings_accordion'),
-            title: strings.settingsTitle,
+            title: strings.systemSettingsTitle,
             icon: Icons.settings,
-            child: SettingsPanel(
-              prefsRepository: widget.notificationPrefsRepository,
-              notificationService: widget.notificationService,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.notificationPrefsRepository != null)
+                  SettingsPanel(
+                    prefsRepository: widget.notificationPrefsRepository,
+                  ),
+                if (widget.languageController != null) ...[
+                  if (widget.notificationPrefsRepository != null)
+                    const SizedBox(height: AppSpacing.xl),
+                  LanguageSwitcher(controller: widget.languageController!),
+                ],
+              ],
+            ),
+          ),
+        ],
+        if (widget.notificationService != null) ...[
+          const SizedBox(height: AppSpacing.xl),
+          AccordionSection(
+            headerKey: const Key('profile_tests_accordion'),
+            title: strings.testsSectionTitle,
+            icon: Icons.science_outlined,
+            child: TestsPanel(
+              notificationService: widget.notificationService!,
+              dailyEntryRepository: widget.dailyEntryRepository,
             ),
           ),
         ],

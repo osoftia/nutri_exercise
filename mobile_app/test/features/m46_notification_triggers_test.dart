@@ -68,15 +68,14 @@ void main() {
     });
   });
 
-  group('M46 quick-test trigger in the Nutrition section', () {
-    testWidgets('tapping the nightly test button fires the test', (
+  group('M46 quick-test triggers (relocated to Profile in M47)', () {
+    testWidgets('the Nutrition tab no longer hosts the test trigger', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1000, 6000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
-      final service = _SpyNotificationService();
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.dark,
@@ -85,25 +84,19 @@ void main() {
               repository: MockNutritionRepository(),
             ),
             dailyEntryRepository: MockDailyEntryRepository(),
-            notificationService: service,
+            notificationService: _SpyNotificationService(),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      final button = find.byKey(const Key('nightly_check_in_test_button'));
-      expect(button, findsOneWidget);
-      await tester.ensureVisible(button);
-      await tester.pumpAndSettle();
-      await tester.tap(button);
-      await tester.pump();
-
-      expect(service.nightlyCalls, 1);
+      expect(
+        find.byKey(const Key('nightly_check_in_test_button')),
+        findsNothing,
+      );
     });
-  });
 
-  group('M46 quick-test trigger in the Profile settings section', () {
-    testWidgets('the settings panel exposes both test triggers', (
+    testWidgets('the Pruebas section exposes both test triggers', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1000, 4000);
@@ -129,7 +122,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('profile_settings_accordion')));
+      await tester.tap(find.byKey(const Key('profile_tests_accordion')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('settings_nightly_test_button')));

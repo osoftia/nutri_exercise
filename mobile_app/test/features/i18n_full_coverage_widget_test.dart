@@ -129,8 +129,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Guardar perfil'), findsOneWidget);
-    expect(find.text('Idioma'), findsOneWidget);
     expect(find.text('Save Profile'), findsNothing);
+
+    // M47: the language switcher now lives inside System Settings; expanding it
+    // reveals the localized heading.
+    await tester.tap(find.byKey(const Key('profile_settings_accordion')));
+    await tester.pumpAndSettle();
+    expect(find.text('Idioma'), findsOneWidget);
   });
 
   testWidgets('validation messages localize on switch', (tester) async {

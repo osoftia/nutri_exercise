@@ -217,6 +217,12 @@ abstract class AppStrings {
   String get nightlyCheckInTestButton;
   String get quickTestTitle;
 
+  // --- Profile sections -------------------------------------------------
+  String get userSettingsTitle;
+  String get systemSettingsTitle;
+  String get testsSectionTitle;
+  String get mealTestButton;
+
   /// `"Remove <name>"` tooltip for an exercise's delete control.
   String removeExerciseTooltip(String name);
 

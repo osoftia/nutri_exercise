@@ -17,8 +17,9 @@ class _SpyNotificationService extends NotificationService {
 }
 
 void main() {
-  testWidgets('nutrition tab shows the EXERCISE NOT button and triggers a test',
-      (tester) async {
+  testWidgets('nutrition tab no longer shows the EXERCISE NOT button (M47)', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1000, 6000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -39,11 +40,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('exercise_not_button')), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('exercise_not_button')));
-    await tester.pump();
-
-    expect(service.exerciseTestCalls, 1);
+    // M47 Task 3: the trigger moved to the Profile "Pruebas" section.
+    expect(find.byKey(const Key('exercise_not_button')), findsNothing);
+    expect(service.exerciseTestCalls, 0);
   });
 }

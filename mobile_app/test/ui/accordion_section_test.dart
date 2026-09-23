@@ -31,7 +31,7 @@ void main() {
       await pumpAccordion(tester);
 
       expect(find.text('Daily symptoms'), findsOneWidget);
-      expect(find.text('Long-press an icon'), findsOneWidget);
+      expect(find.text('Long-press an icon'), findsNothing);
       expect(find.text('BODY'), findsNothing);
     });
 

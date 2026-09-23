@@ -341,6 +341,14 @@ class SpanishStrings extends AppStrings {
   @override
   String get quickTestTitle => 'Prueba rápida';
   @override
+  String get userSettingsTitle => 'Ajustes de Usuario';
+  @override
+  String get systemSettingsTitle => 'Ajustes de Sistema';
+  @override
+  String get testsSectionTitle => 'Pruebas';
+  @override
+  String get mealTestButton => 'Probar notificación de comida';
+  @override
   String removeExerciseTooltip(String name) => 'Eliminar $name';
 
   // --- History dialog / editor -----------------------------------------

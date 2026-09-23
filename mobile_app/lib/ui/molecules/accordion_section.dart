@@ -4,10 +4,12 @@ import '../../core/theme/app_theme.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
 
-/// A collapsible profile section that expands/collapses smoothly on tap.
+/// A standardized collapsible card used across the whole application.
 ///
-/// The body is removed from the tree while collapsed (so it is never laid out)
-/// and its height is animated with [AnimatedSize]; the chevron rotates in sync.
+/// While **collapsed only the main title is visible**; the optional subtitle
+/// and the body are revealed together upon expansion. The body is removed from
+/// the tree while collapsed and its height animates with [AnimatedSize], while
+/// the trailing chevron rotates in sync.
 class AccordionSection extends StatefulWidget {
   /// Creates an accordion section.
   const AccordionSection({
@@ -18,12 +20,14 @@ class AccordionSection extends StatefulWidget {
     this.icon,
     this.initiallyExpanded = false,
     this.headerKey,
+    this.subtitleInHeaderWhenExpanded = false,
   });
 
   /// Section title shown in the always-visible header.
   final String title;
 
-  /// Optional supporting line under the title.
+  /// Optional supporting line, revealed only when the section is expanded
+  /// (unless [subtitleInHeaderWhenExpanded] keeps it in the header).
   final String? subtitle;
 
   /// Optional leading glyph.
@@ -34,6 +38,10 @@ class AccordionSection extends StatefulWidget {
 
   /// Key attached to the tappable header (for tests).
   final Key? headerKey;
+
+  /// When true the subtitle stays under the title even while expanded;
+  /// otherwise it moves into the revealed body.
+  final bool subtitleInHeaderWhenExpanded;
 
   /// The collapsible body.
   final Widget child;
@@ -46,6 +54,14 @@ class _AccordionSectionState extends State<AccordionSection> {
   late bool _expanded = widget.initiallyExpanded;
 
   void _toggle() => setState(() => _expanded = !_expanded);
+
+  bool get _showSubtitleInHeader =>
+      widget.subtitle != null &&
+      _expanded &&
+      widget.subtitleInHeaderWhenExpanded;
+
+  bool get _showSubtitleInBody =>
+      widget.subtitle != null && !_showSubtitleInHeader && _expanded;
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +87,7 @@ class _AccordionSectionState extends State<AccordionSection> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         AppText(widget.title),
-                        if (widget.subtitle != null) ...[
+                        if (_showSubtitleInHeader) ...[
                           const SizedBox(height: AppSpacing.xs),
                           AppCaption(widget.subtitle!),
                         ],
@@ -103,7 +119,16 @@ class _AccordionSectionState extends State<AccordionSection> {
                       AppSpacing.lg,
                       AppSpacing.lg,
                     ),
-                    child: widget.child,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_showSubtitleInBody) ...[
+                          AppCaption(widget.subtitle!),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
+                        widget.child,
+                      ],
+                    ),
                   )
                 : const SizedBox(width: double.infinity),
           ),

@@ -53,7 +53,6 @@ class NutritionPage extends StatefulWidget {
 class _NutritionPageState extends State<NutritionPage> {
   final _nameController = TextEditingController();
   final _caloriesController = TextEditingController();
-  bool _reactiveEnabled = true;
 
   static const List<FoodEntry> _quickAdds = [
     FoodEntry(
@@ -205,17 +204,11 @@ class _NutritionPageState extends State<NutritionPage> {
     );
   }
 
+  /// Fires the reactive meal notification after a food log.
+  ///
+  /// The reactive toggle and test triggers moved to the Profile "Pruebas"
+  /// section (M47 Task 3); logging a meal still triggers the notification.
   Future<void> _maybeNotifyReactive() async {
-    final service = widget.notificationService;
-    final repository = widget.dailyEntryRepository;
-    if (!_reactiveEnabled || service == null || repository == null) return;
-    await service.showReactiveMealNotification(
-      repository: repository,
-      recovered: widget.controller.consumedCalories,
-    );
-  }
-
-  Future<void> _testNotifications() async {
     final service = widget.notificationService;
     final repository = widget.dailyEntryRepository;
     if (service == null || repository == null) return;
@@ -259,62 +252,6 @@ class _NutritionPageState extends State<NutritionPage> {
               ),
             ),
             const SizedBox(height: AppSpacing.section),
-            if (widget.notificationService != null &&
-                widget.dailyEntryRepository != null) ...[
-              NeumorphicContainer(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SwitchListTile(
-                      key: const Key('reactive_notifications_toggle'),
-                      title: AppText(strings.reactiveNotificationsTitle),
-                      subtitle: AppCaption(
-                        strings.reactiveNotificationsSubtitle,
-                      ),
-                      value: _reactiveEnabled,
-                      onChanged: (value) =>
-                          setState(() => _reactiveEnabled = value),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        left: AppSpacing.md,
-                        right: AppSpacing.md,
-                        bottom: AppSpacing.md,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          CustomButton(
-                            key: const Key('exercise_not_button'),
-                            label: strings.exerciseNotButton,
-                            variant: CustomButtonVariant.ghost,
-                            onPressed: () =>
-                                widget.notificationService
-                                    ?.showExerciseReminderTest(),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          CustomButton(
-                            key: const Key('test_notifications_button'),
-                            label: strings.testNotificationsButton,
-                            variant: CustomButtonVariant.ghost,
-                            onPressed: _testNotifications,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          CustomButton(
-                            key: const Key('nightly_check_in_test_button'),
-                            label: strings.nightlyCheckInTestButton,
-                            variant: CustomButtonVariant.ghost,
-                            onPressed: () => widget.notificationService
-                                ?.showNightlyCheckInTest(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.section),
-            ],
             NeumorphicContainer(
               child: Row(
                 children: [

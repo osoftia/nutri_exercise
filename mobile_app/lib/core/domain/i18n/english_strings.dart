@@ -340,6 +340,14 @@ class EnglishStrings extends AppStrings {
   @override
   String get quickTestTitle => 'Quick test';
   @override
+  String get userSettingsTitle => 'User Settings';
+  @override
+  String get systemSettingsTitle => 'System Settings';
+  @override
+  String get testsSectionTitle => 'Tests';
+  @override
+  String get mealTestButton => 'Test meal notification';
+  @override
   String removeExerciseTooltip(String name) => 'Remove $name';
 
   // --- History dialog / editor -----------------------------------------
