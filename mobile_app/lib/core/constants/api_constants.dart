@@ -14,11 +14,11 @@ class ApiConstants {
 
   /// Built-in fallback (the Mac hosting the backend + Ollama on the LAN),
   /// with no flavor or dart-define applied.
-  static String get defaultBaseUrl => 'http://192.168.1.6:$defaultPort';
+  static String get defaultBaseUrl => 'http://192.168.1.2:$defaultPort';
 
   /// Fully resolved base URL: `--dart-define` wins over the built-in default.
   /// Override at build/run time, e.g.
-  /// `flutter run --dart-define=API_BASE_URL=http://192.168.1.10:5039`
+  /// `flutter run --dart-define=API_BASE_URL=http://192.168.1.2:5039`
   /// (Android emulators reach the host through `10.0.2.2`).
   static String get baseUrl => AiEndpointResolver.resolveBaseUrl(
         dartDefineOverride: dartDefineBaseUrl,

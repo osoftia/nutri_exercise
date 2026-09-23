@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -13,15 +12,16 @@ import '../models/routine_models.dart';
 import '../models/symptom_log.dart';
 import '../models/tamagotchi_progress.dart';
 import '../models/user_profile.dart';
+import 'database_schema.dart';
 
 /// Local SQLite storage for offline-first persistence of routines and diets.
 ///
 /// A [database] override can be provided (e.g. an in-memory database in tests).
+/// Table creation and migrations are delegated to [DatabaseSchema].
 class DatabaseHelper {
   DatabaseHelper({Database? database}) : _databaseOverride = database;
 
-  static const String _dbName = 'nutri_exercise.db';
-  static const int _dbVersion = 12;
+  static const int _dbVersion = DatabaseSchema.version;
 
   final Database? _databaseOverride;
   Database? _database;
@@ -33,240 +33,22 @@ class DatabaseHelper {
     if (existing != null) return existing;
     final dir = await getApplicationDocumentsDirectory();
     _database = await openDatabase(
-      '${dir.path}/$_dbName',
+      '${dir.path}/${DatabaseSchema.fileName}',
       version: _dbVersion,
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
+      onCreate: DatabaseSchema.createAll,
+      onUpgrade: DatabaseSchema.upgrade,
     );
     return _database!;
   }
 
-  Future<void> _onCreate(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE routines (
-        id INTEGER PRIMARY KEY,
-        weekday TEXT NOT NULL,
-        focus TEXT NOT NULL,
-        exercises_json TEXT NOT NULL
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE diets (
-        id INTEGER PRIMARY KEY,
-        date TEXT NOT NULL,
-        total_calories INTEGER NOT NULL,
-        meals_json TEXT NOT NULL
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE notification_prefs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        pref_key TEXT NOT NULL UNIQUE,
-        enabled INTEGER NOT NULL
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE profile (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        name TEXT NOT NULL,
-        age INTEGER NOT NULL,
-        weight_kg REAL NOT NULL,
-        height_cm REAL NOT NULL,
-        goal TEXT NOT NULL
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE daily_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT NOT NULL UNIQUE,
-        text TEXT NOT NULL,
-        parsed_json TEXT
-      )
-    ''');
-    await _createProjectionTables(db);
-    await _createDailyEntryTable(db);
-    await _createNotificationHistoryTables(db);
-    await _createBodyDetailTables(db);
-    await _createSettingsTable(db);
-    await _createSymptomTable(db);
-  }
-
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await _createProjectionTables(db);
-    }
-    if (oldVersion < 3) {
-      await db.execute('''
-        CREATE TABLE daily_logs (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          date TEXT NOT NULL UNIQUE,
-          text TEXT NOT NULL
-        )
-      ''');
-    }
-    if (oldVersion < 4) {
-      await db.execute(
-        'ALTER TABLE daily_logs ADD COLUMN parsed_json TEXT',
-      );
-    }
-    if (oldVersion < 5) {
-      await _createDailyEntryTable(db);
-    }
-    if (oldVersion < 6) {
-      await _createNotificationHistoryTables(db);
-    }
-    if (oldVersion < 7) {
-      await db.execute(
-        'ALTER TABLE daily_entries ADD COLUMN healthy_meals '
-        'INTEGER NOT NULL DEFAULT 0',
-      );
-    }
-    if (oldVersion < 8) {
-      await db.execute(
-        'ALTER TABLE daily_entries ADD COLUMN burned '
-        'INTEGER NOT NULL DEFAULT 0',
-      );
-    }
-    if (oldVersion < 9) {
-      await _createBodyDetailTables(db);
-    }
-    if (oldVersion < 10) {
-      await ensureTamagotchiMassColumn(db);
-    }
-    if (oldVersion < 11) {
-      await _createSettingsTable(db);
-    }
-    if (oldVersion < 12) {
-      await _createSymptomTable(db);
-    }
-  }
-
-  /// Creates the `symptom_logs` table (version 12): one severity row per date
-  /// and symptom kind.
-  Future<void> _createSymptomTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS symptom_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT NOT NULL,
-        symptom TEXT NOT NULL,
-        level INTEGER NOT NULL,
-        UNIQUE(date, symptom)
-      )
-    ''');
-  }
-
-  /// Creates the generic key/value `app_settings` table (version 11).
-  Future<void> _createSettingsTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS app_settings (
-        setting_key TEXT PRIMARY KEY,
-        setting_value TEXT NOT NULL
-      )
-    ''');
-  }
-
   /// Adds the `mass_json` column to `tamagotchi_progress` (version 10).
   ///
-  /// Exposed for tests so the legacy-schema upgrade path can be exercised
-  /// without spinning up the real documents-directory database.
-  @visibleForTesting
-  static Future<void> ensureTamagotchiMassColumn(Database db) async {
-    final columns = await db.rawQuery(
-      'PRAGMA table_info(tamagotchi_progress)',
-    );
-    final hasColumn = columns.any((row) => row['name'] == 'mass_json');
-    if (hasColumn) return;
-    await db.execute(
-      "ALTER TABLE tamagotchi_progress ADD COLUMN mass_json TEXT NOT NULL "
-      "DEFAULT '{}'",
-    );
-  }
-
-  Future<void> _createBodyDetailTables(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS food_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT NOT NULL,
-        name TEXT NOT NULL,
-        portion TEXT NOT NULL,
-        calories INTEGER NOT NULL,
-        protein INTEGER NOT NULL,
-        carbs INTEGER NOT NULL,
-        fat INTEGER NOT NULL,
-        time TEXT NOT NULL,
-        created_at TEXT NOT NULL
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS exercise_completions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT NOT NULL,
-        name TEXT NOT NULL,
-        planned_sets INTEGER NOT NULL,
-        completed_sets INTEGER NOT NULL,
-        reps INTEGER NOT NULL,
-        load_kg REAL NOT NULL,
-        created_at TEXT NOT NULL
-      )
-    ''');
-  }
-
-  Future<void> _createNotificationHistoryTables(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS tamagotchi_progress (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        core_fullness REAL NOT NULL,
-        mass_json TEXT NOT NULL DEFAULT '{}',
-        updated_at TEXT NOT NULL
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS meal_actions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT NOT NULL,
-        meal TEXT NOT NULL,
-        time_of_day TEXT NOT NULL,
-        created_at TEXT NOT NULL
-      )
-    ''');
-  }
-
-  Future<void> _createDailyEntryTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS daily_entries (
-        date TEXT PRIMARY KEY,
-        calories INTEGER NOT NULL,
-        protein INTEGER NOT NULL,
-        carbs INTEGER NOT NULL,
-        fat INTEGER NOT NULL,
-        exercises_json TEXT NOT NULL,
-        healthy_meals INTEGER NOT NULL DEFAULT 0,
-        burned INTEGER NOT NULL DEFAULT 0
-      )
-    ''');
-  }
-
-  Future<void> _createProjectionTables(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS projection_plan (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        start_weight_kg REAL NOT NULL,
-        goal TEXT NOT NULL
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS projection_milestone (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        plan_id INTEGER NOT NULL,
-        month INTEGER NOT NULL,
-        weight_kg REAL NOT NULL,
-        shoulder_factor REAL NOT NULL,
-        waist_factor REAL NOT NULL,
-        focus TEXT NOT NULL
-      )
-    ''');
-  }
+  /// Re-exported from [DatabaseSchema] so the legacy-schema upgrade path stays
+  /// testable.
+  static Future<void> ensureTamagotchiMassColumn(Database db) =>
+      // ignore: invalid_use_of_visible_for_testing_member
+      DatabaseSchema.ensureTamagotchiMassColumn(db);
 
   Future<List<Map<String, Object?>>> getRoutines() async {
     final db = await database;

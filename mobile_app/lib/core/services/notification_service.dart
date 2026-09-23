@@ -10,6 +10,7 @@ import '../models/daily_entry.dart';
 import '../utils/weekly_stats.dart';
 import 'local_notification_scheduler.dart';
 import 'notification_background_handler.dart';
+import 'notification_config.dart';
 
 /// Configures the timezone database and pins [tz.local] to a fixed-offset
 /// location derived from the device's current UTC offset.
@@ -37,6 +38,10 @@ void configureLocalTimeZone() {
 }
 
 /// Wraps `flutter_local_notifications` for weekly and daily reminders.
+///
+/// Identifier constants live in [NotificationConfig]; the [NotificationDetails]
+/// builders live in [NotificationDetailsFactory]. This class only orchestrates
+/// initialization, scheduling and the reactive notifications.
 class NotificationService {
   NotificationService({
     FlutterLocalNotificationsPlugin? plugin,
@@ -49,253 +54,48 @@ class NotificationService {
     _scheduler = scheduler ?? FlutterLocalNotificationScheduler(_plugin);
   }
 
-  static const String _channelId = 'routine_reminders';
-  static const String _channelName = 'Routine reminders';
-  static const String _channelDescription =
-      'Weekly reminders for scheduled workouts';
-
-  static const String _dailyChannelId = 'daily_log_reminders';
-  static const String _dailyChannelName = 'Daily check-in';
-  static const String _dailyChannelDescription =
-      'A daily nudge to log what you ate and trained';
-  static const String _dailyReminderTitle = 'Daily check-in';
-  static const String _dailyReminderBody = 'What did you eat and train today?';
-
-  /// Stable id used for the daily reminder so rescheduling replaces it.
-  static const int dailyReminderId = 2001;
-
-  /// Stable ids for the three interactive meal reminders.
-  static const int breakfastReminderId = 3101;
-  static const int lunchReminderId = 3102;
-  static const int dinnerReminderId = 3103;
-
-  /// Stable id for the immediate "meal logged" reactive notification.
-  static const int mealLoggedNotificationId = 4001;
-
-  /// Stable id for the daily 9 PM exercise check-in reminder.
-  static const int exerciseReminderId = 3201;
-
-  /// Stable id for the "EXERCISE NOT" test notification.
-  static const int exerciseReminderTestId = 3202;
-
-  /// Notification action ids for the exercise check-in.
-  static const String exerciseYesActionId = 'exercise_yes';
-  static const String exerciseNoActionId = 'exercise_no';
-
-  /// Stable id for the evening nightly symptom + activity check-in.
-  static const int nightlyCheckInId = 3301;
-
-  /// Stable id for the "nightly check-in" quick-test notification.
-  static const int nightlyCheckInTestId = 3302;
-
-  /// Notification action ids for the nightly check-in.
-  static const String symptomCheckInActionId = 'symptom_check_in';
-  static const String activityCheckInActionId = 'activity_check_in';
-
-  /// Evening hour/minute for the nightly check-in.
-  static const int nightlyCheckInHour = 20;
-  static const int nightlyCheckInMinute = 30;
-
-  static const String _nightlyChannelId = 'nightly_check_ins';
-  static const String _nightlyChannelName = 'Nightly check-in';
-  static const String _nightlyChannelDescription =
-      'Prompts for the daily symptom and activity logs';
-
-  /// Copy for the nightly check-in.
-  static const String nightlyCheckInTitle = 'Nightly check-in';
+  // --- Re-exported config constants (backwards-compatible API) -----------
+  static const int dailyReminderId = NotificationConfig.dailyReminderId;
+  static const int breakfastReminderId = NotificationConfig.breakfastReminderId;
+  static const int lunchReminderId = NotificationConfig.lunchReminderId;
+  static const int dinnerReminderId = NotificationConfig.dinnerReminderId;
+  static const int mealLoggedNotificationId =
+      NotificationConfig.mealLoggedNotificationId;
+  static const int exerciseReminderId = NotificationConfig.exerciseReminderId;
+  static const int exerciseReminderTestId =
+      NotificationConfig.exerciseReminderTestId;
+  static const String exerciseYesActionId =
+      NotificationConfig.exerciseYesActionId;
+  static const String exerciseNoActionId = NotificationConfig.exerciseNoActionId;
+  static const int nightlyCheckInId = NotificationConfig.nightlyCheckInId;
+  static const int nightlyCheckInTestId =
+      NotificationConfig.nightlyCheckInTestId;
+  static const String symptomCheckInActionId =
+      NotificationConfig.symptomCheckInActionId;
+  static const String activityCheckInActionId =
+      NotificationConfig.activityCheckInActionId;
+  static const int nightlyCheckInHour = NotificationConfig.nightlyCheckInHour;
+  static const int nightlyCheckInMinute = NotificationConfig.nightlyCheckInMinute;
+  static const String nightlyCheckInTitle = NotificationConfig.nightlyCheckInTitle;
   static const String nightlyCheckInBodyBoth =
       "You haven't logged your symptoms or activity today.";
   static const String nightlyCheckInBodySymptoms =
       "How are you feeling? Log today's symptoms.";
   static const String nightlyCheckInBodyActivity =
       "You haven't logged any activity today.";
-
-  static const String _exerciseChannelId = 'exercise_reminders';
-  static const String _exerciseChannelName = 'Workout check-in';
-  static const String _exerciseChannelDescription =
-      'Asks if you completed your workout routines';
-  static const String _exerciseTitle = 'Workout check-in';
-  static const String _exerciseBody =
-      'Did you complete your workout routines today?';
-
-  NotificationDetails _exerciseDetails() => const NotificationDetails(
-    android: AndroidNotificationDetails(
-      _exerciseChannelId,
-      _exerciseChannelName,
-      channelDescription: _exerciseChannelDescription,
-      importance: Importance.high,
-      priority: Priority.high,
-      actions: [
-        AndroidNotificationAction(
-          exerciseYesActionId,
-          'Yes',
-          showsUserInterface: false,
-        ),
-        AndroidNotificationAction(
-          exerciseNoActionId,
-          'Not yet',
-          showsUserInterface: false,
-        ),
-      ],
-    ),
-    iOS: DarwinNotificationDetails(),
-    macOS: DarwinNotificationDetails(),
-  );
-
-  /// Immediately shows a test exercise check-in notification (used by the
-  /// "EXERCISE NOT" button).
-  Future<void> showExerciseReminderTest({String? payload}) async {
-    await initialize();
-    await _plugin.show(
-      exerciseReminderTestId,
-      _exerciseTitle,
-      _exerciseBody,
-      _exerciseDetails(),
-      payload: payload,
-    );
-  }
-
-  /// Schedules the daily 9:00 PM exercise check-in reminder (repeating every
-  /// day). Cancels the previous reminder id first so relaunching never stacks
-  /// duplicates.
-  ///
-  /// [payload] optionally carries the structured [ExerciseCheckIn] so the
-  /// notification action has parity with the in-app manual check-in.
-  Future<void> scheduleDailyExerciseReminder({String? payload}) async {
-    await initialize();
-    final scheduled = nextDailyOccurrence(
-      tz.TZDateTime.now(tz.local),
-      hour: 21,
-      minute: 0,
-    );
-    await _scheduler.cancel(exerciseReminderId);
-    await _scheduler.zonedSchedule(
-      exerciseReminderId,
-      _exerciseTitle,
-      _exerciseBody,
-      scheduled,
-      _exerciseDetails(),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      payload: payload,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
-  }
-
-  /// Immediately shows a test nightly check-in notification (used by the
-  /// quick-test triggers in the Nutrition and Profile settings sections).
-  Future<void> showNightlyCheckInTest() async {
-    await initialize();
-    await _plugin.show(
-      nightlyCheckInTestId,
-      nightlyCheckInTitle,
-      nightlyCheckInBodyBoth,
-      _nightlyDetails(nightlyCheckInBodyBoth),
-    );
-  }
-
-  /// Builds the nightly check-in body from what is still missing.
-  static String nightlyCheckInBody({
-    required bool needsSymptoms,
-    required bool needsActivity,
-  }) {
-    if (needsSymptoms && needsActivity) return nightlyCheckInBodyBoth;
-    if (needsSymptoms) return nightlyCheckInBodySymptoms;
-    return nightlyCheckInBodyActivity;
-  }
-
-  NotificationDetails _nightlyDetails(String body) => NotificationDetails(
-    android: AndroidNotificationDetails(
-      _nightlyChannelId,
-      _nightlyChannelName,
-      channelDescription: _nightlyChannelDescription,
-      importance: Importance.high,
-      priority: Priority.high,
-      category: AndroidNotificationCategory.reminder,
-      styleInformation: BigTextStyleInformation(
-        body,
-        contentTitle: nightlyCheckInTitle,
-      ),
-      actions: const [
-        AndroidNotificationAction(
-          symptomCheckInActionId,
-          'Log symptoms',
-          icon: DrawableResourceAndroidBitmap('ic_checkin_symptom'),
-          showsUserInterface: true,
-          cancelNotification: false,
-        ),
-        AndroidNotificationAction(
-          activityCheckInActionId,
-          'Log activity',
-          icon: DrawableResourceAndroidBitmap('ic_checkin_activity'),
-          showsUserInterface: true,
-          cancelNotification: false,
-        ),
-      ],
-    ),
-    iOS: DarwinNotificationDetails(),
-    macOS: DarwinNotificationDetails(),
-  );
-
-  /// Schedules (or clears) the evening nightly check-in.
-  ///
-  /// Prompts only for logs that have not appeared yet: when both the day's
-  /// symptoms and activity are already recorded, any existing check-in is
-  /// cancelled instead of scheduled. The reminder carries icon actions that
-  /// open the app on the matching surface.
-  Future<void> scheduleNightlyCheckIn({
-    required SymptomRepository symptomRepository,
-    required DailyEntryRepository entryRepository,
-  }) async {
-    await initialize();
-    final today = DailyEntry.dateKey(DateTime.now());
-
-    final symptoms = await symptomRepository.getForDate(today);
-    final needsSymptoms = symptoms.every((log) => log.level <= 0);
-
-    final entry = await entryRepository.getByDate(today);
-    final hasActivity =
-        (entry?.exercises.isNotEmpty ?? false) || (entry?.calories ?? 0) > 0;
-    final needsActivity = !hasActivity;
-
-    await _scheduler.cancel(nightlyCheckInId);
-    if (!needsSymptoms && !needsActivity) return;
-
-    final scheduled = nextDailyOccurrence(
-      tz.TZDateTime.now(tz.local),
-      hour: nightlyCheckInHour,
-      minute: nightlyCheckInMinute,
-    );
-    final body = nightlyCheckInBody(
-      needsSymptoms: needsSymptoms,
-      needsActivity: needsActivity,
-    );
-    await _scheduler.zonedSchedule(
-      nightlyCheckInId,
-      nightlyCheckInTitle,
-      body,
-      scheduled,
-      _nightlyDetails(body),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
-  }
-
-  static const List<({int id, String timeOfDay, String title, int hour, int minute})>
-  mealSlots = [
-    (id: breakfastReminderId, timeOfDay: 'breakfast', title: 'Breakfast', hour: 8, minute: 0),
-    (id: lunchReminderId, timeOfDay: 'lunch', title: 'Lunch', hour: 13, minute: 0),
-    (id: dinnerReminderId, timeOfDay: 'dinner', title: 'Dinner', hour: 19, minute: 0),
-  ];
+  static const List<
+    ({int id, String timeOfDay, String title, int hour, int minute})
+  >
+  mealSlots = NotificationConfig.mealSlots;
 
   /// The notification action id used for a meal quick-log button.
-  static String mealActionId(String mealName) => 'meal:$mealName';
+  static String mealActionId(String mealName) =>
+      NotificationConfig.mealActionId(mealName);
 
   /// Extracts the meal name from a [NotificationResponse.actionId], or `null`
   /// when the action was not a meal button.
-  static String? mealNameFromActionId(String? actionId) {
-    if (actionId == null || !actionId.startsWith('meal:')) return null;
-    return actionId.substring('meal:'.length);
-  }
+  static String? mealNameFromActionId(String? actionId) =>
+      NotificationConfig.mealNameFromActionId(actionId);
 
   final FlutterLocalNotificationsPlugin _plugin;
   late final NotificationScheduler _scheduler;
@@ -346,7 +146,9 @@ class NotificationService {
   ///
   /// Receives both the action id (e.g. [exerciseYesActionId]) and the raw
   /// payload so the app can route exercise check-ins to the right surface.
-  void setOnResponse(void Function(String? actionId, String? payload)? onResponse) {
+  void setOnResponse(
+    void Function(String? actionId, String? payload)? onResponse,
+  ) {
     _onResponse = onResponse;
   }
 
@@ -363,23 +165,12 @@ class NotificationService {
   /// Simulates scheduling a weekly local notification for the selected routine.
   Future<void> scheduleWeeklyRoutine(int routineId, int dayOfWeek) async {
     await initialize();
-    const details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        _channelId,
-        _channelName,
-        channelDescription: _channelDescription,
-        importance: Importance.high,
-        priority: Priority.high,
-      ),
-      iOS: DarwinNotificationDetails(),
-      macOS: DarwinNotificationDetails(),
-    );
     await _plugin.periodicallyShow(
       routineId,
       'Routine reminder',
       'Time for your Day $dayOfWeek workout',
       RepeatInterval.weekly,
-      details,
+      NotificationDetailsFactory.routine(),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
   }
@@ -390,29 +181,114 @@ class NotificationService {
   /// duplicates.
   Future<void> scheduleDailyReminder({int hour = 20, int minute = 0}) async {
     await initialize();
-    final scheduled = nextDailyOccurrence(
-      tz.TZDateTime.now(tz.local),
-      hour: hour,
-      minute: minute,
-    );
-    const details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        _dailyChannelId,
-        _dailyChannelName,
-        channelDescription: _dailyChannelDescription,
-        importance: Importance.high,
-        priority: Priority.high,
-      ),
-      iOS: DarwinNotificationDetails(),
-      macOS: DarwinNotificationDetails(),
-    );
+    final scheduled = _nextAtOrAfter(hour: hour, minute: minute);
     await _scheduler.cancel(dailyReminderId);
     await _scheduler.zonedSchedule(
       dailyReminderId,
-      _dailyReminderTitle,
-      _dailyReminderBody,
+      NotificationConfig.dailyReminderTitle,
+      NotificationConfig.dailyReminderBody,
       scheduled,
-      details,
+      NotificationDetailsFactory.daily(),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  /// Immediately shows a test exercise check-in notification (used by the
+  /// "EXERCISE NOT" button).
+  Future<void> showExerciseReminderTest({String? payload}) async {
+    await initialize();
+    await _plugin.show(
+      exerciseReminderTestId,
+      NotificationConfig.exerciseTitle,
+      NotificationConfig.exerciseBody,
+      NotificationDetailsFactory.exercise(),
+      payload: payload,
+    );
+  }
+
+  /// Schedules the daily 9:00 PM exercise check-in reminder (repeating every
+  /// day). Cancels the previous reminder id first so relaunching never stacks
+  /// duplicates.
+  ///
+  /// [payload] optionally carries the structured [ExerciseCheckIn] so the
+  /// notification action has parity with the in-app manual check-in.
+  Future<void> scheduleDailyExerciseReminder({String? payload}) async {
+    await initialize();
+    final scheduled = _nextAtOrAfter(hour: 21, minute: 0);
+    await _scheduler.cancel(exerciseReminderId);
+    await _scheduler.zonedSchedule(
+      exerciseReminderId,
+      NotificationConfig.exerciseTitle,
+      NotificationConfig.exerciseBody,
+      scheduled,
+      NotificationDetailsFactory.exercise(),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: payload,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  /// Immediately shows a test nightly check-in notification (used by the
+  /// quick-test triggers in the Profile settings sections).
+  Future<void> showNightlyCheckInTest() async {
+    await initialize();
+    await _plugin.show(
+      nightlyCheckInTestId,
+      nightlyCheckInTitle,
+      nightlyCheckInBodyBoth,
+      NotificationDetailsFactory.nightly(nightlyCheckInBodyBoth),
+    );
+  }
+
+  /// Builds the nightly check-in body from what is still missing.
+  static String nightlyCheckInBody({
+    required bool needsSymptoms,
+    required bool needsActivity,
+  }) {
+    if (needsSymptoms && needsActivity) return nightlyCheckInBodyBoth;
+    if (needsSymptoms) return nightlyCheckInBodySymptoms;
+    return nightlyCheckInBodyActivity;
+  }
+
+  /// Schedules (or clears) the evening nightly check-in.
+  ///
+  /// Prompts only for logs that have not appeared yet: when both the day's
+  /// symptoms and activity are already recorded, any existing check-in is
+  /// cancelled instead of scheduled. The reminder carries icon actions that
+  /// open the app on the matching surface.
+  Future<void> scheduleNightlyCheckIn({
+    required SymptomRepository symptomRepository,
+    required DailyEntryRepository entryRepository,
+  }) async {
+    await initialize();
+    final today = DailyEntry.dateKey(DateTime.now());
+
+    final symptoms = await symptomRepository.getForDate(today);
+    final needsSymptoms = symptoms.every((log) => log.level <= 0);
+
+    final entry = await entryRepository.getByDate(today);
+    final hasActivity =
+        (entry?.exercises.isNotEmpty ?? false) || (entry?.calories ?? 0) > 0;
+    final needsActivity = !hasActivity;
+
+    await _scheduler.cancel(nightlyCheckInId);
+    if (!needsSymptoms && !needsActivity) return;
+
+    final scheduled = _nextAtOrAfter(
+      hour: nightlyCheckInHour,
+      minute: nightlyCheckInMinute,
+    );
+    final body = nightlyCheckInBody(
+      needsSymptoms: needsSymptoms,
+      needsActivity: needsActivity,
+    );
+    await _scheduler.zonedSchedule(
+      nightlyCheckInId,
+      nightlyCheckInTitle,
+      body,
+      scheduled,
+      NotificationDetailsFactory.nightly(body),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
     );
@@ -436,33 +312,14 @@ class NotificationService {
     ({int id, String timeOfDay, String title, int hour, int minute}) slot,
   ) async {
     final meals = await _mealsFor(slot.timeOfDay);
-    final scheduled = nextDailyOccurrence(
-      tz.TZDateTime.now(tz.local),
-      hour: slot.hour,
-      minute: slot.minute,
-    );
-    final details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        _dailyChannelId,
-        _dailyChannelName,
-        channelDescription: _dailyChannelDescription,
-        importance: Importance.high,
-        priority: Priority.high,
-        actions: [
-          for (final meal in meals)
-            AndroidNotificationAction(mealActionId(meal), meal),
-        ],
-      ),
-      iOS: DarwinNotificationDetails(),
-      macOS: DarwinNotificationDetails(),
-    );
+    final scheduled = _nextAtOrAfter(hour: slot.hour, minute: slot.minute);
     await _scheduler.cancel(slot.id);
     await _scheduler.zonedSchedule(
       slot.id,
       slot.title,
       'Time for ${slot.title.toLowerCase()}',
       scheduled,
-      details,
+      NotificationDetailsFactory.meals(meals),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: slot.timeOfDay,
       matchDateTimeComponents: DateTimeComponents.time,
@@ -499,18 +356,12 @@ class NotificationService {
   /// Shows an immediate "meal logged" notification with [body].
   Future<void> showMealLoggedNotification({required String body}) async {
     await initialize();
-    const details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        _dailyChannelId,
-        _dailyChannelName,
-        channelDescription: _dailyChannelDescription,
-        importance: Importance.high,
-        priority: Priority.high,
-      ),
-      iOS: DarwinNotificationDetails(),
-      macOS: DarwinNotificationDetails(),
+    await _plugin.show(
+      mealLoggedNotificationId,
+      'Meal logged',
+      body,
+      NotificationDetailsFactory.mealLogged(),
     );
-    await _plugin.show(mealLoggedNotificationId, 'Meal logged', body, details);
   }
 
   /// Reactive notification triggered right after logging a meal.
@@ -532,6 +383,14 @@ class NotificationService {
       // Notifications are non-critical.
     }
   }
+
+  /// The next [hour]:[minute] wall-clock occurrence from now.
+  tz.TZDateTime _nextAtOrAfter({required int hour, required int minute}) =>
+      nextDailyOccurrence(
+        tz.TZDateTime.now(tz.local),
+        hour: hour,
+        minute: minute,
+      );
 
   /// The next [hour]:[minute] wall-clock occurrence at or after [now], rolling
   /// to tomorrow when [now] is already past that time.

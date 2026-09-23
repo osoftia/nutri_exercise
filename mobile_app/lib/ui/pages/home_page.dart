@@ -29,6 +29,7 @@ import '../molecules/daily_totals_card.dart';
 import '../molecules/exercise_card.dart';
 import '../organisms/bottom_nav_bar.dart';
 import '../organisms/calendar_history_dialog.dart';
+import '../organisms/home_dashboard_sections.dart';
 import '../organisms/muscle_group_visualizer.dart';
 import '../organisms/social_share_card.dart';
 import 'wizard_page.dart';
@@ -372,7 +373,7 @@ class _HomePageState extends State<HomePage> {
               child: DailyTotalsCard(state: _nutrition),
             ),
             const SizedBox(width: AppSpacing.md),
-            _ProfileInfoCard(
+            ProfileInfoCard(
               profile: widget.profile,
               onEdit: _navigateToProfile,
             ),
@@ -470,72 +471,8 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: AppSpacing.xxl),
         const AppHeading('Daily Menus'),
         const SizedBox(height: AppSpacing.md),
-        ...menus.map(
-          (menu) => Card(
-            margin: const EdgeInsets.only(bottom: AppSpacing.md),
-            child: ListTile(
-              title: AppText(menu.date),
-              subtitle: AppCaption('${menu.meals.length} meals'),
-              trailing: AppText('${menu.totalCalories} kcal'),
-            ),
-          ),
-        ),
+        DailyMenuList(menus: menus),
       ],
-    );
-  }
-}
-
-/// Compact profile summary shown beside the avatar: weight/height with an edit
-/// (pencil) icon. Falls back to the 60 kg / 1.70 m defaults when no profile has
-/// been saved.
-class _ProfileInfoCard extends StatelessWidget {
-  const _ProfileInfoCard({required this.profile, required this.onEdit});
-
-  final UserProfile? profile;
-  final VoidCallback onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    final weight = profile?.weightKg ?? 60;
-    final height = profile?.heightCm ?? 170;
-    return Container(
-      width: 120,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface800,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: Text(
-                  'Profile',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              IconButton(
-                key: const Key('profile_edit_icon'),
-                icon: const Icon(Icons.edit, size: 16),
-                onPressed: onEdit,
-                padding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
-                constraints: const BoxConstraints(
-                  minWidth: 24,
-                  minHeight: 24,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text('${weight.toStringAsFixed(0)} kg'),
-          Text('${height.toStringAsFixed(0)} cm'),
-        ],
-      ),
     );
   }
 }

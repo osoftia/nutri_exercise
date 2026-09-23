@@ -6,7 +6,6 @@ import '../../core/data/daily_entry_repository.dart';
 import '../../core/domain/body_projection/body_diagram_view_model.dart';
 import '../../core/domain/body_projection/nutrition_body_view_model.dart';
 import '../../core/domain/body_projection/nutrition_log.dart';
-import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/domain/nutrition/portion_scaler.dart';
 import '../../core/models/daily_entry.dart';
@@ -25,6 +24,7 @@ import '../molecules/body_segment_sheet.dart';
 import '../molecules/quick_add_grams_dialog.dart';
 import '../organisms/body_blueprint/unified_body_blueprint.dart';
 import '../organisms/calendar_history_dialog.dart';
+import 'nutrition_presets.dart';
 
 class NutritionPage extends StatefulWidget {
   const NutritionPage({
@@ -54,44 +54,6 @@ class _NutritionPageState extends State<NutritionPage> {
   final _nameController = TextEditingController();
   final _caloriesController = TextEditingController();
 
-  static const List<FoodEntry> _quickAdds = [
-    FoodEntry(
-      name: 'Oatmeal & Berries',
-      calories: 420,
-      proteinG: 10,
-      carbsG: 60,
-      fatG: 12,
-    ),
-    FoodEntry(
-      name: 'Grilled Chicken Bowl',
-      calories: 650,
-      proteinG: 45,
-      carbsG: 55,
-      fatG: 18,
-    ),
-    FoodEntry(
-      name: 'Salmon & Quinoa',
-      calories: 580,
-      proteinG: 35,
-      carbsG: 45,
-      fatG: 22,
-    ),
-    FoodEntry(
-      name: 'Greek Yogurt & Almonds',
-      calories: 240,
-      proteinG: 18,
-      carbsG: 18,
-      fatG: 10,
-    ),
-    FoodEntry(
-      name: 'Protein Shake',
-      calories: 150,
-      proteinG: 30,
-      carbsG: 6,
-      fatG: 1,
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -113,17 +75,6 @@ class _NutritionPageState extends State<NutritionPage> {
     _nameController.clear();
     _caloriesController.clear();
   }
-
-  /// Localized label for a preset quick-add, keyed by its canonical name.
-  static String _quickAddLabel(AppStrings strings, FoodEntry entry) =>
-      switch (entry.name) {
-        'Oatmeal & Berries' => strings.quickAddOatmealBerries,
-        'Grilled Chicken Bowl' => strings.quickAddGrilledChickenBowl,
-        'Salmon & Quinoa' => strings.quickAddSalmonQuinoa,
-        'Greek Yogurt & Almonds' => strings.quickAddGreekYogurtAlmonds,
-        'Protein Shake' => strings.quickAddProteinShake,
-        _ => entry.name,
-      };
 
   /// Intercepts a preset quick-add: asks for the portion in grams (default
   /// 100 g) and logs the proportionally scaled entry.
@@ -363,10 +314,10 @@ class _NutritionPageState extends State<NutritionPage> {
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
               children: [
-                for (final entry in _quickAdds)
+                for (final entry in NutritionPresets.quickAdds)
                   CustomButton(
                     key: Key('quick_add_${entry.name}'),
-                    label: _quickAddLabel(strings, entry),
+                    label: NutritionPresets.label(strings, entry),
                     variant: CustomButtonVariant.ghost,
                     onPressed: () => _addQuick(entry),
                   ),
