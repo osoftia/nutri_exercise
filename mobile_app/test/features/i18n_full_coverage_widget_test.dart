@@ -64,13 +64,13 @@ void main() {
     );
 
     expect(find.text('Nutrition'), findsOneWidget);
-    expect(find.text('Quick Add'), findsOneWidget);
+    expect(find.text('Add foods'), findsOneWidget);
     expect(find.text('Calories'), findsWidgets);
 
     await _switchToSpanish(tester);
 
     expect(find.text('Nutrición'), findsOneWidget);
-    expect(find.text('Añadir rápido'), findsOneWidget);
+    expect(find.text('Añadir alimentos'), findsOneWidget);
     expect(find.text('Calorías'), findsWidgets);
     expect(find.text('Nutrition'), findsNothing);
   });

@@ -1,0 +1,77 @@
+# M47 Execution Changes Log — Calendar Header, Global Accordions, Profile Restructure, Nutrition Redesign & Macro Overlay
+
+Autonomous sprint following the strict TDD loop per task: failing tests →
+implementation → targeted tests → backlog check-off → git commit, followed by a
+full `fvm flutter analyze` and full `fvm flutter test`. Verification used the
+project's pinned FVM SDK (Flutter 3.29.0).
+
+## Task 1: Calendar Header Redesign
+- `lib/ui/molecules/calendar_month_header.dart` — the shared clean month header
+  (centered month label in a subtle capsule between two circular navigation
+  buttons) is used by both the Schedule calendar and the history popup.
+- Verified with `test/features/m47_calendar_header_test.dart` (header presence,
+  pill styling, navigation, history reuse).
+
+## Task 2: Global Accordion Pattern
+- `lib/ui/molecules/accordion_section.dart` — standardized collapsible card:
+  while **collapsed only the main title is visible**; the subtitle (when
+  present) and body are revealed exclusively on expansion (subtitle moves into
+  the body by default), with a rotating chevron and animated size. Added the
+  `subtitleInHeaderWhenExpanded` option for surfaces that keep the subtitle in
+  the header.
+- Tests: `test/ui/m47_global_accordion_test.dart` (title-only collapsed,
+  reveal on expand, collapse again, header subtitle option); updated
+  `test/ui/accordion_section_test.dart` for the new standard.
+
+## Task 3: Profile Restructuring & Testing Panel
+- `lib/ui/pages/profile_page.dart` — reorganized into four accordions:
+  "Ajustes de Usuario" (profile form, `profile_user_settings_accordion`),
+  Daily Symptoms (`profile_symptoms_accordion`), "Ajustes de Sistema"
+  (`profile_settings_accordion`, notification toggles with the Language
+  switcher at the very bottom) and "Pruebas" (`profile_tests_accordion`).
+- `lib/ui/molecules/tests_panel.dart` — new "Pruebas" panel: meal test
+  notification (`settings_meal_test_button`), nightly check-in and exercise
+  test triggers.
+- `lib/ui/molecules/settings_panel.dart` — reduced to notification preferences
+  only (language rendered below it by the page).
+- `lib/ui/pages/nutrition_page.dart` — removed the reactive-notifications
+  toggle and all test-notification triggers.
+- i18n: added `userSettingsTitle`, `systemSettingsTitle`, `testsSectionTitle`,
+  `mealTestButton` (EN/ES); probe updated.
+- Tests: `test/features/m47_profile_restructure_test.dart`; updated the M46
+  notification-trigger, M27 reactive-notification and M32 EXERCISE-NOT tests to
+  the relocated/removed state; `i18n_language_switcher_test` and
+  `i18n_full_coverage_widget_test` updated to expand System Settings.
+
+## Task 4: Nutrition Input & Quick Add Redesign
+- i18n: added `addFoodsTitle` ("Añadir alimentos" / "Add foods") and
+  `logAMealShortTitle` ("Registrar una comida" / "Log a meal"); the Nutrition
+  tab now renders these titles.
+- `lib/core/theme/app_theme.dart` — new `AppRadius.pill` and
+  `AppInputDecoration.rounded(...)` shared input style: filled `surface800`
+  fields with fully-rounded pill borders, a brighter focused border and a red
+  error border.
+- Applied across `nutrition_page`, `profile_page`, `quick_add_grams_dialog`,
+  `daily_log_sheet`, `settings_page` and the calendar history editor.
+- `lib/ui/organisms/weekly_stats_sheet.dart` — replaced the standalone macro
+  tile row with a single **overlaid macro bar** (`weekly_macro_overlay`)
+  presenting protein (`weekly_protein_overlay`) and fat
+  (`weekly_fat_overlay`) in one capsule above the balance chart.
+- Tests: `test/features/m47_nutrition_redesign_test.dart`,
+  `test/features/m47_macro_overlay_test.dart`; updated
+  `test/features/m46_weekly_stats_macros_test.dart`.
+
+## Task 5: Testing & Verification
+- `fvm flutter analyze` — No issues found.
+- `fvm flutter test` (full suite) — **806 passed, 0 failed** (up from 789 at
+  sprint start; +17 net tests).
+
+## Verification
+- Analyzer: clean (`No issues found!`).
+- Full suite: 806 tests passed.
+
+## Commits (this sprint)
+- test(m47-task-1): verify clean calendar month header on schedule and history
+- feat(m47-task-2-3): title-only global accordions and restructured profile sections
+- feat(m47-task-4): nutrition input/quick-add redesign and overlaid macro stats bar
+- final: test(m47-task-5): verification, full suite green (806), analyzer clean
