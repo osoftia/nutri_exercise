@@ -12,6 +12,7 @@ import '../atoms/typography.dart';
 import '../molecules/blueprint_action_rail.dart';
 import '../molecules/body_segment_sheet.dart';
 import '../molecules/exercise_completion_sheet.dart';
+import '../molecules/luna_avatar_switcher.dart';
 import '../molecules/routine_summary_sheet.dart';
 import '../organisms/body_blueprint/unified_body_blueprint.dart';
 import '../organisms/calendar_history_dialog.dart';
@@ -142,42 +143,34 @@ class _RoutinesPageState extends State<RoutinesPage> {
                 children: [
                   AppText(strings.bodyProjectionLabel),
                   const SizedBox(height: AppSpacing.md),
-                  SizedBox(
-                    height: 320,
-                    width: double.infinity,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: UnifiedBodyBlueprint(
-                            viewModel: viewModel,
-                            onSegmentSelected: (segment) =>
-                                showBodySegmentDetailSheet(
-                              context,
-                              segment: segment,
-                              controller: widget.detailController,
-                            ),
-                          ),
-                        ),
-                        BlueprintActionRail(
-                          showHistory: widget.dailyEntryRepository != null,
-                          historyKey: const Key('body_history_fab'),
-                          historyTooltip: 'History',
-                          onHistory: widget.dailyEntryRepository == null
-                              ? null
-                              : () => showCalendarHistoryDialog(
-                                    context,
-                                    repository: widget.dailyEntryRepository!,
-                                  ),
-                          summaryKey: const Key('routine_summary_button'),
-                          summaryTooltip: 'Daily Routine Summary',
-                          summaryIcon: Icons.fitness_center,
-                          onSummary: () => showRoutineSummarySheet(
-                            context,
-                            controller: widget.detailController,
-                            completion: widget.workoutCompletionController,
-                          ),
-                        ),
-                      ],
+                  LunaAvatarSwitcher(
+                    blueprint: UnifiedBodyBlueprint(
+                      viewModel: viewModel,
+                      onSegmentSelected: (segment) =>
+                          showBodySegmentDetailSheet(
+                        context,
+                        segment: segment,
+                        controller: widget.detailController,
+                      ),
+                    ),
+                    trailing: BlueprintActionRail(
+                      showHistory: widget.dailyEntryRepository != null,
+                      historyKey: const Key('body_history_fab'),
+                      historyTooltip: 'History',
+                      onHistory: widget.dailyEntryRepository == null
+                          ? null
+                          : () => showCalendarHistoryDialog(
+                                context,
+                                repository: widget.dailyEntryRepository!,
+                              ),
+                      summaryKey: const Key('routine_summary_button'),
+                      summaryTooltip: 'Daily Routine Summary',
+                      summaryIcon: Icons.fitness_center,
+                      onSummary: () => showRoutineSummarySheet(
+                        context,
+                        controller: widget.detailController,
+                        completion: widget.workoutCompletionController,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
