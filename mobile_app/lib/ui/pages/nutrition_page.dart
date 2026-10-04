@@ -12,6 +12,7 @@ import '../../core/models/daily_entry.dart';
 import '../../core/models/food_entry.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/state/body_detail_controller.dart';
+import '../../core/state/clinical_profile_controller.dart';
 import '../../core/state/nutrition_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/custom_button.dart';
@@ -33,6 +34,7 @@ class NutritionPage extends StatefulWidget {
     this.dailyEntryRepository,
     this.notificationService,
     this.bodyDetailController,
+    this.clinicalProfileController,
   });
 
   final NutritionController controller;
@@ -45,6 +47,9 @@ class NutritionPage extends StatefulWidget {
 
   /// Optional blueprint controller; enables the daily nutrition action button.
   final BodyDetailController? bodyDetailController;
+
+  /// Optional reactive clinical condition profile for food safety guidance.
+  final ClinicalProfileController? clinicalProfileController;
 
   @override
   State<NutritionPage> createState() => _NutritionPageState();
@@ -126,7 +131,8 @@ class _NutritionPageState extends State<NutritionPage> {
     final repository = widget.dailyEntryRepository;
     if (repository == null) return;
     final today = DailyEntry.dateKey(DateTime.now());
-    final existing = await repository.getByDate(today) ?? DailyEntry(date: today);
+    final existing =
+        await repository.getByDate(today) ?? DailyEntry(date: today);
     await repository.save(
       existing.copyWith(
         calories: existing.calories + entry.calories,

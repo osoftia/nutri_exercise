@@ -7,6 +7,8 @@ import '../../core/domain/notifications/exercise_check_in.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/state/ai_chat_controller.dart';
 import '../../core/state/body_detail_controller.dart';
+import '../../core/state/clinical_profile_controller.dart';
+import '../../core/state/clinical_profile_controller.dart';
 import '../../core/state/daily_log_controller.dart';
 import '../../core/state/language_controller.dart';
 import '../../core/theme/app_theme.dart';
@@ -34,6 +36,8 @@ class MainShellPage extends StatefulWidget {
   const MainShellPage({
     super.key,
     required this.profileController,
+    this.clinicalProfileController,
+    this.clinicalProfileController,
     required this.scheduleController,
     required this.nutritionController,
     required this.projectionController,
@@ -51,6 +55,8 @@ class MainShellPage extends StatefulWidget {
   });
 
   final UserProfileController profileController;
+  final ClinicalProfileController? clinicalProfileController;
+  final ClinicalProfileController? clinicalProfileController;
   final ScheduleController scheduleController;
   final NutritionController nutritionController;
   final ProjectionController projectionController;
@@ -91,6 +97,8 @@ class _MainShellPageState extends State<MainShellPage> {
     ),
     NutritionPage(
       controller: widget.nutritionController,
+      clinicalProfileController: widget.clinicalProfileController,
+      clinicalProfileController: widget.clinicalProfileController,
       dailyEntryRepository: widget.dailyEntryRepository,
       notificationService: widget.notificationService,
       bodyDetailController: widget.bodyDetailController,
@@ -101,6 +109,8 @@ class _MainShellPageState extends State<MainShellPage> {
     ),
     ProfilePage(
       controller: widget.profileController,
+      clinicalProfileController: widget.clinicalProfileController,
+      clinicalProfileController: widget.clinicalProfileController,
       languageController: widget.languageController,
       symptomController: widget.symptomController,
       notificationPrefsRepository: widget.notificationPrefsRepository,

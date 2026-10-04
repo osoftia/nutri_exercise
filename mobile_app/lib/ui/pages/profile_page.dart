@@ -7,12 +7,14 @@ import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/user_profile.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/state/language_controller.dart';
+import '../../core/state/clinical_profile_controller.dart';
 import '../../core/state/symptom_controller.dart';
 import '../../core/state/user_profile_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
 import '../molecules/accordion_section.dart';
+import '../molecules/clinical_conditions_panel.dart';
 import '../molecules/language_switcher.dart';
 import '../molecules/profile_avatar.dart';
 import '../molecules/settings_panel.dart';
@@ -28,6 +30,7 @@ class ProfilePage extends StatefulWidget {
     required this.controller,
     this.languageController,
     this.symptomController,
+    this.clinicalProfileController,
     this.notificationPrefsRepository,
     this.notificationService,
     this.dailyEntryRepository,
@@ -40,6 +43,9 @@ class ProfilePage extends StatefulWidget {
 
   /// Optional symptom controller; enables the Daily Symptoms accordion.
   final SymptomController? symptomController;
+
+  /// Optional clinical profile controller; enables health condition guidance.
+  final ClinicalProfileController? clinicalProfileController;
 
   /// Optional prefs store; enables the System Settings accordion.
   final NotificationPrefsRepository? notificationPrefsRepository;
@@ -78,6 +84,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _load() async {
+    await widget.clinicalProfileController?.load();
     await widget.controller.load();
     final profile = widget.controller.profile;
     if (profile == null || !mounted) return;
@@ -145,6 +152,19 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         ),
+        if (widget.clinicalProfileController != null) ...[
+          const SizedBox(height: AppSpacing.xl),
+          AccordionSection(
+            headerKey: const Key('profile_clinical_conditions_accordion'),
+            title: LocalizationScope.languageOf(context).name == 'spanish'
+                ? 'Condiciones de salud'
+                : 'Clinical conditions',
+            icon: Icons.medical_services_outlined,
+            child: ClinicalConditionsPanel(
+              controller: widget.clinicalProfileController!,
+            ),
+          ),
+        ],
         if (widget.symptomController != null) ...[
           const SizedBox(height: AppSpacing.xl),
           AccordionSection(
@@ -300,4 +320,3 @@ class _ProfilePageState extends State<ProfilePage> {
     return null;
   }
 }
-
