@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/domain/body_projection/body_segment.dart';
 import '../../core/state/body_detail_controller.dart';
+import '../../core/state/clinical_profile_controller.dart';
 import 'body_exercise_detail_sheet.dart';
 import 'body_food_detail_sheet.dart';
 
@@ -12,11 +13,13 @@ import 'body_food_detail_sheet.dart';
 Future<void> showNutritionSummarySheet(
   BuildContext context, {
   required BodyDetailController controller,
+  ClinicalProfileController? clinicalProfileController,
 }) {
   return showBodySegmentDetailSheet(
     context,
     segment: BodySegment.abdomen,
     controller: controller,
+    clinicalProfileController: clinicalProfileController,
   );
 }
 
@@ -28,13 +31,17 @@ Future<void> showBodySegmentDetailSheet(
   BuildContext context, {
   required BodySegment segment,
   required BodyDetailController controller,
+  ClinicalProfileController? clinicalProfileController,
 }) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) => segment.isAbdomen
-        ? BodyFoodDetailSheet(controller: controller)
+        ? BodyFoodDetailSheet(
+            controller: controller,
+            clinicalProfileController: clinicalProfileController,
+          )
         : BodyExerciseDetailSheet(controller: controller, segment: segment),
   );
 }

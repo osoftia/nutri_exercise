@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/domain/nutrition/portion_scaler.dart';
 import '../../core/models/food_entry.dart';
+import '../../core/state/clinical_profile_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/custom_button.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
+import 'clinical_food_safety_badge.dart';
 
 /// Opens a centered confirmation dialog asking for the portion, in grams, of a
 /// quick-add [food] before it is logged.
@@ -19,18 +21,28 @@ Future<double?> showQuickAddGramsDialog(
   BuildContext context, {
   required FoodEntry food,
   double initialGrams = PortionScaler.baseGrams,
+  ClinicalProfileController? clinicalProfileController,
 }) {
   return showDialog<double>(
     context: context,
-    builder: (_) => _QuickAddGramsDialog(food: food, initialGrams: initialGrams),
+    builder: (_) => _QuickAddGramsDialog(
+      food: food,
+      initialGrams: initialGrams,
+      clinicalProfileController: clinicalProfileController,
+    ),
   );
 }
 
 class _QuickAddGramsDialog extends StatefulWidget {
-  const _QuickAddGramsDialog({required this.food, required this.initialGrams});
+  const _QuickAddGramsDialog({
+    required this.food,
+    required this.initialGrams,
+    this.clinicalProfileController,
+  });
 
   final FoodEntry food;
   final double initialGrams;
+  final ClinicalProfileController? clinicalProfileController;
 
   @override
   State<_QuickAddGramsDialog> createState() => _QuickAddGramsDialogState();
@@ -60,6 +72,28 @@ class _QuickAddGramsDialogState extends State<_QuickAddGramsDialog> {
     Navigator.of(context).pop(grams);
   }
 
+  Widget _clinicalGuidance() {
+    final clinical = widget.clinicalProfileController;
+    if (clinical == null) return const SizedBox.shrink();
+    return ListenableBuilder(
+      listenable: clinical,
+      builder: (context, _) {
+        if (!clinical.hasConditions) return const SizedBox.shrink();
+        final grams = double.tryParse(_controller.text.trim());
+        final portion = PortionScaler.scaleFood(
+          widget.food,
+          grams != null && grams.isFinite && grams > 0
+              ? grams
+              : PortionScaler.baseGrams,
+        );
+        return ClinicalFoodSafetyBadge(
+          cardKey: const Key('quick_add_clinical_guidance'),
+          verdict: clinical.evaluate(portion),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final strings = LocalizationScope.stringsOf(context);
@@ -86,12 +120,17 @@ class _QuickAddGramsDialogState extends State<_QuickAddGramsDialog> {
               )} '
               'per ${PortionScaler.baseGrams.toInt()} g',
             ),
+            if (widget.clinicalProfileController != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              _clinicalGuidance(),
+            ],
             const SizedBox(height: AppSpacing.lg),
             TextField(
               key: const Key('quick_add_grams_field'),
               controller: _controller,
               autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
@@ -102,7 +141,7 @@ class _QuickAddGramsDialogState extends State<_QuickAddGramsDialog> {
               ).copyWith(errorText: _error),
               onSubmitted: (_) => _confirm(),
               onChanged: (_) {
-                if (_error != null) setState(() => _error = null);
+                setState(() => _error = null);
               },
             ),
             const SizedBox(height: AppSpacing.lg),

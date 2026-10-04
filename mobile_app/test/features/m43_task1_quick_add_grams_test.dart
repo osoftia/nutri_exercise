@@ -18,6 +18,12 @@ const _oatmeal = FoodEntry(
   proteinG: 10,
   carbsG: 60,
   fatG: 12,
+  saturatedFatG: 1.2,
+  sugarsG: 7,
+  fiberG: 8,
+  glycemicIndex: 55,
+  purinesMg: 15,
+  sodiumMg: 10,
 );
 
 Future<NutritionController> _pump(
@@ -80,6 +86,17 @@ void main() {
     test('keeps the food name on the scaled entry', () {
       expect(PortionScaler.scaleFood(_oatmeal, 250).name, 'Oatmeal & Berries');
     });
+
+    test('scales clinical nutrient amounts but preserves glycemic index', () {
+      final scaled = PortionScaler.scaleFood(_oatmeal, 200);
+
+      expect(scaled.saturatedFatG, closeTo(2.4, 0.001));
+      expect(scaled.sugarsG, 14);
+      expect(scaled.fiberG, 16);
+      expect(scaled.glycemicIndex, 55);
+      expect(scaled.purinesMg, 30);
+      expect(scaled.sodiumMg, 20);
+    });
   });
 
   group('M43 quick-add gram scaling flow', () {
@@ -117,7 +134,8 @@ void main() {
       expect(controller.consumedCalories, 1420);
     });
 
-    testWidgets('a custom gram value scales calories and macros', (tester) async {
+    testWidgets('a custom gram value scales calories and macros',
+        (tester) async {
       final controller = await _pump(tester);
       await _openQuickAdd(tester, 'Oatmeal & Berries');
 

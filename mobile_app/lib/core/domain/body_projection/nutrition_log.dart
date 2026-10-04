@@ -9,6 +9,12 @@ class LoggedFood {
     this.proteinG = 0,
     this.carbsG = 0,
     this.fatG = 0,
+    this.saturatedFatG,
+    this.sugarsG,
+    this.fiberG,
+    this.glycemicIndex,
+    this.purinesMg,
+    this.sodiumMg,
     required this.time,
   });
 
@@ -30,6 +36,14 @@ class LoggedFood {
   /// Fat in grams.
   final int fatG;
 
+  /// Optional condition-relevant nutrition estimates for the logged portion.
+  final double? saturatedFatG;
+  final double? sugarsG;
+  final double? fiberG;
+  final double? glycemicIndex;
+  final double? purinesMg;
+  final double? sodiumMg;
+
   /// Wall-clock time the food was logged (`HH:mm`).
   final String time;
 
@@ -41,6 +55,12 @@ class LoggedFood {
     int? proteinG,
     int? carbsG,
     int? fatG,
+    double? saturatedFatG,
+    double? sugarsG,
+    double? fiberG,
+    double? glycemicIndex,
+    double? purinesMg,
+    double? sodiumMg,
     String? time,
   }) {
     return LoggedFood(
@@ -50,6 +70,12 @@ class LoggedFood {
       proteinG: proteinG ?? this.proteinG,
       carbsG: carbsG ?? this.carbsG,
       fatG: fatG ?? this.fatG,
+      saturatedFatG: saturatedFatG ?? this.saturatedFatG,
+      sugarsG: sugarsG ?? this.sugarsG,
+      fiberG: fiberG ?? this.fiberG,
+      glycemicIndex: glycemicIndex ?? this.glycemicIndex,
+      purinesMg: purinesMg ?? this.purinesMg,
+      sodiumMg: sodiumMg ?? this.sodiumMg,
       time: time ?? this.time,
     );
   }
@@ -63,11 +89,30 @@ class LoggedFood {
       other.proteinG == proteinG &&
       other.carbsG == carbsG &&
       other.fatG == fatG &&
+      other.saturatedFatG == saturatedFatG &&
+      other.sugarsG == sugarsG &&
+      other.fiberG == fiberG &&
+      other.glycemicIndex == glycemicIndex &&
+      other.purinesMg == purinesMg &&
+      other.sodiumMg == sodiumMg &&
       other.time == time;
 
   @override
-  int get hashCode =>
-      Object.hash(name, portion, calories, proteinG, carbsG, fatG, time);
+  int get hashCode => Object.hash(
+        name,
+        portion,
+        calories,
+        proteinG,
+        carbsG,
+        fatG,
+        saturatedFatG,
+        sugarsG,
+        fiberG,
+        glycemicIndex,
+        purinesMg,
+        sodiumMg,
+        time,
+      );
 
   @override
   String toString() => 'LoggedFood($name, $portion, $calories kcal)';

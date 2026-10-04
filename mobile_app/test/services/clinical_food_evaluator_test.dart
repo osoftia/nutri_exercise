@@ -174,6 +174,19 @@ void main() {
       );
     });
 
+    test('evaluates a meal using the sum of its ingredient nutrient estimates', () {
+      final verdict = evaluator.evaluateMeal(
+        const [
+          FoodEntry(name: 'Cheese', calories: 100, saturatedFatG: 3),
+          FoodEntry(name: 'Sauce', calories: 80, saturatedFatG: 3),
+        ],
+        profile(ClinicalCondition.highCholesterol),
+      );
+
+      expect(verdict.level, ClinicalVerdictLevel.warning);
+      expect(verdict.findings.single.reason, contains('6 g'));
+    });
+
     test('returns a neutral safe verdict when no conditions are selected', () {
       final verdict = evaluator.evaluate(
         const FoodEntry(name: 'Any food', calories: 100),

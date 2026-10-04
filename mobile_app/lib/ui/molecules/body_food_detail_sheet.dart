@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/domain/body_projection/nutrition_log.dart';
 import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/state/body_detail_controller.dart';
+import '../../core/state/clinical_profile_controller.dart';
+import '../../core/models/food_entry.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/typography.dart';
+import 'clinical_food_safety_badge.dart';
 
 /// Draggable blueprint sheet listing today's logged foods with inline delete
 /// controls and a sticky total row.
@@ -15,10 +20,16 @@ import '../atoms/typography.dart';
 /// suggestions or the RAG AI advisor pipeline.
 class BodyFoodDetailSheet extends StatefulWidget {
   /// Creates the food sheet for [controller].
-  const BodyFoodDetailSheet({super.key, required this.controller});
+  const BodyFoodDetailSheet({
+    super.key,
+    required this.controller,
+    this.clinicalProfileController,
+  });
 
   /// The shared detail controller.
   final BodyDetailController controller;
+
+  final ClinicalProfileController? clinicalProfileController;
 
   @override
   State<BodyFoodDetailSheet> createState() => _BodyFoodDetailSheetState();
@@ -28,6 +39,8 @@ class _BodyFoodDetailSheetState extends State<BodyFoodDetailSheet> {
   @override
   void initState() {
     super.initState();
+    final clinicalProfile = widget.clinicalProfileController;
+    if (clinicalProfile != null) unawaited(clinicalProfile.load());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       // Only hydrate from the repository when the shared controller has not
@@ -57,7 +70,12 @@ class _BodyFoodDetailSheetState extends State<BodyFoodDetailSheet> {
             ),
           ),
           child: ListenableBuilder(
-            listenable: widget.controller,
+            listenable: widget.clinicalProfileController == null
+                ? widget.controller
+                : Listenable.merge([
+                    widget.controller,
+                    widget.clinicalProfileController!,
+                  ]),
             builder: (context, _) {
               final strings = LocalizationScope.stringsOf(context);
               final controller = widget.controller;
@@ -100,6 +118,8 @@ class _BodyFoodDetailSheetState extends State<BodyFoodDetailSheet> {
                               deleteKey: Key('food_delete_$i'),
                               food: log.entries[i],
                               strings: strings,
+                              clinicalProfileController:
+                                  widget.clinicalProfileController,
                               onDelete: () => controller.removeFood(i),
                             ),
                       ],
@@ -140,12 +160,14 @@ class _FoodTile extends StatelessWidget {
     required this.deleteKey,
     required this.food,
     required this.strings,
+    this.clinicalProfileController,
     required this.onDelete,
   });
 
   final Key deleteKey;
   final LoggedFood food;
   final AppStrings strings;
+  final ClinicalProfileController? clinicalProfileController;
   final VoidCallback onDelete;
 
   @override
@@ -168,6 +190,25 @@ class _FoodTile extends StatelessWidget {
                     food.fatG,
                   ),
                 ),
+                if (clinicalProfileController?.hasConditions ?? false)
+                  ClinicalFoodSafetyBadge(
+                    cardKey: Key('food_clinical_safety_${food.name}'),
+                    verdict: clinicalProfileController!.evaluate(
+                      FoodEntry(
+                        name: food.name,
+                        calories: food.calories,
+                        proteinG: food.proteinG,
+                        carbsG: food.carbsG,
+                        fatG: food.fatG,
+                        saturatedFatG: food.saturatedFatG,
+                        sugarsG: food.sugarsG,
+                        fiberG: food.fiberG,
+                        glycemicIndex: food.glycemicIndex,
+                        purinesMg: food.purinesMg,
+                        sodiumMg: food.sodiumMg,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

@@ -7,11 +7,9 @@ import 'core/config/app_config.dart';
 import 'core/constants/api_constants.dart';
 import 'core/data/body_detail_repository.dart';
 import 'core/data/clinical_profile_repository.dart';
-import 'core/data/clinical_profile_repository.dart';
 import 'core/data/daily_entry_repository.dart';
 import 'core/data/daily_log_repository.dart';
 import 'core/data/local_body_detail_repository.dart';
-import 'core/data/local_clinical_profile_repository.dart';
 import 'core/data/local_clinical_profile_repository.dart';
 import 'core/data/local_daily_entry_repository.dart';
 import 'core/data/local_daily_log_repository.dart';
@@ -34,7 +32,6 @@ import 'core/mocks/mock_language_repository.dart';
 import 'core/mocks/mock_daily_log_repository.dart';
 import 'core/mocks/mock_body_detail_repository.dart';
 import 'core/mocks/mock_clinical_profile_repository.dart';
-import 'core/mocks/mock_clinical_profile_repository.dart';
 import 'core/mocks/mock_nutrition_repository.dart';
 import 'core/mocks/mock_notification_prefs_repository.dart';
 import 'core/mocks/mock_profile_repository.dart';
@@ -47,7 +44,6 @@ import 'core/services/rule_based_body_projection_forecaster.dart';
 import 'core/services/rule_based_muscle_gap_advisor.dart';
 import 'core/services/smart_logger.dart';
 import 'core/state/body_detail_controller.dart';
-import 'core/state/clinical_profile_controller.dart';
 import 'core/state/clinical_profile_controller.dart';
 import 'core/state/daily_log_controller.dart';
 import 'core/state/language_controller.dart';
@@ -203,13 +199,6 @@ class _NutriAppState extends State<NutriApp> {
     final clinicalProfileController = ClinicalProfileController(
       repository: clinicalProfileRepository,
     );
-    final ClinicalProfileRepository clinicalProfileRepository =
-        widget.config.useMockApi
-            ? MockClinicalProfileRepository()
-            : LocalClinicalProfileRepository();
-    final clinicalProfileController = ClinicalProfileController(
-      repository: clinicalProfileRepository,
-    );
 
     // Schedule events are mock-seeded for M13; persistence is a follow-up.
     final ScheduleRepository scheduleRepository = MockScheduleRepository();
@@ -274,7 +263,6 @@ class _NutriAppState extends State<NutriApp> {
           language: _languageController.language,
           child: MainShellPage(
             profileController: profileController,
-            clinicalProfileController: clinicalProfileController,
             clinicalProfileController: clinicalProfileController,
             scheduleController: scheduleController,
             symptomController: symptomController,

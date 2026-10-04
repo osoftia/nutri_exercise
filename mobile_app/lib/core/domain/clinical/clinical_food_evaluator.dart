@@ -34,6 +34,57 @@ class ClinicalFoodEvaluator {
     return ClinicalSafetyVerdict(level: level, findings: findings);
   }
 
+  /// Evaluates an assembled meal by summing its per-ingredient nutrient data.
+  ///
+  /// A nutrient is considered unknown when any ingredient omits it, preventing
+  /// an incomplete meal from being marked safe by treating missing data as 0.
+  ClinicalSafetyVerdict evaluateMeal(
+    Iterable<FoodEntry> ingredients,
+    ClinicalConditionProfile profile,
+  ) {
+    final foods = ingredients.toList(growable: false);
+    if (foods.isEmpty) {
+      return const ClinicalSafetyVerdict(
+        level: ClinicalVerdictLevel.unassessed,
+      );
+    }
+    double? total(double? Function(FoodEntry food) select) {
+      if (foods.any((food) => select(food) == null)) return null;
+      return foods.fold<double>(0, (sum, food) {
+        final amount = select(food);
+        return sum + (amount ?? 0);
+      });
+    }
+
+    final totalCarbs = foods.fold<int>(0, (sum, food) => sum + food.carbsG);
+    final glycemicIndex =
+        foods.any((food) => food.carbsG > 0 && food.glycemicIndex == null) ||
+                totalCarbs == 0
+            ? null
+            : foods.fold<double>(0, (sum, food) {
+                  final index = food.glycemicIndex;
+                  return sum + (index == null ? 0 : index * food.carbsG);
+                }) /
+                totalCarbs;
+
+    return evaluate(
+      FoodEntry(
+        name: foods.map((food) => food.name).join(' + '),
+        calories: foods.fold(0, (sum, food) => sum + food.calories),
+        proteinG: foods.fold(0, (sum, food) => sum + food.proteinG),
+        carbsG: totalCarbs,
+        fatG: foods.fold(0, (sum, food) => sum + food.fatG),
+        saturatedFatG: total((food) => food.saturatedFatG),
+        sugarsG: total((food) => food.sugarsG),
+        fiberG: total((food) => food.fiberG),
+        glycemicIndex: glycemicIndex,
+        purinesMg: total((food) => food.purinesMg),
+        sodiumMg: total((food) => food.sodiumMg),
+      ),
+      profile,
+    );
+  }
+
   ClinicalFinding _evaluateCondition(
     FoodEntry food,
     ClinicalCondition condition,

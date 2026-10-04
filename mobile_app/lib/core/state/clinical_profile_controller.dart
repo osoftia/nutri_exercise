@@ -49,6 +49,9 @@ class ClinicalProfileController extends ChangeNotifier {
   ClinicalSafetyVerdict evaluate(FoodEntry food) =>
       _evaluator.evaluate(food, _profile);
 
+  ClinicalSafetyVerdict evaluateMeal(Iterable<FoodEntry> ingredients) =>
+      _evaluator.evaluateMeal(ingredients, _profile);
+
   Future<void> setSeverity(
     ClinicalCondition condition,
     ClinicalSeverity severity,

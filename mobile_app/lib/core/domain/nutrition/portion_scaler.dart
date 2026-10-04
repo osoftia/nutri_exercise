@@ -20,6 +20,12 @@ abstract final class PortionScaler {
       proteinG: _scaleInt(base.proteinG, factor),
       carbsG: _scaleInt(base.carbsG, factor),
       fatG: _scaleInt(base.fatG, factor),
+      saturatedFatG: _scaleNullable(base.saturatedFatG, factor),
+      sugarsG: _scaleNullable(base.sugarsG, factor),
+      fiberG: _scaleNullable(base.fiberG, factor),
+      glycemicIndex: base.glycemicIndex,
+      purinesMg: _scaleNullable(base.purinesMg, factor),
+      sodiumMg: _scaleNullable(base.sodiumMg, factor),
     );
   }
 
@@ -37,6 +43,12 @@ abstract final class PortionScaler {
       proteinG: _scaleInt(base.proteinG, factor),
       carbsG: _scaleInt(base.carbsG, factor),
       fatG: _scaleInt(base.fatG, factor),
+      saturatedFatG: _scaleNullable(base.saturatedFatG, factor),
+      sugarsG: _scaleNullable(base.sugarsG, factor),
+      fiberG: _scaleNullable(base.fiberG, factor),
+      glycemicIndex: base.glycemicIndex,
+      purinesMg: _scaleNullable(base.purinesMg, factor),
+      sodiumMg: _scaleNullable(base.sodiumMg, factor),
       time: time ?? base.time,
     );
   }
@@ -47,6 +59,9 @@ abstract final class PortionScaler {
   }
 
   static int _scaleInt(int value, double factor) => (value * factor).round();
+
+  static double? _scaleNullable(double? value, double factor) =>
+      value == null ? null : value * factor;
 
   static String _formatGrams(double grams) {
     if (grams == grams.roundToDouble()) return grams.toInt().toString();

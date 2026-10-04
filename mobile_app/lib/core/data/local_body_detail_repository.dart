@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../database/database_helper.dart';
 import '../domain/body_projection/body_segment.dart';
 import '../domain/body_projection/muscle_workout_log.dart';
@@ -20,8 +22,7 @@ class LocalBodyDetailRepository implements BodyDetailRepository {
   LocalBodyDetailRepository({
     DatabaseHelper? databaseHelper,
     String Function()? dateKey,
-    Map<BodySegment, MuscleWorkoutLog> plannedWorkouts =
-        bodyDetailPlannedSeed,
+    Map<BodySegment, MuscleWorkoutLog> plannedWorkouts = bodyDetailPlannedSeed,
   })  : _databaseHelper = databaseHelper ?? DatabaseHelper(),
         _dateKey = dateKey ?? (() => DailyEntry.dateKey(DateTime.now())),
         _plannedWorkouts = plannedWorkouts;
@@ -88,19 +89,45 @@ class LocalBodyDetailRepository implements BodyDetailRepository {
         'protein': food.proteinG,
         'carbs': food.carbsG,
         'fat': food.fatG,
+        'clinical_nutrients_json': _encodeClinicalNutrients(food),
         'time': food.time,
         'created_at': DateTime.now().toIso8601String(),
       };
 
-  LoggedFood _foodFromRow(Map<String, Object?> row) => LoggedFood(
-        name: row['name'] as String,
-        portion: row['portion'] as String,
-        calories: (row['calories'] as num).toInt(),
-        proteinG: (row['protein'] as num).toInt(),
-        carbsG: (row['carbs'] as num).toInt(),
-        fatG: (row['fat'] as num).toInt(),
-        time: row['time'] as String,
-      );
+  LoggedFood _foodFromRow(Map<String, Object?> row) {
+    final rawNutrients = row['clinical_nutrients_json'] as String?;
+    final nutrients = rawNutrients == null
+        ? const <String, dynamic>{}
+        : jsonDecode(rawNutrients) as Map<String, dynamic>;
+    double? value(String key) => (nutrients[key] as num?)?.toDouble();
+    return LoggedFood(
+      name: row['name'] as String,
+      portion: row['portion'] as String,
+      calories: (row['calories'] as num).toInt(),
+      proteinG: (row['protein'] as num).toInt(),
+      carbsG: (row['carbs'] as num).toInt(),
+      fatG: (row['fat'] as num).toInt(),
+      saturatedFatG: value('saturatedFatG'),
+      sugarsG: value('sugarsG'),
+      fiberG: value('fiberG'),
+      glycemicIndex: value('glycemicIndex'),
+      purinesMg: value('purinesMg'),
+      sodiumMg: value('sodiumMg'),
+      time: row['time'] as String,
+    );
+  }
+
+  String? _encodeClinicalNutrients(LoggedFood food) {
+    final nutrients = {
+      if (food.saturatedFatG != null) 'saturatedFatG': food.saturatedFatG,
+      if (food.sugarsG != null) 'sugarsG': food.sugarsG,
+      if (food.fiberG != null) 'fiberG': food.fiberG,
+      if (food.glycemicIndex != null) 'glycemicIndex': food.glycemicIndex,
+      if (food.purinesMg != null) 'purinesMg': food.purinesMg,
+      if (food.sodiumMg != null) 'sodiumMg': food.sodiumMg,
+    };
+    return nutrients.isEmpty ? null : jsonEncode(nutrients);
+  }
 
   Map<String, Object?> _completionToRow(CompletedExercise exercise) => {
         'date': _dateKey(),

@@ -17,6 +17,12 @@ const _foods = DailyFoodLog(
       proteinG: 12,
       carbsG: 60,
       fatG: 12,
+      saturatedFatG: 1.2,
+      sugarsG: 7,
+      fiberG: 8,
+      glycemicIndex: 55,
+      purinesMg: 15,
+      sodiumMg: 10,
       time: '08:10',
     ),
     LoggedFood(
@@ -72,6 +78,7 @@ void main() {
               protein INTEGER NOT NULL,
               carbs INTEGER NOT NULL,
               fat INTEGER NOT NULL,
+              clinical_nutrients_json TEXT,
               time TEXT NOT NULL,
               created_at TEXT NOT NULL
             )
@@ -115,6 +122,8 @@ void main() {
       expect(loaded.entries, hasLength(2));
       expect(loaded.totalCalories, 1070);
       expect(loaded.entries.first.name, 'Oatmeal');
+      expect(loaded.entries.first.saturatedFatG, 1.2);
+      expect(loaded.entries.first.fiberG, 8);
     });
 
     test('saving replaces the previous food log', () async {

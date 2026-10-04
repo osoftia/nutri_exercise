@@ -11,7 +11,7 @@ class DatabaseSchema {
   DatabaseSchema._();
 
   /// Current schema version (bump on every structural change).
-  static const int version = 12;
+  static const int version = 13;
 
   /// The database file name.
   static const String fileName = 'nutri_exercise.db';
@@ -120,6 +120,9 @@ class DatabaseSchema {
     if (oldVersion < 12) {
       await createSymptomTable(db);
     }
+    if (oldVersion < 13) {
+      await ensureClinicalNutrientsColumn(db);
+    }
   }
 
   /// Creates the `symptom_logs` table (version 12): one severity row per date
@@ -176,6 +179,7 @@ class DatabaseSchema {
         protein INTEGER NOT NULL,
         carbs INTEGER NOT NULL,
         fat INTEGER NOT NULL,
+        clinical_nutrients_json TEXT,
         time TEXT NOT NULL,
         created_at TEXT NOT NULL
       )
@@ -192,6 +196,19 @@ class DatabaseSchema {
         created_at TEXT NOT NULL
       )
     ''');
+  }
+
+  /// Adds optional clinical nutrient metadata to legacy `food_logs` tables.
+  ///
+  /// The column check matters when upgrading from a version before the body
+  /// detail tables existed: their creation already uses the current shape.
+  @visibleForTesting
+  static Future<void> ensureClinicalNutrientsColumn(Database db) async {
+    final columns = await db.rawQuery('PRAGMA table_info(food_logs)');
+    if (columns.any((row) => row['name'] == 'clinical_nutrients_json')) return;
+    await db.execute(
+      'ALTER TABLE food_logs ADD COLUMN clinical_nutrients_json TEXT',
+    );
   }
 
   /// Creates the `tamagotchi_progress` / `meal_actions` tables (version 6).

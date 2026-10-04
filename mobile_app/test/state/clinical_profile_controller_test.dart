@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nutri_mobile_app/core/data/clinical_profile_repository.dart';
 import 'package:nutri_mobile_app/core/domain/clinical/clinical_condition.dart';
-import 'package:nutri_mobile_app/core/domain/clinical/clinical_condition_profile.dart';
 import 'package:nutri_mobile_app/core/mocks/mock_clinical_profile_repository.dart';
 import 'package:nutri_mobile_app/core/state/clinical_profile_controller.dart';
 
