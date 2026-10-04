@@ -37,7 +37,8 @@ Future<void> showCalendarHistoryDialog(
 /// Month grid of daily logged entries (nutrition + exercises) with an inline
 /// editor for reviewing and updating past days.
 class CalendarHistoryDialog extends StatefulWidget {
-  const CalendarHistoryDialog({super.key, required this.repository, this.onChanged});
+  const CalendarHistoryDialog(
+      {super.key, required this.repository, this.onChanged});
 
   final DailyEntryRepository repository;
 
@@ -176,11 +177,10 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
     final totalCells = leadingBlanks + daysInMonth;
     final entries = _controller.entries
         .where(
-          (entry) =>
-              entry.date.startsWith(
-                '${_month.year.toString().padLeft(4, '0')}-'
-                '${_month.month.toString().padLeft(2, '0')}',
-              ),
+          (entry) => entry.date.startsWith(
+            '${_month.year.toString().padLeft(4, '0')}-'
+            '${_month.month.toString().padLeft(2, '0')}',
+          ),
         )
         .map((entry) => entry.date)
         .toSet();
@@ -209,15 +209,29 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Stack(
+              fit: StackFit.expand,
               children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: AppText('$day'),
+                Positioned.fill(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: hasEntry ? 5 : 0),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: AppText('$day'),
+                    ),
+                  ),
                 ),
                 if (hasEntry)
-                  const Icon(Icons.circle, size: 6, color: AppColors.accent),
+                  const Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Icon(
+                      Icons.circle,
+                      size: 4,
+                      color: AppColors.accent,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -248,4 +262,3 @@ class _CalendarHistoryDialogState extends State<CalendarHistoryDialog> {
     );
   }
 }
-
