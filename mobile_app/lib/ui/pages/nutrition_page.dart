@@ -7,8 +7,6 @@ import '../../core/domain/body_projection/body_diagram_view_model.dart';
 import '../../core/domain/body_projection/nutrition_body_view_model.dart';
 import '../../core/domain/body_projection/nutrition_log.dart';
 import '../../core/domain/i18n/localization_scope.dart';
-import '../../core/domain/i18n/app_language.dart';
-import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/nutrition/portion_scaler.dart';
 import '../../core/models/daily_entry.dart';
 import '../../core/models/food_entry.dart';
@@ -24,11 +22,10 @@ import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
 import '../molecules/blueprint_action_rail.dart';
 import '../molecules/body_segment_sheet.dart';
-import '../molecules/clinical_food_safety_badge.dart';
+import '../molecules/clinical_food_search_panel.dart';
 import '../molecules/quick_add_grams_dialog.dart';
 import '../organisms/body_blueprint/unified_body_blueprint.dart';
 import '../organisms/calendar_history_dialog.dart';
-import 'nutrition_presets.dart';
 
 class NutritionPage extends StatefulWidget {
   const NutritionPage({
@@ -61,8 +58,6 @@ class NutritionPage extends StatefulWidget {
 class _NutritionPageState extends State<NutritionPage> {
   final _nameController = TextEditingController();
   final _caloriesController = TextEditingController();
-  final _foodSearchController = TextEditingController();
-  String _foodQuery = '';
 
   @override
   void initState() {
@@ -75,7 +70,6 @@ class _NutritionPageState extends State<NutritionPage> {
   void dispose() {
     _nameController.dispose();
     _caloriesController.dispose();
-    _foodSearchController.dispose();
     super.dispose();
   }
 
@@ -166,33 +160,6 @@ class _NutritionPageState extends State<NutritionPage> {
     return '${two(now.hour)}:${two(now.minute)}';
   }
 
-  Widget _quickAddFood(FoodEntry entry, AppStrings strings) {
-    final button = SizedBox(
-      width: double.infinity,
-      child: CustomButton(
-        key: Key('quick_add_${entry.name}'),
-        label: NutritionPresets.label(strings, entry),
-        variant: CustomButtonVariant.ghost,
-        onPressed: () => _addQuick(entry),
-      ),
-    );
-    final clinical = widget.clinicalProfileController;
-    if (clinical == null || !clinical.hasConditions) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-        child: button,
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: ClinicalFoodSafetyBadge(
-        cardKey: Key('clinical_food_${entry.name}'),
-        verdict: clinical.evaluate(entry),
-        child: button,
-      ),
-    );
-  }
-
   /// The shared blueprint snapshot: the live body-detail state when available
   /// (so the abdomen colour tracks logged food), otherwise a calorie-derived
   /// snapshot so the figure still responds to the day's intake.
@@ -223,9 +190,7 @@ class _NutritionPageState extends State<NutritionPage> {
   Widget build(BuildContext context) {
     final clinicalController = widget.clinicalProfileController;
     return ListenableBuilder(
-      listenable: clinicalController == null
-          ? widget.controller
-          : Listenable.merge([widget.controller, clinicalController]),
+      listenable: widget.controller,
       builder: (context, _) {
         final c = widget.controller;
         final strings = LocalizationScope.stringsOf(context);
@@ -363,47 +328,9 @@ class _NutritionPageState extends State<NutritionPage> {
               ),
             ),
             const SizedBox(height: AppSpacing.section),
-            AppText(strings.addFoodsTitle),
-            const SizedBox(height: AppSpacing.sm),
-            if (clinicalController != null) ...[
-              TextField(
-                key: const Key('clinical_food_search_field'),
-                controller: _foodSearchController,
-                decoration: AppInputDecoration.rounded(
-                  label: LocalizationScope.languageOf(context) ==
-                          AppLanguage.spanish
-                      ? 'Buscar alimentos'
-                      : 'Search foods',
-                  hint: LocalizationScope.languageOf(context) ==
-                          AppLanguage.spanish
-                      ? 'Avena, carne, sodio…'
-                      : 'Oats, meat, sodium…',
-                  suffixIcon: const Icon(Icons.search),
-                ),
-                onChanged: (value) => setState(() => _foodQuery = value),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final entry in NutritionPresets.quickAdds.where(
-                  (food) => food.name.toLowerCase().contains(
-                        _foodQuery.trim().toLowerCase(),
-                      ),
-                ))
-                  _quickAddFood(entry, strings),
-                if (NutritionPresets.quickAdds.every(
-                  (food) => !food.name.toLowerCase().contains(
-                        _foodQuery.trim().toLowerCase(),
-                      ),
-                ))
-                  AppCaption(
-                    LocalizationScope.languageOf(context) == AppLanguage.spanish
-                        ? 'No hay alimentos con ese nombre.'
-                        : 'No foods match that search.',
-                  ),
-              ],
+            ClinicalFoodSearchPanel(
+              controller: clinicalController,
+              onAdd: _addQuick,
             ),
             const SizedBox(height: AppSpacing.section),
             NeumorphicContainer(
