@@ -1,0 +1,131 @@
+.medical-dashboard {
+  background: var(--color-bg);
+  border: 3px solid var(--color-border);
+  border-radius: 0 !important;
+  padding: var(--grid-gutter);
+  color: var(--color-text-high);
+}
+
+.medical-dashboard__grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--grid-gutter);
+}
+
+.medical-dashboard__profiles,
+.medical-dashboard__suggestions {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 0 !important;
+  padding: var(--grid-gutter);
+}
+
+.medical-dashboard__overline {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-medium);
+}
+
+.medical-dashboard__title,
+.medical-dashboard__suggestions-title,
+.medical-dashboard__condition-name {
+  margin: 0 0 8px;
+  font-weight: 800;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text-high);
+}
+
+.medical-dashboard__title {
+  font-size: var(--font-size-h2);
+}
+
+.medical-dashboard__suggestions-title,
+.medical-dashboard__condition-name {
+  font-size: var(--font-size-h3);
+}
+
+.medical-dashboard__notes,
+.medical-dashboard__condition-desc,
+.medical-dashboard__empty {
+  margin: 0 0 12px;
+  font-size: var(--font-size-body);
+  color: var(--color-text-medium);
+}
+
+.medical-dashboard__selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.medical-dashboard__chip {
+  padding: 8px 14px;
+  background: var(--color-bg);
+  color: var(--color-text-medium);
+  border: 2px solid var(--color-border);
+  border-radius: 0 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.medical-dashboard__chip.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-high);
+}
+
+.medical-dashboard__chip--condition.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-text-high);
+}
+
+.medical-dashboard__condition {
+  margin-top: 12px;
+  border: 2px solid var(--color-border);
+  border-radius: 0 !important;
+  padding: 12px;
+  background: var(--color-bg);
+}
+
+.medical-dashboard__suggestions {
+  border-width: 4px;
+}
+
+.medical-dashboard__suggestion {
+  border: 2px solid var(--color-border);
+  border-radius: 0 !important;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: var(--color-bg);
+}
+
+.medical-dashboard__suggestion-text {
+  margin: 0 0 8px;
+  font-size: var(--font-size-body);
+  color: var(--color-text-high);
+}
+
+.medical-dashboard__badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 2px solid var(--color-accent);
+  border-radius: 0 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: var(--font-size-caption);
+  color: var(--color-accent);
+}
+
+@media (max-width: 900px) {
+  .medical-dashboard__grid {
+    grid-template-columns: 1fr;
+  }
+}

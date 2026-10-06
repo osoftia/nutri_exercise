@@ -1,0 +1,54 @@
+<section class="medical-dashboard" aria-label="Medical profiles dashboard">
+  <div class="medical-dashboard__grid">
+    <div class="medical-dashboard__profiles">
+      <p class="medical-dashboard__overline">MEDICAL PROFILE — MOCK</p>
+      @if (store.selectedProfile(); as profile) {
+        <h2 class="medical-dashboard__title">{{ profile.displayName }} — {{ profile.age }} y/o</h2>
+        <p class="medical-dashboard__notes">{{ profile.notes }}</p>
+      }
+      <nav class="medical-dashboard__selectors" aria-label="Select user profile">
+        @for (p of store.profiles(); track p.id) {
+          <button
+            type="button"
+            class="medical-dashboard__chip"
+            [class.active]="store.selectedProfile().id === p.id"
+            [attr.aria-pressed]="store.selectedProfile().id === p.id"
+            (click)="onSelectProfile(p.id)"
+          >
+            {{ p.displayName }}
+          </button>
+        }
+      </nav>
+      <nav class="medical-dashboard__selectors" aria-label="Select medical condition">
+        @for (id of store.selectedProfile().conditionIds; track id) {
+          <button
+            type="button"
+            class="medical-dashboard__chip medical-dashboard__chip--condition"
+            [class.active]="store.activeConditionId() === id"
+            [attr.aria-pressed]="store.activeConditionId() === id"
+            (click)="onSelectCondition(id)"
+          >
+            {{ conditionName(id) }}
+          </button>
+        }
+      </nav>
+      <article class="medical-dashboard__condition">
+        <p class="medical-dashboard__overline">Active condition</p>
+        <h3 class="medical-dashboard__condition-name">{{ store.activeCondition().name }}</h3>
+        <p class="medical-dashboard__condition-desc">{{ store.activeCondition().description }}</p>
+      </article>
+    </div>
+    <aside class="medical-dashboard__suggestions" aria-label="AI Daily Suggestions">
+      <p class="medical-dashboard__overline">AI Daily Suggestions</p>
+      <h3 class="medical-dashboard__suggestions-title">AI Daily Suggestions</h3>
+      @for (s of store.suggestionsForActive(); track s.id) {
+        <article class="medical-dashboard__suggestion">
+          <p class="medical-dashboard__suggestion-text">{{ s.text }}</p>
+          <span class="medical-dashboard__badge">{{ s.context }}</span>
+        </article>
+      } @empty {
+        <p class="medical-dashboard__empty">No suggestions for this condition.</p>
+      }
+    </aside>
+  </div>
+</section>

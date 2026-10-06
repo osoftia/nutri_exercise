@@ -17,6 +17,25 @@ export const routes: Routes = [
         (m) => m.PromptLab,
       ),
   },
+  {
+    path: 'rag-ingest',
+    loadComponent: () =>
+      import('./components/organisms/rag-ingest/rag-ingest').then(
+        (m) => m.RagIngest,
+      ),
+  },
+  {
+    path: 'routine-board',
+    loadComponent: () =>
+      import('./components/organisms/routine-board/routine-board').then(
+        (m) => m.RoutineBoard,
+      ),
+  },
+  {
+    path: 'health-ai',
+    loadComponent: () =>
+      import('./pages/health-ai/health-ai.page').then((m) => m.HealthAiPage),
+  },
   { path: 'admin-dashboard', redirectTo: '/history', pathMatch: 'full' },
   { path: '', redirectTo: '/history', pathMatch: 'full' },
 ];
