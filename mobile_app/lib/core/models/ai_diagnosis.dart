@@ -102,9 +102,12 @@ class AiDiagnosisReport {
     final summary = json['summary'];
     final considerations = json['considerations'];
     final rawMenus = json['menus'];
-    if (title is! String || title.trim().isEmpty ||
-        summary is! String || summary.trim().isEmpty ||
-        considerations is! List || rawMenus is! List) {
+    if (title is! String ||
+        title.trim().isEmpty ||
+        summary is! String ||
+        summary.trim().isEmpty ||
+        considerations is! List ||
+        rawMenus is! List) {
       throw const FormatException('Malformed clinical report response.');
     }
     final parsedConsiderations = considerations.map((item) {

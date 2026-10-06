@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
+import '../../core/data/ai_diagnosis_repository.dart';
 import '../../core/data/notification_prefs_repository.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/domain/notifications/exercise_check_in.dart';
@@ -36,6 +37,7 @@ class MainShellPage extends StatefulWidget {
     super.key,
     required this.profileController,
     this.clinicalProfileController,
+    this.aiDiagnosisRepository,
     required this.scheduleController,
     required this.nutritionController,
     required this.projectionController,
@@ -54,6 +56,7 @@ class MainShellPage extends StatefulWidget {
 
   final UserProfileController profileController;
   final ClinicalProfileController? clinicalProfileController;
+  final AiDiagnosisRepository? aiDiagnosisRepository;
   final ScheduleController scheduleController;
   final NutritionController nutritionController;
   final ProjectionController projectionController;
@@ -106,6 +109,7 @@ class _MainShellPageState extends State<MainShellPage> {
     ProfilePage(
       controller: widget.profileController,
       clinicalProfileController: widget.clinicalProfileController,
+      aiDiagnosisRepository: widget.aiDiagnosisRepository,
       languageController: widget.languageController,
       symptomController: widget.symptomController,
       notificationPrefsRepository: widget.notificationPrefsRepository,

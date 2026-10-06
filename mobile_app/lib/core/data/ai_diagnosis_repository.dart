@@ -83,7 +83,8 @@ class AiDiagnosisRepository {
     } on AiDiagnosisException {
       rethrow;
     } on FormatException catch (error) {
-      throw AiDiagnosisException('The clinical report response was invalid: $error');
+      throw AiDiagnosisException(
+          'The clinical report response was invalid: $error');
     } on TimeoutException {
       throw const AiDiagnosisException(
         'The clinical report service timed out. Your saved reports are still available.',

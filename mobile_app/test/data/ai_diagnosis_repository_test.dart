@@ -53,7 +53,8 @@ void main() {
     ],
   };
 
-  test('sends active conditions, severity, preferences, and language', () async {
+  test('sends active conditions, severity, preferences, and language',
+      () async {
     final store = _MemoryStore();
     late http.Request captured;
     final repository = AiDiagnosisRepository(
@@ -87,7 +88,8 @@ void main() {
     expect(store.preferences, 'Vegetarian; dislikes mushrooms');
   });
 
-  test('does not issue a request when no active conditions are selected', () async {
+  test('does not issue a request when no active conditions are selected',
+      () async {
     var requested = false;
     final repository = AiDiagnosisRepository(
       'https://api.example.test',
@@ -109,7 +111,8 @@ void main() {
     expect(requested, isFalse);
   });
 
-  test('keeps the cached report when the service returns invalid data', () async {
+  test('keeps the cached report when the service returns invalid data',
+      () async {
     final store = _MemoryStore()
       ..report = AiDiagnosisReport.fromJson(
         responseBody,

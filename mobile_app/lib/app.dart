@@ -6,6 +6,8 @@ import 'core/config/ai_chat_factory.dart';
 import 'core/config/app_config.dart';
 import 'core/constants/api_constants.dart';
 import 'core/data/body_detail_repository.dart';
+import 'core/data/ai_diagnosis_repository.dart';
+import 'core/data/local_ai_diagnosis_repository.dart';
 import 'core/data/clinical_profile_repository.dart';
 import 'core/data/daily_entry_repository.dart';
 import 'core/data/daily_log_repository.dart';
@@ -31,6 +33,7 @@ import 'core/mocks/mock_daily_entry_repository.dart';
 import 'core/mocks/mock_language_repository.dart';
 import 'core/mocks/mock_daily_log_repository.dart';
 import 'core/mocks/mock_body_detail_repository.dart';
+import 'core/mocks/mock_ai_diagnosis_store.dart';
 import 'core/mocks/mock_clinical_profile_repository.dart';
 import 'core/mocks/mock_nutrition_repository.dart';
 import 'core/mocks/mock_notification_prefs_repository.dart';
@@ -84,6 +87,7 @@ class _NutriAppState extends State<NutriApp> {
   late final DailyLogController _dailyLogController;
   late final NotificationService _notificationService;
   late final LanguageController _languageController;
+  late final AiDiagnosisRepository _aiDiagnosisRepository;
 
   @override
   void initState() {
@@ -97,6 +101,14 @@ class _NutriAppState extends State<NutriApp> {
         : LocalLanguageRepository();
     _languageController = LanguageController(repository: languageRepository);
     unawaited(_languageController.restore());
+    _aiDiagnosisRepository = AiDiagnosisRepository(
+      widget.config.apiBaseUrl.isNotEmpty
+          ? widget.config.apiBaseUrl
+          : ApiConstants.baseUrl,
+      store: widget.config.useMockApi
+          ? MockAiDiagnosisStore()
+          : LocalAiDiagnosisRepository(),
+    );
     final dailyLogRepository = _dailyLogRepository();
     _dailyLogController = DailyLogController(
       repository: dailyLogRepository,
@@ -264,6 +276,7 @@ class _NutriAppState extends State<NutriApp> {
           child: MainShellPage(
             profileController: profileController,
             clinicalProfileController: clinicalProfileController,
+            aiDiagnosisRepository: _aiDiagnosisRepository,
             scheduleController: scheduleController,
             symptomController: symptomController,
             nutritionController: nutritionController,

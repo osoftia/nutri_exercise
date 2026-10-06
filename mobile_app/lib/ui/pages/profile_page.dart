@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
+import '../../core/data/ai_diagnosis_repository.dart';
 import '../../core/data/notification_prefs_repository.dart';
 import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
@@ -31,6 +32,7 @@ class ProfilePage extends StatefulWidget {
     this.languageController,
     this.symptomController,
     this.clinicalProfileController,
+    this.aiDiagnosisRepository,
     this.notificationPrefsRepository,
     this.notificationService,
     this.dailyEntryRepository,
@@ -46,6 +48,9 @@ class ProfilePage extends StatefulWidget {
 
   /// Optional clinical profile controller; enables health condition guidance.
   final ClinicalProfileController? clinicalProfileController;
+
+  /// Optional online generation + offline report repository for clinical AI.
+  final AiDiagnosisRepository? aiDiagnosisRepository;
 
   /// Optional prefs store; enables the System Settings accordion.
   final NotificationPrefsRepository? notificationPrefsRepository;
@@ -162,6 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
             icon: Icons.medical_services_outlined,
             child: ClinicalConditionsPanel(
               controller: widget.clinicalProfileController!,
+              aiDiagnosisRepository: widget.aiDiagnosisRepository,
             ),
           ),
         ],
