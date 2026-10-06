@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import '../models/daily_entry.dart';
 import '../models/daily_log.dart';
 import '../models/diet_models.dart';
+import '../models/ai_diagnosis.dart';
 import '../models/meal_action.dart';
 import '../models/projection_models.dart';
 import '../models/routine_models.dart';
@@ -296,6 +297,52 @@ class DatabaseHelper {
       'app_settings',
       {'setting_key': key, 'setting_value': value},
       conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Saves a report and all of its suggested menus atomically.
+  Future<int> insertAiDiagnosis(AiDiagnosisReport report) async {
+    final db = await database;
+    return db.transaction((txn) async {
+      final diagnosisId = await txn.insert('ai_diagnoses', {
+        'created_at': report.createdAt.toUtc().toIso8601String(),
+        'title': report.title,
+        'summary': report.summary,
+        'considerations_json': jsonEncode(report.considerations),
+        'condition_ids_json': jsonEncode(report.conditionIds),
+        'food_preferences': report.foodPreferences,
+        'language': report.language,
+      });
+      for (final menu in report.menus) {
+        await txn.insert('ai_suggested_menus', {
+          'diagnosis_id': diagnosisId,
+          'name': menu.name,
+          'day': menu.day,
+          'meals_json': jsonEncode(
+            menu.meals.map((meal) => meal.toJson()).toList(),
+          ),
+        });
+      }
+      return diagnosisId;
+    });
+  }
+
+  /// Returns saved diagnosis rows newest first.
+  Future<List<Map<String, Object?>>> getAiDiagnoses() async {
+    final db = await database;
+    return db.query('ai_diagnoses', orderBy: 'created_at DESC, id DESC');
+  }
+
+  /// Returns the suggested menus associated with [diagnosisId].
+  Future<List<Map<String, Object?>>> getAiSuggestedMenus(
+    int diagnosisId,
+  ) async {
+    final db = await database;
+    return db.query(
+      'ai_suggested_menus',
+      where: 'diagnosis_id = ?',
+      whereArgs: [diagnosisId],
+      orderBy: 'id',
     );
   }
 

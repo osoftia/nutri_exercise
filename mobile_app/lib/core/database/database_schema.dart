@@ -11,7 +11,7 @@ class DatabaseSchema {
   DatabaseSchema._();
 
   /// Current schema version (bump on every structural change).
-  static const int version = 13;
+  static const int version = 14;
 
   /// The database file name.
   static const String fileName = 'nutri_exercise.db';
@@ -65,6 +65,7 @@ class DatabaseSchema {
     await createBodyDetailTables(db);
     await createSettingsTable(db);
     await createSymptomTable(db);
+    await createAiDiagnosisTables(db);
   }
 
   /// Applies every migration needed to reach the current schema version.
@@ -123,6 +124,39 @@ class DatabaseSchema {
     if (oldVersion < 13) {
       await ensureClinicalNutrientsColumn(db);
     }
+    if (oldVersion < 14) {
+      await createAiDiagnosisTables(db);
+    }
+  }
+
+  /// Creates local tables for generated clinical reports and their menus.
+  static Future<void> createAiDiagnosisTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ai_diagnoses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TEXT NOT NULL,
+        title TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        considerations_json TEXT NOT NULL,
+        condition_ids_json TEXT NOT NULL,
+        food_preferences TEXT NOT NULL,
+        language TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ai_suggested_menus (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        diagnosis_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        day TEXT NOT NULL,
+        meals_json TEXT NOT NULL,
+        FOREIGN KEY (diagnosis_id) REFERENCES ai_diagnoses(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_ai_suggested_menus_diagnosis
+      ON ai_suggested_menus(diagnosis_id)
+    ''');
   }
 
   /// Creates the `symptom_logs` table (version 12): one severity row per date
