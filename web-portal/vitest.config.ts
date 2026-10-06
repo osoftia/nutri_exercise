@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { isMatch } from 'picomatch';
@@ -40,9 +40,55 @@ function coverageVirtualFilesPatch(): { name: string; configResolved: () => void
   };
 }
 
+/**
+ * Inline Angular component external resources (`templateUrl`/`styleUrl`/
+ * `styleUrls`) for plain `npx vitest` runs, which (unlike `ng test`) do not
+ * go through the Angular AOT compiler. Styles are dropped (`styles: []`)
+ * since they are irrelevant to unit tests; templates are inlined so
+ * `TestBed.compileComponents()` / JIT resolution succeeds.
+ *
+ * Under `ng test` the builder AOT-compiles components first, so this
+ * transform is a no-op there. The plugin name intentionally does NOT start
+ * with `angular:`/`vitest` so the unit-test builder keeps it as a user
+ * plugin instead of stripping it.
+ */
+function jitResourceInline(): { name: string; enforce: string; transform: (code: string, id: string) => string | undefined } {
+  return {
+    name: 'jit-resource-inline',
+    enforce: 'pre',
+    transform(code: string, id: string) {
+      const filePath = id.split('?')[0];
+      if (!filePath.endsWith('.ts')) {
+        return undefined;
+      }
+      if (!code.includes('templateUrl') && !code.includes('styleUrl')) {
+        return undefined;
+      }
+      const dir = path.dirname(filePath);
+      let result = code;
+      result = result.replace(/templateUrl\s*:\s*['"]([^'"]+)['"]/g, (_match, rel: string) => {
+        try {
+          const html = readFileSync(path.join(dir, rel), 'utf-8')
+            .replace(/\\/g, '\\\\')
+            .replace(/`/g, '\\`')
+            .replace(/\$\{/g, '\\${');
+          return `template: \`${html}\``;
+        } catch {
+          return 'template: ``';
+        }
+      });
+      result = result.replace(/styleUrl\s*:\s*['"][^'"]+['"]/g, 'styles: []');
+      result = result.replace(/styleUrls\s*:\s*\[[^\]]*\]/g, 'styles: []');
+      return result === code ? undefined : result;
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [coverageVirtualFilesPatch()],
+  plugins: [jitResourceInline(), coverageVirtualFilesPatch()],
   test: {
+    globals: true,
+    setupFiles: ['./src/test-setup.ts'],
     environment: 'jsdom',
     coverage: {
       provider: 'v8',
