@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
 import '../../core/data/ai_diagnosis_repository.dart';
+import '../../core/data/error_log_repository.dart';
 import '../../core/data/notification_prefs_repository.dart';
 import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
@@ -36,6 +37,7 @@ class ProfilePage extends StatefulWidget {
     this.notificationPrefsRepository,
     this.notificationService,
     this.dailyEntryRepository,
+    this.errorLogRepository,
   });
 
   final UserProfileController controller;
@@ -60,6 +62,9 @@ class ProfilePage extends StatefulWidget {
 
   /// Optional calendar store; feeds the reactive meal test notification.
   final DailyEntryRepository? dailyEntryRepository;
+
+  /// Optional local forensic history store for the Profile Testing panel.
+  final ErrorLogRepository? errorLogRepository;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -213,6 +218,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: TestsPanel(
               notificationService: widget.notificationService!,
               dailyEntryRepository: widget.dailyEntryRepository,
+              errorLogRepository: widget.errorLogRepository,
             ),
           ),
         ],

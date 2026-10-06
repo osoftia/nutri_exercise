@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../constants/api_constants.dart';
+import 'global_error_handler.dart';
 
 /// A single conversational turn sent to the backend for context.
 class ChatTurn {
@@ -85,18 +86,28 @@ class AiChatService {
             }),
           )
           .timeout(timeout);
-    } on TimeoutException catch (e) {
+    } on TimeoutException catch (e, stackTrace) {
+      await ErrorHandlerRegistry.capture(e, stackTrace);
       debugPrint('API Error: $e');
       throw const AiChatTimeoutException();
-    } on SocketException catch (e) {
+    } on SocketException catch (e, stackTrace) {
+      await ErrorHandlerRegistry.capture(e, stackTrace);
       debugPrint('API Error: $e');
       throw const AiChatNetworkException();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      await ErrorHandlerRegistry.capture(e, stackTrace);
       debugPrint('API Error: $e');
       throw const AiChatNetworkException();
     }
 
     if (response.statusCode != 200) {
+      await ErrorHandlerRegistry.capture(
+        AppHttpStatusException(
+          response.statusCode,
+          response.reasonPhrase ?? 'HTTP error',
+        ),
+        StackTrace.current,
+      );
       throw AiChatHttpException(response.statusCode);
     }
 
@@ -110,9 +121,11 @@ class AiChatService {
         throw const AiChatParseException();
       }
       return reply;
-    } on AiChatParseException {
+    } on AiChatParseException catch (error, stackTrace) {
+      await ErrorHandlerRegistry.capture(error, stackTrace);
       rethrow;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      await ErrorHandlerRegistry.capture(error, stackTrace);
       throw const AiChatParseException();
     }
   }

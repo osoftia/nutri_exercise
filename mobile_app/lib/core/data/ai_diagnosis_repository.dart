@@ -7,6 +7,7 @@ import '../domain/clinical/clinical_condition_profile.dart';
 import '../models/ai_diagnosis.dart';
 import '../models/ai_diagnosis_request.dart';
 import 'ai_diagnosis_store.dart';
+import '../services/global_error_handler.dart';
 
 /// Failure returned when a new report cannot be safely generated.
 class AiDiagnosisException implements Exception {
@@ -64,6 +65,13 @@ class AiDiagnosisRepository {
           )
           .timeout(timeout);
       if (response.statusCode < 200 || response.statusCode >= 300) {
+        await ErrorHandlerRegistry.capture(
+          AppHttpStatusException(
+            response.statusCode,
+            response.reasonPhrase ?? 'HTTP error',
+          ),
+          StackTrace.current,
+        );
         throw AiDiagnosisException(
           'The clinical report service returned ${response.statusCode}.',
         );
@@ -82,14 +90,17 @@ class AiDiagnosisRepository {
       return report;
     } on AiDiagnosisException {
       rethrow;
-    } on FormatException catch (error) {
+    } on FormatException catch (error, stackTrace) {
+      await ErrorHandlerRegistry.capture(error, stackTrace);
       throw AiDiagnosisException(
           'The clinical report response was invalid: $error');
-    } on TimeoutException {
+    } on TimeoutException catch (error, stackTrace) {
+      await ErrorHandlerRegistry.capture(error, stackTrace);
       throw const AiDiagnosisException(
         'The clinical report service timed out. Your saved reports are still available.',
       );
-    } catch (error) {
+    } catch (error, stackTrace) {
+      await ErrorHandlerRegistry.capture(error, stackTrace);
       throw AiDiagnosisException(
         'Could not reach the clinical report service. Your saved reports are still available. ($error)',
       );

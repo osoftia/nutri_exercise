@@ -6,6 +6,8 @@ import 'core/config/ai_chat_factory.dart';
 import 'core/config/app_config.dart';
 import 'core/constants/api_constants.dart';
 import 'core/data/body_detail_repository.dart';
+import 'core/data/error_log_repository.dart';
+import 'core/data/local_error_log_repository.dart';
 import 'core/data/ai_diagnosis_repository.dart';
 import 'core/data/local_ai_diagnosis_repository.dart';
 import 'core/data/clinical_profile_repository.dart';
@@ -33,6 +35,7 @@ import 'core/mocks/mock_daily_entry_repository.dart';
 import 'core/mocks/mock_language_repository.dart';
 import 'core/mocks/mock_daily_log_repository.dart';
 import 'core/mocks/mock_body_detail_repository.dart';
+import 'core/mocks/mock_error_log_repository.dart';
 import 'core/mocks/mock_ai_diagnosis_store.dart';
 import 'core/mocks/mock_clinical_profile_repository.dart';
 import 'core/mocks/mock_nutrition_repository.dart';
@@ -42,6 +45,7 @@ import 'core/mocks/mock_projection_repository.dart';
 import 'core/mocks/mock_schedule_repository.dart';
 import 'core/mocks/mock_symptom_repository.dart';
 import 'core/services/log_parse_service.dart';
+import 'core/services/global_error_handler.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/rule_based_body_projection_forecaster.dart';
 import 'core/services/rule_based_muscle_gap_advisor.dart';
@@ -81,6 +85,8 @@ class NutriApp extends StatefulWidget {
 
 class _NutriAppState extends State<NutriApp> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
   final NotificationNavigationController _notificationNav =
       NotificationNavigationController();
 
@@ -88,6 +94,8 @@ class _NutriAppState extends State<NutriApp> {
   late final NotificationService _notificationService;
   late final LanguageController _languageController;
   late final AiDiagnosisRepository _aiDiagnosisRepository;
+  late final ErrorLogRepository _errorLogRepository;
+  late final GlobalErrorHandler _globalErrorHandler;
 
   @override
   void initState() {
@@ -101,6 +109,26 @@ class _NutriAppState extends State<NutriApp> {
         : LocalLanguageRepository();
     _languageController = LanguageController(repository: languageRepository);
     unawaited(_languageController.restore());
+    _errorLogRepository = widget.config.useMockApi
+        ? MockErrorLogRepository()
+        : LocalErrorLogRepository();
+    _globalErrorHandler = GlobalErrorHandler(
+      repository: _errorLogRepository,
+      showAlert: (message) {
+        final messenger = _scaffoldMessengerKey.currentState;
+        if (messenger == null) return;
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(message),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+      },
+    );
+    ErrorHandlerRegistry.current = _globalErrorHandler;
     _aiDiagnosisRepository = AiDiagnosisRepository(
       widget.config.apiBaseUrl.isNotEmpty
           ? widget.config.apiBaseUrl
@@ -139,6 +167,14 @@ class _NutriAppState extends State<NutriApp> {
     if (tamagotchiRepository != null) {
       unawaited(sharedMuscleTamagotchiState.restore());
     }
+  }
+
+  @override
+  void dispose() {
+    if (identical(ErrorHandlerRegistry.current, _globalErrorHandler)) {
+      ErrorHandlerRegistry.current = null;
+    }
+    super.dispose();
   }
 
   DailyLogRepository _dailyLogRepository() => widget.config.useMockApi
@@ -266,6 +302,7 @@ class _NutriAppState extends State<NutriApp> {
 
     return MaterialApp(
       navigatorKey: _navigatorKey,
+      scaffoldMessengerKey: _scaffoldMessengerKey,
       title: 'NutriExercise',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
@@ -277,6 +314,7 @@ class _NutriAppState extends State<NutriApp> {
             profileController: profileController,
             clinicalProfileController: clinicalProfileController,
             aiDiagnosisRepository: _aiDiagnosisRepository,
+            errorLogRepository: _errorLogRepository,
             scheduleController: scheduleController,
             symptomController: symptomController,
             nutritionController: nutritionController,

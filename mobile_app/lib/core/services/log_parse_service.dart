@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 
 import '../constants/api_constants.dart';
 import '../models/log_parse_response.dart';
+import 'global_error_handler.dart';
 
 /// The parse request did not complete within the configured timeout.
 class LogParseTimeoutException implements Exception {
@@ -73,18 +74,28 @@ class LogParseService {
             body: jsonEncode({'text': rawText}),
           )
           .timeout(timeout);
-    } on TimeoutException catch (e) {
+    } on TimeoutException catch (e, stackTrace) {
+      await ErrorHandlerRegistry.capture(e, stackTrace);
       debugPrint('API Error: $e');
       throw const LogParseTimeoutException();
-    } on SocketException catch (e) {
+    } on SocketException catch (e, stackTrace) {
+      await ErrorHandlerRegistry.capture(e, stackTrace);
       debugPrint('API Error: $e');
       throw const LogParseNetworkException();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      await ErrorHandlerRegistry.capture(e, stackTrace);
       debugPrint('API Error: $e');
       throw const LogParseNetworkException();
     }
 
     if (response.statusCode != 200) {
+      await ErrorHandlerRegistry.capture(
+        AppHttpStatusException(
+          response.statusCode,
+          response.reasonPhrase ?? 'HTTP error',
+        ),
+        StackTrace.current,
+      );
       throw LogParseHttpException(response.statusCode);
     }
 
@@ -94,9 +105,11 @@ class LogParseService {
         throw const LogParseParseException();
       }
       return LogParseResponse.fromJson(body);
-    } on LogParseParseException {
+    } on LogParseParseException catch (error, stackTrace) {
+      await ErrorHandlerRegistry.capture(error, stackTrace);
       rethrow;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      await ErrorHandlerRegistry.capture(error, stackTrace);
       throw const LogParseParseException();
     }
   }

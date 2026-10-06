@@ -4,10 +4,11 @@ import 'package:http/http.dart' as http;
 
 import '../models/diet_models.dart';
 import 'diet_repository.dart';
+import '../services/global_error_handler.dart';
 
 class HttpDietRepository implements DietRepository {
   HttpDietRepository(this.baseUrl, {DietRepository? fallback})
-    : _fallback = fallback;
+      : _fallback = fallback;
 
   final String baseUrl;
   final DietRepository? _fallback;
@@ -21,16 +22,17 @@ class HttpDietRepository implements DietRepository {
           .get(Uri.parse('$baseUrl/api/v1/diets/menus'))
           .timeout(_timeout);
       if (response.statusCode != 200) {
-        throw http.ClientException(
-          'Unexpected status code ${response.statusCode}',
-          Uri.parse('$baseUrl/api/v1/diets/menus'),
+        throw AppHttpStatusException(
+          response.statusCode,
+          response.reasonPhrase ?? 'HTTP error',
         );
       }
       final data = jsonDecode(response.body) as List<dynamic>;
       return data
           .map((menu) => DailyMenu.fromJson(menu as Map<String, dynamic>))
           .toList();
-    } catch (_) {
+    } catch (error, stackTrace) {
+      await ErrorHandlerRegistry.capture(error, stackTrace);
       return _fallback?.getDailyMenus() ?? <DailyMenu>[];
     }
   }

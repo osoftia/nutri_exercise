@@ -8,6 +8,7 @@ import '../models/routine_models.dart';
 import 'description_parser.dart';
 import 'local_routine_repository.dart';
 import 'routine_repository.dart';
+import '../services/global_error_handler.dart';
 
 /// Thrown when the backend rejects the request for a client-side reason
 /// (e.g. HTTP 400) and no fallback should be attempted.
@@ -51,16 +52,28 @@ class ApiRoutineRepository implements RoutineRepository {
           .get(Uri.parse('$baseUrl${ApiConstants.routinesPath}'))
           .timeout(timeout);
       if (response.statusCode != 200) {
+        await ErrorHandlerRegistry.capture(
+          AppHttpStatusException(
+            response.statusCode,
+            response.reasonPhrase ?? 'HTTP error',
+          ),
+          StackTrace.current,
+        );
         return await _fallback.getWeeklyRoutine();
       }
       final data = jsonDecode(response.body);
       if (data is! List<dynamic>) {
+        await ErrorHandlerRegistry.capture(
+          const FormatException('Expected a JSON routine list.'),
+          StackTrace.current,
+        );
         return await _fallback.getWeeklyRoutine();
       }
       return data
           .map((routine) => _mapRoutine(routine as Map<String, dynamic>))
           .toList();
-    } catch (_) {
+    } catch (error, stackTrace) {
+      await ErrorHandlerRegistry.capture(error, stackTrace);
       return _fallback.getWeeklyRoutine();
     }
   }
@@ -77,12 +90,23 @@ class ApiRoutineRepository implements RoutineRepository {
           .timeout(timeout);
 
       if (response.statusCode == 400) {
+        await ErrorHandlerRegistry.capture(
+          const AppHttpStatusException(400, 'Bad Request'),
+          StackTrace.current,
+        );
         throw const RoutineApiException(
           'Your preferences were not accepted by the server. '
           'Please review your answers and try again.',
         );
       }
       if (response.statusCode != 200) {
+        await ErrorHandlerRegistry.capture(
+          AppHttpStatusException(
+            response.statusCode,
+            response.reasonPhrase ?? 'HTTP error',
+          ),
+          StackTrace.current,
+        );
         return await _fallback.generateRoutine(userPreferences);
       }
 
@@ -96,7 +120,8 @@ class ApiRoutineRepository implements RoutineRepository {
       return body['description'] as String? ?? '';
     } on RoutineApiException {
       rethrow;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      await ErrorHandlerRegistry.capture(error, stackTrace);
       return _fallback.generateRoutine(userPreferences);
     }
   }
