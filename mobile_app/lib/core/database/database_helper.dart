@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/daily_entry.dart';
 import '../models/daily_log.dart';
+import '../models/error_log_entry.dart';
 import '../models/diet_models.dart';
 import '../models/ai_diagnosis.dart';
 import '../models/meal_action.dart';
@@ -298,6 +299,22 @@ class DatabaseHelper {
       {'setting_key': key, 'setting_value': value},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  /// Inserts a technical failure record into the local forensics log.
+  Future<void> insertErrorLog(ErrorLogEntry entry) async {
+    final db = await database;
+    await db.insert('local_error_logs', entry.toMap());
+  }
+
+  /// Returns local error records newest first.
+  Future<List<ErrorLogEntry>> getErrorLogs() async {
+    final db = await database;
+    final rows = await db.query(
+      'local_error_logs',
+      orderBy: 'timestamp DESC, id DESC',
+    );
+    return rows.map(ErrorLogEntry.fromMap).toList(growable: false);
   }
 
   /// Saves a report and all of its suggested menus atomically.

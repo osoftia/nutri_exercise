@@ -11,7 +11,7 @@ class DatabaseSchema {
   DatabaseSchema._();
 
   /// Current schema version (bump on every structural change).
-  static const int version = 14;
+  static const int version = 15;
 
   /// The database file name.
   static const String fileName = 'nutri_exercise.db';
@@ -66,6 +66,7 @@ class DatabaseSchema {
     await createSettingsTable(db);
     await createSymptomTable(db);
     await createAiDiagnosisTables(db);
+    await createLocalErrorLogTable(db);
   }
 
   /// Applies every migration needed to reach the current schema version.
@@ -127,6 +128,26 @@ class DatabaseSchema {
     if (oldVersion < 14) {
       await createAiDiagnosisTables(db);
     }
+    if (oldVersion < 15) {
+      await createLocalErrorLogTable(db);
+    }
+  }
+
+  /// Creates the local technical error history table (version 15).
+  static Future<void> createLocalErrorLogTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_error_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT NOT NULL,
+        error_code TEXT NOT NULL,
+        message TEXT NOT NULL,
+        stack_trace TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_local_error_logs_timestamp
+      ON local_error_logs(timestamp DESC, id DESC)
+    ''');
   }
 
   /// Creates local tables for generated clinical reports and their menus.

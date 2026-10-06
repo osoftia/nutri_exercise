@@ -2,7 +2,7 @@
 
 ## Backlog
 
-- [ ] **Task 1: SQLite schema update.** Add `local_error_logs` with an auto-increment ID, precise UTC timestamp, string error code, technical message, and stack trace. The repository is currently schema v14, so the additive migration is v14 → v15 (the requested v12 → v13 wording predates existing migrations).
+- [x] **Task 1: SQLite schema update.** Add `local_error_logs` with an auto-increment ID, precise UTC timestamp, string error code, technical message, and stack trace. The repository is currently schema v14, so the additive migration is v14 → v15 (the requested v12 → v13 wording predates existing migrations).
 - [ ] **Task 2: Error logging repository and global reporter.** Implement `ErrorLogRepository`, classify network/timeout/HTTP/parse failures, persist the original technical exception and stack, then issue a short, non-blocking Spanish floating alert. Instrument app HTTP boundaries without changing their existing fallback behavior.
 - [ ] **Task 3: Profile Pruebas error viewer.** Add an “Errores registrados” action in the Profile Testing accordion. Display newest-first local records with local date/time, exact error code, technical message, and expandable stack trace.
 - [ ] **Task 4: Testing and verification.** Cover SQLite storage, error classification, floating alerts, and the error viewer. Run the full Flutter test suite and analyzer.
