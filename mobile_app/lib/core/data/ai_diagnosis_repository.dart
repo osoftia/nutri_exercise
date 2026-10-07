@@ -43,6 +43,7 @@ class AiDiagnosisRepository {
     required ClinicalConditionProfile profile,
     required String foodPreferences,
     required String language,
+    int userId = 1,
   }) async {
     if (profile.isEmpty) {
       throw const AiDiagnosisException(
@@ -52,16 +53,17 @@ class AiDiagnosisRepository {
     final request = AiDiagnosisRequest.fromProfile(
       profile: profile,
       foodPreferences: foodPreferences,
-      language: language,
+      userId: userId,
     );
-    await _store.saveFoodPreferences(request.foodPreferences);
+    await _store.saveFoodPreferences(request.preferences);
+    final requestBody = jsonEncode(request.toJson());
     final uri = Uri.parse('$baseUrl$endpointPath');
     try {
       final response = await _client
           .post(
             uri,
             headers: const {'Content-Type': 'application/json'},
-            body: jsonEncode(request.toJson()),
+            body: requestBody,
           )
           .timeout(timeout);
       if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -72,6 +74,7 @@ class AiDiagnosisRepository {
           ),
           StackTrace.current,
           requestUri: uri,
+          requestBody: requestBody,
         );
         throw AiDiagnosisException(
           'The clinical report service returned ${response.statusCode}.',
@@ -83,25 +86,41 @@ class AiDiagnosisRepository {
       }
       final report = AiDiagnosisReport.fromJson(
         decoded,
-        conditionIds: request.conditions.map((item) => item['id']!).toList(),
-        foodPreferences: request.foodPreferences,
-        language: request.language,
+        conditionIds:
+            profile.conditions.keys.map((value) => value.name).toList(),
+        foodPreferences: request.preferences,
+        language: language,
       );
       await _store.save(report);
       return report;
     } on AiDiagnosisException {
       rethrow;
     } on FormatException catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
+      await ErrorHandlerRegistry.capture(
+        error,
+        stackTrace,
+        requestUri: uri,
+        requestBody: requestBody,
+      );
       throw AiDiagnosisException(
           'The clinical report response was invalid: $error');
     } on TimeoutException catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
+      await ErrorHandlerRegistry.capture(
+        error,
+        stackTrace,
+        requestUri: uri,
+        requestBody: requestBody,
+      );
       throw const AiDiagnosisException(
         'The clinical report service timed out. Your saved reports are still available.',
       );
     } catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
+      await ErrorHandlerRegistry.capture(
+        error,
+        stackTrace,
+        requestUri: uri,
+        requestBody: requestBody,
+      );
       throw AiDiagnosisException(
         'Could not reach the clinical report service. Your saved reports are still available. ($error)',
       );

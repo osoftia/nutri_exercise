@@ -3,38 +3,33 @@ import '../domain/clinical/clinical_condition_profile.dart';
 /// Typed request contract for the clinical nutrition report endpoint.
 class AiDiagnosisRequest {
   const AiDiagnosisRequest({
+    required this.preferences,
     required this.conditions,
-    required this.foodPreferences,
-    required this.language,
+    required this.userId,
   });
 
-  final List<Map<String, String>> conditions;
-  final String foodPreferences;
-  final String language;
+  final String preferences;
+  final String conditions;
+  final int userId;
 
   factory AiDiagnosisRequest.fromProfile({
     required ClinicalConditionProfile profile,
     required String foodPreferences,
-    required String language,
+    required int userId,
   }) {
     final conditions = profile.conditions.entries
-        .map(
-          (entry) => {
-            'id': entry.key.name,
-            'severity': entry.value.name,
-          },
-        )
-        .toList(growable: false);
+        .map((entry) => '${entry.key.name}:${entry.value.name}')
+        .join(',');
     return AiDiagnosisRequest(
+      preferences: foodPreferences.trim(),
       conditions: conditions,
-      foodPreferences: foodPreferences.trim(),
-      language: language,
+      userId: userId,
     );
   }
 
   Map<String, dynamic> toJson() => {
+        'preferences': preferences,
         'conditions': conditions,
-        'foodPreferences': foodPreferences,
-        'language': language,
+        'userId': userId,
       };
 }
