@@ -102,4 +102,24 @@ void main() {
         'https://api.example.test/api/aiproxy/chat');
     expect(alerts.single, contains('Ha ocurrido un error'));
   });
+
+  test('network failures retain the exact target URL', () async {
+    ErrorHandlerRegistry.current = handler;
+    addTearDown(() => ErrorHandlerRegistry.current = null);
+    final service = AiChatService(
+      baseUrl: 'http://10.0.2.2:5039',
+      client: MockClient(
+          (_) async => throw const SocketException('Connection refused')),
+    );
+
+    await expectLater(
+      service.sendMessage(message: 'hello'),
+      throwsA(isA<AiChatNetworkException>()),
+    );
+
+    expect(repository.entries.single.errorCode, 'network');
+    expect(repository.entries.single.requestUrl,
+        'http://10.0.2.2:5039/api/aiproxy/chat');
+    expect(alerts.single, contains('no hay conexión'));
+  });
 }

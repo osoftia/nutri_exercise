@@ -66,7 +66,8 @@ void main() {
     expect(repository.entries.single.stackTrace, isNotEmpty);
   });
 
-  testWidgets('Pruebas error history shows time, code, URL, message and stack', (
+  testWidgets('Pruebas error history shows time, code, URL, message and stack',
+      (
     tester,
   ) async {
     final timestamp = DateTime.utc(2026, 10, 6, 14, 22, 31, 456);
@@ -102,7 +103,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('error_log_sheet_title')), findsOneWidget);
     expect(find.text('Code: 404'), findsOneWidget);
-    expect(find.textContaining('http://10.0.2.2:5039/api/clinical/diagnosis'), findsOneWidget);
+    expect(find.textContaining('http://10.0.2.2:5039/api/clinical/diagnosis'),
+        findsOneWidget);
     expect(find.textContaining('HTTP 404 Not Found'), findsOneWidget);
     expect(
       find.text(timestamp.toLocal().toString().replaceFirst('T', ' ')),

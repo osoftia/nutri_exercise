@@ -26,7 +26,8 @@ void main() {
 
   tearDown(() => db.close());
 
-  test('persists precise error details and reads newest records first', () async {
+  test('persists precise error details and reads newest records first',
+      () async {
     final older = ErrorLogEntry(
       timestamp: DateTime.utc(2026, 10, 5, 12),
       errorCode: '404',
@@ -56,7 +57,8 @@ void main() {
     expect(records.last.requestUrl, older.requestUrl);
   });
 
-  test('v15 migration adds request_url without losing previous error records', () async {
+  test('v15 migration adds request_url without losing previous error records',
+      () async {
     await db.execute('DROP TABLE local_error_logs');
     await db.execute('''
       CREATE TABLE local_error_logs (

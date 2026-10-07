@@ -19,9 +19,7 @@ class HttpDietRepository implements DietRepository {
   Future<List<DailyMenu>> getDailyMenus() async {
     final uri = Uri.parse('$baseUrl/api/v1/diets/menus');
     try {
-      final response = await http
-          .get(uri)
-          .timeout(_timeout);
+      final response = await http.get(uri).timeout(_timeout);
       if (response.statusCode != 200) {
         throw AppHttpStatusException(
           response.statusCode,
