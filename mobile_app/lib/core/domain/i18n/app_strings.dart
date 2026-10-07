@@ -213,6 +213,10 @@ abstract class AppStrings {
   String get exerciseAlertsLabel;
   String get foodAlertsLabel;
   String get dailyIntakeRemindersLabel;
+  String requestTimeoutLabel(int seconds);
+  String get requestTimeoutDescription;
+  String get recommendedClinicalNutritionTitle;
+  String get addSuggestedMeal;
   String get deleteRecordTitle;
   String get editFocusTitle;
   String get focusAreaLabel;
@@ -285,4 +289,13 @@ abstract class AppStrings {
 ///
 /// Kept in the domain layer so dictionaries can localize them without the UI
 /// leaking anatomy strings into hardcoded maps.
-enum BodyRegion { chest, armLeft, armRight, legLeft, legRight, core, head, neck }
+enum BodyRegion {
+  chest,
+  armLeft,
+  armRight,
+  legLeft,
+  legRight,
+  core,
+  head,
+  neck
+}

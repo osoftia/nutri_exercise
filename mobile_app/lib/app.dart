@@ -8,6 +8,7 @@ import 'core/constants/api_constants.dart';
 import 'core/data/body_detail_repository.dart';
 import 'core/data/error_log_repository.dart';
 import 'core/data/local_error_log_repository.dart';
+import 'core/data/local_http_timeout_settings_repository.dart';
 import 'core/data/ai_diagnosis_repository.dart';
 import 'core/data/local_ai_diagnosis_repository.dart';
 import 'core/data/clinical_profile_repository.dart';
@@ -36,6 +37,7 @@ import 'core/mocks/mock_language_repository.dart';
 import 'core/mocks/mock_daily_log_repository.dart';
 import 'core/mocks/mock_body_detail_repository.dart';
 import 'core/mocks/mock_error_log_repository.dart';
+import 'core/mocks/mock_http_timeout_settings_repository.dart';
 import 'core/mocks/mock_ai_diagnosis_store.dart';
 import 'core/mocks/mock_clinical_profile_repository.dart';
 import 'core/mocks/mock_nutrition_repository.dart';
@@ -61,6 +63,7 @@ import 'core/state/schedule_controller.dart';
 import 'core/state/symptom_controller.dart';
 import 'core/state/user_profile_controller.dart';
 import 'core/state/workout_completion_controller.dart';
+import 'core/state/http_timeout_settings_controller.dart';
 import 'core/state/muscle_tamagotchi_state.dart';
 import 'core/theme/app_theme.dart';
 import 'ui/pages/main_shell_page.dart';
@@ -96,6 +99,7 @@ class _NutriAppState extends State<NutriApp> {
   late final AiDiagnosisRepository _aiDiagnosisRepository;
   late final ErrorLogRepository _errorLogRepository;
   late final GlobalErrorHandler _globalErrorHandler;
+  late final HttpTimeoutSettingsController _httpTimeoutSettingsController;
 
   @override
   void initState() {
@@ -137,6 +141,12 @@ class _NutriAppState extends State<NutriApp> {
           ? MockAiDiagnosisStore()
           : LocalAiDiagnosisRepository(),
     );
+    _httpTimeoutSettingsController = HttpTimeoutSettingsController(
+      repository: widget.config.useMockApi
+          ? MockHttpTimeoutSettingsRepository()
+          : LocalHttpTimeoutSettingsRepository(),
+    );
+    unawaited(_httpTimeoutSettingsController.load());
     final dailyLogRepository = _dailyLogRepository();
     _dailyLogController = DailyLogController(
       repository: dailyLogRepository,
@@ -315,6 +325,7 @@ class _NutriAppState extends State<NutriApp> {
             clinicalProfileController: clinicalProfileController,
             aiDiagnosisRepository: _aiDiagnosisRepository,
             errorLogRepository: _errorLogRepository,
+            httpTimeoutSettingsController: _httpTimeoutSettingsController,
             scheduleController: scheduleController,
             symptomController: symptomController,
             nutritionController: nutritionController,

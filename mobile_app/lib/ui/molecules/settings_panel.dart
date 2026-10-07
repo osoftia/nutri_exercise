@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/data/notification_prefs_repository.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/notification_pref.dart';
+import '../../core/state/http_timeout_settings_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/typography.dart';
 
@@ -12,10 +15,17 @@ import '../atoms/typography.dart';
 /// panel so it always sits at the very bottom of System Settings.
 class SettingsPanel extends StatefulWidget {
   /// Creates a settings panel.
-  const SettingsPanel({super.key, this.prefsRepository});
+  const SettingsPanel({
+    super.key,
+    this.prefsRepository,
+    this.timeoutSettingsController,
+  });
 
   /// Optional preference store; when absent the toggles are hidden.
   final NotificationPrefsRepository? prefsRepository;
+
+  /// Optional global request-timeout preference.
+  final HttpTimeoutSettingsController? timeoutSettingsController;
 
   @override
   State<SettingsPanel> createState() => _SettingsPanelState();
@@ -56,40 +66,77 @@ class _SettingsPanelState extends State<SettingsPanel> {
     }
 
     final repository = widget.prefsRepository;
-    if (repository == null) {
+    final timeoutController = widget.timeoutSettingsController;
+    if (repository == null && timeoutController == null) {
       return AppCaption(strings.notificationPreferencesTitle);
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppCaption(strings.notificationPreferencesTitle),
-        const SizedBox(height: AppSpacing.sm),
-        SwitchListTile(
-          key: const Key('settings_toggle_exercise_alerts'),
-          contentPadding: EdgeInsets.zero,
-          title: AppText(strings.exerciseAlertsLabel),
-          value: _values[NotificationPrefType.exerciseAlerts] ?? false,
-          onChanged: (value) =>
-              _toggle(NotificationPrefType.exerciseAlerts, value),
-        ),
-        SwitchListTile(
-          key: const Key('settings_toggle_food_alerts'),
-          contentPadding: EdgeInsets.zero,
-          title: AppText(strings.foodAlertsLabel),
-          value: _values[NotificationPrefType.foodAlerts] ?? false,
-          onChanged: (value) => _toggle(NotificationPrefType.foodAlerts, value),
-        ),
-        SwitchListTile(
-          key: const Key('settings_toggle_daily_intake_reminders'),
-          contentPadding: EdgeInsets.zero,
-          title: AppText(strings.dailyIntakeRemindersLabel),
-          value: _values[NotificationPrefType.dailyIntakeReminders] ?? false,
-          onChanged: (value) =>
-              _toggle(NotificationPrefType.dailyIntakeReminders, value),
-        ),
+        if (repository != null) ...[
+          AppCaption(strings.notificationPreferencesTitle),
+          const SizedBox(height: AppSpacing.sm),
+          SwitchListTile(
+            key: const Key('settings_toggle_exercise_alerts'),
+            contentPadding: EdgeInsets.zero,
+            title: AppText(strings.exerciseAlertsLabel),
+            value: _values[NotificationPrefType.exerciseAlerts] ?? false,
+            onChanged: (value) =>
+                _toggle(NotificationPrefType.exerciseAlerts, value),
+          ),
+          SwitchListTile(
+            key: const Key('settings_toggle_food_alerts'),
+            contentPadding: EdgeInsets.zero,
+            title: AppText(strings.foodAlertsLabel),
+            value: _values[NotificationPrefType.foodAlerts] ?? false,
+            onChanged: (value) =>
+                _toggle(NotificationPrefType.foodAlerts, value),
+          ),
+          SwitchListTile(
+            key: const Key('settings_toggle_daily_intake_reminders'),
+            contentPadding: EdgeInsets.zero,
+            title: AppText(strings.dailyIntakeRemindersLabel),
+            value: _values[NotificationPrefType.dailyIntakeReminders] ?? false,
+            onChanged: (value) =>
+                _toggle(NotificationPrefType.dailyIntakeReminders, value),
+          ),
+        ],
+        if (timeoutController != null) ...[
+          if (repository != null) const SizedBox(height: AppSpacing.md),
+          ListenableBuilder(
+            listenable: timeoutController,
+            builder: (context, _) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  strings.requestTimeoutLabel(timeoutController.timeoutSeconds),
+                  key: const Key('settings_request_timeout_label'),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Slider(
+                  key: const Key('settings_request_timeout_slider'),
+                  min: 10,
+                  max: 60,
+                  divisions: 50,
+                  value: timeoutController.timeoutSeconds.toDouble(),
+                  label: '${timeoutController.timeoutSeconds} s',
+                  onChanged: timeoutController.isLoaded
+                      ? (value) =>
+                          timeoutController.previewTimeoutSeconds(value.round())
+                      : null,
+                  onChangeEnd: timeoutController.isLoaded
+                      ? (value) => unawaited(
+                            timeoutController.setTimeoutSeconds(value.round()),
+                          )
+                      : null,
+                ),
+                AppCaption(strings.requestTimeoutDescription),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
 }
-

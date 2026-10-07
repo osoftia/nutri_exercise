@@ -9,6 +9,7 @@ import 'description_parser.dart';
 import 'local_routine_repository.dart';
 import 'routine_repository.dart';
 import '../services/global_error_handler.dart';
+import '../services/http_timeout_configuration.dart';
 
 /// Thrown when the backend rejects the request for a client-side reason
 /// (e.g. HTTP 400) and no fallback should be attempted.
@@ -33,16 +34,19 @@ class ApiRoutineRepository implements RoutineRepository {
     RoutineRepository? fallback,
     LocalRoutineRepository? local,
     http.Client? client,
-    this.timeout = const Duration(seconds: 10),
+    Duration? timeout,
   })  : _local = local ?? LocalRoutineRepository(),
-        _client = client ?? http.Client() {
+        _client = client ?? http.Client(),
+        _timeoutOverride = timeout {
     _fallback = fallback ?? _local;
   }
 
   final String baseUrl;
   final LocalRoutineRepository _local;
   final http.Client _client;
-  final Duration timeout;
+  final Duration? _timeoutOverride;
+  Duration get timeout =>
+      _timeoutOverride ?? HttpTimeoutConfiguration.currentTimeout;
   late final RoutineRepository _fallback;
 
   @override

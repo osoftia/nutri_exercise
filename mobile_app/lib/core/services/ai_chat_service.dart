@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 
 import '../constants/api_constants.dart';
 import 'global_error_handler.dart';
+import 'http_timeout_configuration.dart';
 
 /// A single conversational turn sent to the backend for context.
 class ChatTurn {
@@ -58,12 +59,15 @@ class AiChatService {
   AiChatService({
     required this.baseUrl,
     http.Client? client,
-    this.timeout = const Duration(seconds: 60),
-  }) : _client = client ?? http.Client();
+    Duration? timeout,
+  })  : _client = client ?? http.Client(),
+        _timeoutOverride = timeout;
 
   final String baseUrl;
   final http.Client _client;
-  final Duration timeout;
+  final Duration? _timeoutOverride;
+  Duration get timeout =>
+      _timeoutOverride ?? HttpTimeoutConfiguration.currentTimeout;
 
   /// Sends [message] (with optional [history] for context) and returns the
   /// assistant reply. Throws [AiChatTimeoutException], [AiChatHttpException] or

@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import '../models/log_parse_response.dart';
 import 'global_error_handler.dart';
+import 'http_timeout_configuration.dart';
 
 /// The parse request did not complete within the configured timeout.
 class LogParseTimeoutException implements Exception {
@@ -50,12 +51,15 @@ class LogParseService {
   LogParseService({
     required this.baseUrl,
     http.Client? client,
-    this.timeout = const Duration(seconds: 60),
-  }) : _client = client ?? http.Client();
+    Duration? timeout,
+  })  : _client = client ?? http.Client(),
+        _timeoutOverride = timeout;
 
   final String baseUrl;
   final http.Client _client;
-  final Duration timeout;
+  final Duration? _timeoutOverride;
+  Duration get timeout =>
+      _timeoutOverride ?? HttpTimeoutConfiguration.currentTimeout;
 
   /// Posts [rawText] and returns the parsed [LogParseResponse].
   ///

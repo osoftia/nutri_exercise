@@ -83,6 +83,10 @@ void main() {
           strings.languageSectionSubtitle,
           strings.languageName(AppLanguage.english),
           strings.languageName(AppLanguage.spanish),
+          strings.requestTimeoutLabel(30),
+          strings.requestTimeoutDescription,
+          strings.recommendedClinicalNutritionTitle,
+          strings.addSuggestedMeal,
         ]) {
           expect(value.trim(), isNotEmpty);
         }

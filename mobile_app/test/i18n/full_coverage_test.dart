@@ -128,6 +128,10 @@ class _AllStringsProbe extends StatelessWidget {
       s.exerciseAlertsLabel,
       s.foodAlertsLabel,
       s.dailyIntakeRemindersLabel,
+      s.requestTimeoutLabel(30),
+      s.requestTimeoutDescription,
+      s.recommendedClinicalNutritionTitle,
+      s.addSuggestedMeal,
       s.deleteRecordTitle,
       s.editFocusTitle,
       s.focusAreaLabel,
@@ -195,7 +199,8 @@ void main() {
       for (final language in AppLanguage.values) {
         final s = AppStrings.of(language);
         for (final value in _sampleKeys(s)) {
-          expect(value.trim(), isNotEmpty, reason: '$language produced a blank');
+          expect(value.trim(), isNotEmpty,
+              reason: '$language produced a blank');
         }
       }
     });
@@ -212,14 +217,16 @@ void main() {
   });
 
   group('i18n full coverage — rendered UI', () {
-    testWidgets('the probe renders localized labels in English', (tester) async {
+    testWidgets('the probe renders localized labels in English',
+        (tester) async {
       await tester.pumpWidget(_harness(AppLanguage.english));
       for (final label in _englishHead) {
         expect(find.text(label), findsWidgets, reason: label);
       }
     });
 
-    testWidgets('the probe renders localized labels in Spanish', (tester) async {
+    testWidgets('the probe renders localized labels in Spanish',
+        (tester) async {
       await tester.pumpWidget(_harness(AppLanguage.spanish));
       for (final label in _spanishHead) {
         expect(find.text(label), findsWidgets, reason: label);
@@ -343,6 +350,10 @@ List<String> _sampleKeys(AppStrings s) {
     s.exerciseAlertsLabel,
     s.foodAlertsLabel,
     s.dailyIntakeRemindersLabel,
+    s.requestTimeoutLabel(30),
+    s.requestTimeoutDescription,
+    s.recommendedClinicalNutritionTitle,
+    s.addSuggestedMeal,
     s.deleteRecordTitle,
     s.editFocusTitle,
     s.focusAreaLabel,

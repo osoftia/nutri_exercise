@@ -105,12 +105,36 @@ class SpanishStrings extends AppStrings {
   String get noEventsScheduled => 'No hay eventos programados';
 
   static const List<String> _months = [
-    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+    'enero',
+    'febrero',
+    'marzo',
+    'abril',
+    'mayo',
+    'junio',
+    'julio',
+    'agosto',
+    'septiembre',
+    'octubre',
+    'noviembre',
+    'diciembre',
   ];
-  static const List<String> _weekdayNarrow = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'];
+  static const List<String> _weekdayNarrow = [
+    'Lu',
+    'Ma',
+    'Mi',
+    'Ju',
+    'Vi',
+    'Sá',
+    'Do'
+  ];
   static const List<String> _weekdayShort = [
-    'lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom',
+    'lun',
+    'mar',
+    'mié',
+    'jue',
+    'vie',
+    'sáb',
+    'dom',
   ];
 
   @override
@@ -239,7 +263,8 @@ class SpanishStrings extends AppStrings {
   String get totalLabel => 'Total';
 
   @override
-  String itemCount(int count) => '$count ${count == 1 ? 'elemento' : 'elementos'}';
+  String itemCount(int count) =>
+      '$count ${count == 1 ? 'elemento' : 'elementos'}';
 
   @override
   String removeItemTooltip(String name) => 'Eliminar $name';
@@ -335,6 +360,17 @@ class SpanishStrings extends AppStrings {
   @override
   String get dailyIntakeRemindersLabel => 'Recordatorios de ingesta diaria';
   @override
+  String requestTimeoutLabel(int seconds) =>
+      'Tiempo de espera de conexión: $seconds s';
+  @override
+  String get requestTimeoutDescription =>
+      'Tiempo máximo de espera de una respuesta de la API';
+  @override
+  String get recommendedClinicalNutritionTitle =>
+      'Recomendado por condición clínica';
+  @override
+  String get addSuggestedMeal => 'Añadir al registro diario';
+  @override
   String get deleteRecordTitle => 'Eliminar registro';
   @override
   String get editFocusTitle => 'Editar enfoque';
@@ -393,7 +429,8 @@ class SpanishStrings extends AppStrings {
   @override
   String get aiAssistantTitle => 'Asistente IA';
   @override
-  String get aiChatEmptyPrompt => 'Pídeme que arme una rutina de entrenamiento.';
+  String get aiChatEmptyPrompt =>
+      'Pídeme que arme una rutina de entrenamiento.';
   @override
   String get aiChatInputHint => 'Pide una rutina de entrenamiento…';
   @override
@@ -404,8 +441,7 @@ class SpanishStrings extends AppStrings {
   @override
   String get offlineAiTitle => 'IA sin conexión';
   @override
-  String get offlineAiBody =>
-      'Para consultar la IA, conéctate a internet.';
+  String get offlineAiBody => 'Para consultar la IA, conéctate a internet.';
   @override
   String get gotItButton => 'Entendido';
 

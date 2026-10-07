@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/data/daily_entry_repository.dart';
+import '../../core/data/ai_diagnosis_repository.dart';
 import '../../core/domain/body_projection/body_diagram_view_model.dart';
 import '../../core/domain/body_projection/nutrition_body_view_model.dart';
 import '../../core/domain/body_projection/nutrition_log.dart';
@@ -23,6 +24,7 @@ import '../atoms/typography.dart';
 import '../molecules/blueprint_action_rail.dart';
 import '../molecules/body_segment_sheet.dart';
 import '../molecules/clinical_food_search_panel.dart';
+import '../molecules/clinical_recommendations_accordion.dart';
 import '../molecules/quick_add_grams_dialog.dart';
 import '../organisms/body_blueprint/unified_body_blueprint.dart';
 import '../organisms/calendar_history_dialog.dart';
@@ -35,6 +37,7 @@ class NutritionPage extends StatefulWidget {
     this.notificationService,
     this.bodyDetailController,
     this.clinicalProfileController,
+    this.aiDiagnosisRepository,
   });
 
   final NutritionController controller;
@@ -50,6 +53,9 @@ class NutritionPage extends StatefulWidget {
 
   /// Optional reactive clinical condition profile for food safety guidance.
   final ClinicalProfileController? clinicalProfileController;
+
+  /// Local cache and generation repository for clinical meal recommendations.
+  final AiDiagnosisRepository? aiDiagnosisRepository;
 
   @override
   State<NutritionPage> createState() => _NutritionPageState();
@@ -204,6 +210,13 @@ class _NutritionPageState extends State<NutritionPage> {
           ),
           children: [
             AppHeading(strings.nutritionTitle, size: AppHeadingSize.h2),
+            if (widget.aiDiagnosisRepository != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              ClinicalRecommendationsAccordion(
+                repository: widget.aiDiagnosisRepository!,
+                onAddMeal: _logFood,
+              ),
+            ],
             const SizedBox(height: AppSpacing.section),
             NeumorphicContainer(
               child: Row(

@@ -105,17 +105,40 @@ class EnglishStrings extends AppStrings {
   String get noEventsScheduled => 'No events scheduled';
 
   static const List<String> _months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
-  static const List<String> _weekdayNarrow = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  static const List<String> _weekdayNarrow = [
+    'Mo',
+    'Tu',
+    'We',
+    'Th',
+    'Fr',
+    'Sa',
+    'Su'
+  ];
   static const List<String> _weekdayShort = [
-    'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun',
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
   ];
 
   @override
-  String monthYear(DateTime date) =>
-      '${_months[date.month - 1]} ${date.year}';
+  String monthYear(DateTime date) => '${_months[date.month - 1]} ${date.year}';
 
   @override
   String weekdayNarrow(int weekday) => _weekdayNarrow[weekday - 1];
@@ -256,7 +279,8 @@ class EnglishStrings extends AppStrings {
   @override
   String get noPlanForMuscle => 'No plan for this muscle yet';
   @override
-  String get noExercisesPlanned => 'No exercises planned for this muscle group.';
+  String get noExercisesPlanned =>
+      'No exercises planned for this muscle group.';
   @override
   String get completedVsPlanned => 'Completed vs planned';
   @override
@@ -334,6 +358,16 @@ class EnglishStrings extends AppStrings {
   @override
   String get dailyIntakeRemindersLabel => 'Daily intake reminders';
   @override
+  String requestTimeoutLabel(int seconds) => 'Connection timeout: $seconds s';
+  @override
+  String get requestTimeoutDescription =>
+      'Maximum time to wait for an API response';
+  @override
+  String get recommendedClinicalNutritionTitle =>
+      'Recommended for your clinical condition';
+  @override
+  String get addSuggestedMeal => 'Add to daily log';
+  @override
   String get deleteRecordTitle => 'Delete record';
   @override
   String get editFocusTitle => 'Edit focus';
@@ -401,7 +435,8 @@ class EnglishStrings extends AppStrings {
   @override
   String get offlineAiTitle => 'Offline AI';
   @override
-  String get offlineAiBody => 'To consult the AI, please connect to the internet.';
+  String get offlineAiBody =>
+      'To consult the AI, please connect to the internet.';
   @override
   String get gotItButton => 'Got it';
 

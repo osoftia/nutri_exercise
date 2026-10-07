@@ -12,6 +12,7 @@ import '../../core/state/language_controller.dart';
 import '../../core/state/clinical_profile_controller.dart';
 import '../../core/state/symptom_controller.dart';
 import '../../core/state/user_profile_controller.dart';
+import '../../core/state/http_timeout_settings_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
@@ -38,6 +39,7 @@ class ProfilePage extends StatefulWidget {
     this.notificationService,
     this.dailyEntryRepository,
     this.errorLogRepository,
+    this.httpTimeoutSettingsController,
   });
 
   final UserProfileController controller;
@@ -65,6 +67,9 @@ class ProfilePage extends StatefulWidget {
 
   /// Optional local forensic history store for the Profile Testing panel.
   final ErrorLogRepository? errorLogRepository;
+
+  /// Optional persisted global HTTP timeout settings.
+  final HttpTimeoutSettingsController? httpTimeoutSettingsController;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -187,6 +192,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
         if (widget.notificationPrefsRepository != null ||
+            widget.httpTimeoutSettingsController != null ||
             widget.languageController != null) ...[
           const SizedBox(height: AppSpacing.xl),
           AccordionSection(
@@ -196,12 +202,16 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (widget.notificationPrefsRepository != null)
+                if (widget.notificationPrefsRepository != null ||
+                    widget.httpTimeoutSettingsController != null)
                   SettingsPanel(
                     prefsRepository: widget.notificationPrefsRepository,
+                    timeoutSettingsController:
+                        widget.httpTimeoutSettingsController,
                   ),
                 if (widget.languageController != null) ...[
-                  if (widget.notificationPrefsRepository != null)
+                  if (widget.notificationPrefsRepository != null ||
+                      widget.httpTimeoutSettingsController != null)
                     const SizedBox(height: AppSpacing.xl),
                   LanguageSwitcher(controller: widget.languageController!),
                 ],
