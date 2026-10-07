@@ -63,6 +63,7 @@ class AiDiagnosisRepository {
     await _store.saveFoodPreferences(foodPreferences.trim());
     final requestBody = jsonEncode(request.toJson());
     final uri = Uri.parse('$baseUrl$endpointPath');
+    var responseBody = '';
     try {
       final response = await _client
           .post(
@@ -71,6 +72,7 @@ class AiDiagnosisRepository {
             body: requestBody,
           )
           .timeout(timeout);
+      responseBody = response.body;
       if (response.statusCode < 200 || response.statusCode >= 300) {
         await ErrorHandlerRegistry.capture(
           AppHttpStatusException(
@@ -80,6 +82,7 @@ class AiDiagnosisRepository {
           StackTrace.current,
           requestUri: uri,
           requestBody: requestBody,
+          responseBody: responseBody,
         );
         throw AiDiagnosisException(
           'The clinical report service returned ${response.statusCode}.',
@@ -107,6 +110,7 @@ class AiDiagnosisRepository {
         stackTrace,
         requestUri: uri,
         requestBody: requestBody,
+        responseBody: responseBody,
       );
       throw AiDiagnosisException(
           'The clinical report response was invalid: $error');
@@ -116,6 +120,7 @@ class AiDiagnosisRepository {
         stackTrace,
         requestUri: uri,
         requestBody: requestBody,
+        responseBody: responseBody,
       );
       throw const AiDiagnosisException(
         'The clinical report service timed out. Your saved reports are still available.',
@@ -126,6 +131,7 @@ class AiDiagnosisRepository {
         stackTrace,
         requestUri: uri,
         requestBody: requestBody,
+        responseBody: responseBody,
       );
       throw AiDiagnosisException(
         'Could not reach the clinical report service. Your saved reports are still available. ($error)',

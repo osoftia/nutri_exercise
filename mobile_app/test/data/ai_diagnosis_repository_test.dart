@@ -190,4 +190,70 @@ void main() {
     );
     expect(store.report, same(existing));
   });
+
+  test('accepts Swagger-style optional fields and numeric strings safely', () {
+    final report = AiDiagnosisReport.fromJson(
+      {
+        'menus': [
+          {
+            'meals': [
+              {
+                'name': 'Oats',
+                'calories': '325',
+                'protein': '12',
+                'carbs': '50',
+                'fat': '8',
+              },
+              {'title': 'Fruit', 'calories': 'not-a-number'},
+              null,
+            ],
+          },
+          {'name': 'Empty suggestions', 'meals': null},
+          null,
+        ],
+        'considerations': null,
+      },
+      conditionIds: const ['diabetes'],
+      foodPreferences: 'vegetarian',
+      language: 'en',
+    );
+
+    expect(report.title, isNotEmpty);
+    expect(report.summary, isA<String>());
+    expect(report.considerations, isEmpty);
+    expect(report.menus, hasLength(2));
+    expect(report.menus.first.meals, hasLength(2));
+    expect(report.menus.first.meals.first.calories, 325);
+    expect(report.menus.first.meals.first.proteinG, 12);
+    expect(report.menus.first.meals.last.calories, 0);
+    expect(report.menus.last.meals, isEmpty);
+  });
+
+  test('records the raw response when malformed JSON cannot be parsed',
+      () async {
+    final errorLogs = _MemoryErrorLogRepository();
+    ErrorHandlerRegistry.current = GlobalErrorHandler(
+      repository: errorLogs,
+      showAlert: (_) {},
+    );
+    addTearDown(() => ErrorHandlerRegistry.current = null);
+    const rawResponse = '{"title":"partial","menus":[}';
+    final repository = AiDiagnosisRepository(
+      'https://api.example.test',
+      store: _MemoryStore(),
+      client: MockClient((_) async => http.Response(rawResponse, 200)),
+    );
+
+    await expectLater(
+      repository.generateDiagnosis(
+        profile: profile,
+        foodPreferences: 'vegetarian',
+        language: 'en',
+      ),
+      throwsA(isA<AiDiagnosisException>()),
+    );
+
+    expect(errorLogs.entries.single.errorCode, 'parse');
+    expect(errorLogs.entries.single.responseBody, rawResponse);
+  });
 }

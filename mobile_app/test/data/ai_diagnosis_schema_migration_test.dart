@@ -22,7 +22,7 @@ void main() {
     expect(names, contains('ai_suggested_menus'));
   });
 
-  test('v17 upgrade adds raw report JSON without losing cached reports',
+  test('v17 upgrade adds response_json without losing cached reports',
       () async {
     final db = await databaseFactoryFfi.openDatabase(
       inMemoryDatabasePath,
@@ -50,6 +50,7 @@ void main() {
       'food_preferences': 'vegetarian',
       'language': 'es',
     });
+    await _createVersion18ErrorLogTable(db);
 
     await DatabaseSchema.upgrade(db, 17, DatabaseSchema.version);
 
@@ -59,41 +60,16 @@ void main() {
     expect(rows.single['title'], 'Saved report');
     expect(rows.single['response_json'], '');
   });
-
-  test('v17 upgrade adds response_json to cached diagnosis rows', () async {
-    final db = await databaseFactoryFfi.openDatabase(
-      inMemoryDatabasePath,
-      options: OpenDatabaseOptions(version: 17),
-    );
-    addTearDown(db.close);
-    await db.execute('''
-      CREATE TABLE ai_diagnoses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        created_at TEXT NOT NULL,
-        title TEXT NOT NULL,
-        summary TEXT NOT NULL,
-        considerations_json TEXT NOT NULL,
-        condition_ids_json TEXT NOT NULL,
-        food_preferences TEXT NOT NULL,
-        language TEXT NOT NULL
-      )
-    ''');
-    await db.insert('ai_diagnoses', {
-      'created_at': DateTime.utc(2026, 10, 6).toIso8601String(),
-      'title': 'Cached report',
-      'summary': 'Saved before raw JSON cache.',
-      'considerations_json': '[]',
-      'condition_ids_json': '["diabetes"]',
-      'food_preferences': 'vegetarian',
-      'language': 'en',
-    });
-
-    await DatabaseSchema.upgrade(db, 17, DatabaseSchema.version);
-
-    final columns = await db.rawQuery('PRAGMA table_info(ai_diagnoses)');
-    expect(columns.map((column) => column['name']), contains('response_json'));
-    final rows = await db.query('ai_diagnoses');
-    expect(rows.single['summary'], 'Saved before raw JSON cache.');
-    expect(rows.single['response_json'], '');
-  });
 }
+
+Future<void> _createVersion18ErrorLogTable(Database db) => db.execute('''
+  CREATE TABLE local_error_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    error_code TEXT NOT NULL,
+    message TEXT NOT NULL,
+    stack_trace TEXT NOT NULL,
+    request_url TEXT NOT NULL DEFAULT '',
+    request_body TEXT NOT NULL DEFAULT ''
+  )
+''');

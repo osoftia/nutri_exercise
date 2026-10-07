@@ -1,8 +1,54 @@
 import 'dart:convert';
 
+Map<String, dynamic> _stringKeyedMap(Object? value) {
+  if (value is! Map) return const {};
+  final map = <String, dynamic>{};
+  for (final entry in value.entries) {
+    if (entry.key is String) map[entry.key as String] = entry.value;
+  }
+  return map;
+}
+
+List<Object?> _jsonList(Object? value) {
+  if (value is List) return value.cast<Object?>();
+  if (value is Map) return [value];
+  if (value is String && value.trim().isNotEmpty) {
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is List) return decoded.cast<Object?>();
+      if (decoded is Map) return [decoded];
+    } on FormatException {
+      return [value];
+    }
+    return [value];
+  }
+  return const [];
+}
+
+String _text(Object? value, {String fallback = ''}) {
+  if (value is String && value.trim().isNotEmpty) return value.trim();
+  if (value is num) return '$value';
+  if (value is Map) {
+    final map = _stringKeyedMap(value);
+    for (final key in const ['text', 'content', 'message', 'description']) {
+      final candidate = map[key];
+      if (candidate is String && candidate.trim().isNotEmpty) {
+        return candidate.trim();
+      }
+    }
+  }
+  return fallback;
+}
+
+int _integerValue(Object? value) {
+  if (value is num) return value.round();
+  if (value is String) return num.tryParse(value.trim())?.round() ?? 0;
+  return 0;
+}
+
 /// One meal entry in a tailored AI-generated menu.
-class AiSuggestedMeal {
-  const AiSuggestedMeal({
+class MealSuggestion {
+  const MealSuggestion({
     required this.name,
     this.description = '',
     this.calories = 0,
@@ -18,25 +64,29 @@ class AiSuggestedMeal {
   final int carbsG;
   final int fatG;
 
-  factory AiSuggestedMeal.fromJson(Object? value) {
+  factory MealSuggestion.fromJson(Object? value, {String language = 'en'}) {
+    final fallbackName = language.toLowerCase().startsWith('es')
+        ? 'Comida sugerida'
+        : 'Suggested meal';
     if (value is String && value.trim().isNotEmpty) {
-      return AiSuggestedMeal(name: value.trim());
+      return MealSuggestion(name: value.trim());
     }
-    if (value is Map) {
-      final name = value['name'] ?? value['meal'] ?? value['title'];
-      if (name is String && name.trim().isNotEmpty) {
-        final description = value['description'];
-        return AiSuggestedMeal(
-          name: name.trim(),
-          description: description is String ? description.trim() : '',
-          calories: _integerValue(value['calories'] ?? value['caloriesKcal']),
-          proteinG: _integerValue(value['proteinG'] ?? value['protein']),
-          carbsG: _integerValue(value['carbsG'] ?? value['carbs']),
-          fatG: _integerValue(value['fatG'] ?? value['fat']),
-        );
-      }
-    }
-    throw const FormatException('A suggested meal must have a name.');
+    final map = _stringKeyedMap(value);
+    return MealSuggestion(
+      name: _text(
+        map['name'] ??
+            map['meal'] ??
+            map['title'] ??
+            map['mealName'] ??
+            map['foodName'],
+        fallback: fallbackName,
+      ),
+      description: _text(map['description'] ?? map['details'] ?? map['notes']),
+      calories: _integerValue(map['calories'] ?? map['caloriesKcal']),
+      proteinG: _integerValue(map['proteinG'] ?? map['protein']),
+      carbsG: _integerValue(map['carbsG'] ?? map['carbs']),
+      fatG: _integerValue(map['fatG'] ?? map['fat']),
+    );
   }
 
   Map<String, dynamic> toJson() => {
@@ -47,8 +97,30 @@ class AiSuggestedMeal {
         'carbsG': carbsG,
         'fatG': fatG,
       };
+}
 
-  static int _integerValue(Object? value) => value is num ? value.round() : 0;
+/// Backwards-compatible name used by the app's nutrition view.
+class AiSuggestedMeal extends MealSuggestion {
+  const AiSuggestedMeal({
+    required super.name,
+    super.description,
+    super.calories,
+    super.proteinG,
+    super.carbsG,
+    super.fatG,
+  });
+
+  factory AiSuggestedMeal.fromJson(Object? value, {String language = 'en'}) {
+    final meal = MealSuggestion.fromJson(value, language: language);
+    return AiSuggestedMeal(
+      name: meal.name,
+      description: meal.description,
+      calories: meal.calories,
+      proteinG: meal.proteinG,
+      carbsG: meal.carbsG,
+      fatG: meal.fatG,
+    );
+  }
 }
 
 /// One generated menu in a report's suggested weekly plan.
@@ -67,17 +139,24 @@ class AiSuggestedMenu {
   final String day;
   final List<AiSuggestedMeal> meals;
 
-  factory AiSuggestedMenu.fromJson(Map<String, dynamic> json) {
-    final name = json['name'] ?? json['title'] ?? json['day'];
-    final rawMeals = json['meals'];
-    if (name is! String || name.trim().isEmpty || rawMeals is! List) {
-      throw const FormatException('A suggested menu needs a name and meals.');
-    }
-    final day = json['day'];
+  factory AiSuggestedMenu.fromJson(Object? value, {String language = 'en'}) {
+    final json = _stringKeyedMap(value);
+    final day = _text(json['day']);
+    final menuName = _text(
+      json['name'] ?? json['title'] ?? day,
+      fallback: language.toLowerCase().startsWith('es')
+          ? 'Menú sugerido'
+          : 'Suggested menu',
+    );
+    final rawMeals =
+        _jsonList(json['meals'] ?? json['suggestions'] ?? json['items']);
     return AiSuggestedMenu(
-      name: name.trim(),
-      day: day is String ? day.trim() : '',
-      meals: rawMeals.map(AiSuggestedMeal.fromJson).toList(growable: false),
+      name: menuName,
+      day: day,
+      meals: [
+        for (final meal in rawMeals)
+          if (meal != null) AiSuggestedMeal.fromJson(meal, language: language),
+      ],
     );
   }
 
@@ -124,24 +203,31 @@ class AiDiagnosisReport {
     String responseJson = '',
     DateTime? createdAt,
   }) {
-    final title = json['title'];
-    final summary = json['summary'];
-    final considerations = json['considerations'];
-    final rawMenus = json['menus'];
-    if (title is! String ||
-        title.trim().isEmpty ||
-        summary is! String ||
-        summary.trim().isEmpty ||
-        considerations is! List ||
-        rawMenus is! List) {
-      throw const FormatException('Malformed clinical report response.');
-    }
-    final parsedConsiderations = considerations.map((item) {
-      if (item is! String || item.trim().isEmpty) {
-        throw const FormatException('Invalid report consideration.');
-      }
-      return item.trim();
-    }).toList(growable: false);
+    final title = _text(
+      json['title'] ?? json['diagnosisTitle'] ?? json['name'],
+      fallback: language.toLowerCase().startsWith('es')
+          ? 'Informe de nutrición clínica'
+          : 'Clinical nutrition report',
+    );
+    final summary = _text(
+      json['summary'] ??
+          json['diagnosis'] ??
+          json['description'] ??
+          json['message'],
+    );
+    final rawConsiderations =
+        json['considerations'] ?? json['recommendations'] ?? json['notes'];
+    final considerations =
+        rawConsiderations is String && _jsonList(rawConsiderations).isEmpty
+            ? [rawConsiderations]
+            : _jsonList(rawConsiderations);
+    final parsedConsiderations = <String>[
+      for (final item in considerations)
+        if (_text(item).isNotEmpty) _text(item),
+    ];
+    final rawMenus = _jsonList(
+      json['menus'] ?? json['suggestedMenus'] ?? json['weeklyMenus'],
+    );
     return AiDiagnosisReport(
       title: title.trim(),
       summary: summary.trim(),
@@ -150,7 +236,8 @@ class AiDiagnosisReport {
       foodPreferences: foodPreferences,
       language: language,
       menus: rawMenus
-          .map((menu) => AiSuggestedMenu.fromJson(menu as Map<String, dynamic>))
+          .where((menu) => menu != null)
+          .map((menu) => AiSuggestedMenu.fromJson(menu, language: language))
           .toList(growable: false),
       responseJson: responseJson,
       createdAt: createdAt ?? DateTime.now().toUtc(),
