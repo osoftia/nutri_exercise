@@ -34,6 +34,7 @@ class GlobalErrorHandler {
     StackTrace stackTrace, {
     Uri? requestUri,
     String? requestBody,
+    String? responseBody,
   }) async {
     final code = _errorCode(error);
     final entry = ErrorLogEntry(
@@ -43,6 +44,7 @@ class GlobalErrorHandler {
       stackTrace: stackTrace.toString(),
       requestUrl: requestUri?.toString() ?? '',
       requestBody: requestBody ?? '',
+      responseBody: responseBody ?? '',
     );
     try {
       _showAlert(_friendlyMessage(code));
@@ -103,12 +105,14 @@ class ErrorHandlerRegistry {
     StackTrace stackTrace, {
     Uri? requestUri,
     String? requestBody,
+    String? responseBody,
   }) async {
     await current?.capture(
       error,
       stackTrace,
       requestUri: requestUri,
       requestBody: requestBody,
+      responseBody: responseBody,
     );
   }
 }

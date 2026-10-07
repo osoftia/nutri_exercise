@@ -82,6 +82,7 @@ void main() {
         requestUrl: 'http://10.0.2.2:5039/api/clinical/diagnosis',
         requestBody:
             '{"preferences":"vegetarian","conditions":"diabetes:high","userId":1}',
+        responseBody: '{"title":"Plan", "menus":[{"name":"Lunes"}]}',
       ),
     ]);
     await tester.pumpWidget(
@@ -121,6 +122,10 @@ void main() {
     await tester.tap(find.byKey(const Key('error_log_request_body_7')));
     await tester.pumpAndSettle();
     expect(find.textContaining('"userId":1'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('error_log_response_body_7')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('"menus":[{"name":"Lunes"}]'), findsOneWidget);
   });
 
   testWidgets('error viewer displays a useful empty state', (tester) async {

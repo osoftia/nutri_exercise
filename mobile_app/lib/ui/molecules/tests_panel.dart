@@ -207,6 +207,13 @@ class _ErrorLogCard extends StatelessWidget {
                 childrenPadding: const EdgeInsets.all(AppSpacing.md),
                 children: [SelectableText(entry.requestBody)],
               ),
+            if (entry.responseBody.isNotEmpty)
+              ExpansionTile(
+                key: Key('error_log_response_body_$id'),
+                title: const Text('Response body'),
+                childrenPadding: const EdgeInsets.all(AppSpacing.md),
+                children: [SelectableText(entry.responseBody)],
+              ),
           ],
         ),
       ),

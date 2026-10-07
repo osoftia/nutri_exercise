@@ -43,6 +43,7 @@ void main() {
       stack,
       requestUri: Uri.parse('https://api.example.test/clinical/diagnosis'),
       requestBody: '{"preferences":"vegan"}',
+      responseBody: '{"error":"bad schema"}',
     );
 
     expect(repository.entries.single.errorCode, '404');
@@ -51,6 +52,7 @@ void main() {
     expect(repository.entries.single.requestUrl,
         'https://api.example.test/clinical/diagnosis');
     expect(repository.entries.single.requestBody, '{"preferences":"vegan"}');
+    expect(repository.entries.single.responseBody, '{"error":"bad schema"}');
     expect(alerts.single, contains('Ha ocurrido un error'));
     expect(alerts.single, isNot(contains('404')));
   });
@@ -81,6 +83,19 @@ void main() {
 
     expect(repository.entries.single.errorCode, '503');
     expect(alerts.single, contains('servicio no está disponible'));
+  });
+
+  test('stores raw response JSON with parse failures', () async {
+    const rawResponse = '{"title":"report","menus":[}';
+    await handler.capture(
+      const FormatException('Unexpected character at offset 27'),
+      StackTrace.current,
+      requestUri: Uri.parse('https://api.example.test/api/clinical/diagnosis'),
+      responseBody: rawResponse,
+    );
+
+    expect(repository.entries.single.errorCode, 'parse');
+    expect(repository.entries.single.responseBody, rawResponse);
   });
 
   test('AI HTTP boundary forwards raw server failures to the global handler',

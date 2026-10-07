@@ -35,6 +35,7 @@ void main() {
       stackTrace: '#0 request (test.dart:10:2)',
       requestUrl: 'https://api.example.test/api/clinical/diagnosis',
       requestBody: '{"preferences":"vegan"}',
+      responseBody: '{"title":"report"}',
     );
     final newer = ErrorLogEntry(
       timestamp: DateTime.utc(2026, 10, 6, 12),
@@ -43,6 +44,7 @@ void main() {
       stackTrace: '#0 send (test.dart:20:2)',
       requestUrl: 'https://api.example.test/api/log/parse',
       requestBody: '{"text":"today lunch"}',
+      responseBody: '{"calories":250}',
     );
 
     await repository.record(older);
@@ -56,12 +58,14 @@ void main() {
     expect(records.first.timestamp, newer.timestamp);
     expect(records.first.requestUrl, newer.requestUrl);
     expect(records.first.requestBody, newer.requestBody);
+    expect(records.first.responseBody, newer.responseBody);
     expect(records.last.errorCode, '404');
     expect(records.last.requestUrl, older.requestUrl);
     expect(records.last.requestBody, older.requestBody);
+    expect(records.last.responseBody, older.responseBody);
   });
 
-  test('v16 migration adds request_body without losing previous error records',
+  test('v18 migration adds response_body without losing previous error records',
       () async {
     await db.execute('DROP TABLE local_error_logs');
     await db.execute('''
@@ -71,7 +75,8 @@ void main() {
         error_code TEXT NOT NULL,
         message TEXT NOT NULL,
         stack_trace TEXT NOT NULL,
-        request_url TEXT NOT NULL DEFAULT ''
+        request_url TEXT NOT NULL DEFAULT '',
+        request_body TEXT NOT NULL DEFAULT ''
       )
     ''');
     await db.insert('local_error_logs', {
@@ -80,9 +85,10 @@ void main() {
       'message': 'HTTP 404 Not Found',
       'stack_trace': 'legacy stack',
       'request_url': 'https://api.example.test/missing',
+      'request_body': '{"id":1}',
     });
 
-    await DatabaseSchema.upgrade(db, 16, DatabaseSchema.version);
+    await DatabaseSchema.upgrade(db, 18, DatabaseSchema.version);
 
     final columns = await db.rawQuery('PRAGMA table_info(local_error_logs)');
     expect(
@@ -95,11 +101,13 @@ void main() {
         'stack_trace',
         'request_url',
         'request_body',
+        'response_body',
       ]),
     );
     final rows = await db.query('local_error_logs');
     expect(rows.single['request_url'], 'https://api.example.test/missing');
-    expect(rows.single['request_body'], '');
+    expect(rows.single['request_body'], '{"id":1}');
+    expect(rows.single['response_body'], '');
     expect(rows.single['message'], 'HTTP 404 Not Found');
   });
 }
