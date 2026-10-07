@@ -329,6 +329,7 @@ class DatabaseHelper {
         'condition_ids_json': jsonEncode(report.conditionIds),
         'food_preferences': report.foodPreferences,
         'language': report.language,
+        'response_json': report.responseJson,
       });
       for (final menu in report.menus) {
         await txn.insert('ai_suggested_menus', {

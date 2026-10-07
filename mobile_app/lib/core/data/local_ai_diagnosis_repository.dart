@@ -45,6 +45,7 @@ class LocalAiDiagnosisRepository implements AiDiagnosisStore {
           ),
           foodPreferences: row['food_preferences'] as String,
           language: row['language'] as String,
+          responseJson: row['response_json'] as String? ?? '',
           menus: menuRows.map(_mapMenu).toList(growable: false),
         ),
       );

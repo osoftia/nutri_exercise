@@ -2,10 +2,21 @@ import 'dart:convert';
 
 /// One meal entry in a tailored AI-generated menu.
 class AiSuggestedMeal {
-  const AiSuggestedMeal({required this.name, this.description = ''});
+  const AiSuggestedMeal({
+    required this.name,
+    this.description = '',
+    this.calories = 0,
+    this.proteinG = 0,
+    this.carbsG = 0,
+    this.fatG = 0,
+  });
 
   final String name;
   final String description;
+  final int calories;
+  final int proteinG;
+  final int carbsG;
+  final int fatG;
 
   factory AiSuggestedMeal.fromJson(Object? value) {
     if (value is String && value.trim().isNotEmpty) {
@@ -18,6 +29,10 @@ class AiSuggestedMeal {
         return AiSuggestedMeal(
           name: name.trim(),
           description: description is String ? description.trim() : '',
+          calories: _integerValue(value['calories'] ?? value['caloriesKcal']),
+          proteinG: _integerValue(value['proteinG'] ?? value['protein']),
+          carbsG: _integerValue(value['carbsG'] ?? value['carbs']),
+          fatG: _integerValue(value['fatG'] ?? value['fat']),
         );
       }
     }
@@ -27,7 +42,13 @@ class AiSuggestedMeal {
   Map<String, dynamic> toJson() => {
         'name': name,
         if (description.isNotEmpty) 'description': description,
+        'calories': calories,
+        'proteinG': proteinG,
+        'carbsG': carbsG,
+        'fatG': fatG,
       };
+
+  static int _integerValue(Object? value) => value is num ? value.round() : 0;
 }
 
 /// One generated menu in a report's suggested weekly plan.
@@ -78,6 +99,7 @@ class AiDiagnosisReport {
     required this.language,
     required this.menus,
     required this.createdAt,
+    this.responseJson = '',
     this.id,
   });
 
@@ -91,11 +113,15 @@ class AiDiagnosisReport {
   final String language;
   final List<AiSuggestedMenu> menus;
 
+  /// Exact successful JSON body returned by the clinical diagnosis service.
+  final String responseJson;
+
   factory AiDiagnosisReport.fromJson(
     Map<String, dynamic> json, {
     required List<String> conditionIds,
     required String foodPreferences,
     required String language,
+    String responseJson = '',
     DateTime? createdAt,
   }) {
     final title = json['title'];
@@ -126,6 +152,7 @@ class AiDiagnosisReport {
       menus: rawMenus
           .map((menu) => AiSuggestedMenu.fromJson(menu as Map<String, dynamic>))
           .toList(growable: false),
+      responseJson: responseJson,
       createdAt: createdAt ?? DateTime.now().toUtc(),
     );
   }

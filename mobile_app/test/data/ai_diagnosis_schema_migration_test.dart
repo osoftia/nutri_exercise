@@ -21,4 +21,79 @@ void main() {
     expect(names, contains('ai_diagnoses'));
     expect(names, contains('ai_suggested_menus'));
   });
+
+  test('v17 upgrade adds raw report JSON without losing cached reports',
+      () async {
+    final db = await databaseFactoryFfi.openDatabase(
+      inMemoryDatabasePath,
+      options: OpenDatabaseOptions(version: 17),
+    );
+    addTearDown(db.close);
+    await db.execute('''
+      CREATE TABLE ai_diagnoses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TEXT NOT NULL,
+        title TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        considerations_json TEXT NOT NULL,
+        condition_ids_json TEXT NOT NULL,
+        food_preferences TEXT NOT NULL,
+        language TEXT NOT NULL
+      )
+    ''');
+    await db.insert('ai_diagnoses', {
+      'created_at': DateTime.utc(2026, 10, 6).toIso8601String(),
+      'title': 'Saved report',
+      'summary': 'Existing summary',
+      'considerations_json': '[]',
+      'condition_ids_json': '["diabetes"]',
+      'food_preferences': 'vegetarian',
+      'language': 'es',
+    });
+
+    await DatabaseSchema.upgrade(db, 17, DatabaseSchema.version);
+
+    final columns = await db.rawQuery('PRAGMA table_info(ai_diagnoses)');
+    expect(columns.map((column) => column['name']), contains('response_json'));
+    final rows = await db.query('ai_diagnoses');
+    expect(rows.single['title'], 'Saved report');
+    expect(rows.single['response_json'], '');
+  });
+
+  test('v17 upgrade adds response_json to cached diagnosis rows', () async {
+    final db = await databaseFactoryFfi.openDatabase(
+      inMemoryDatabasePath,
+      options: OpenDatabaseOptions(version: 17),
+    );
+    addTearDown(db.close);
+    await db.execute('''
+      CREATE TABLE ai_diagnoses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TEXT NOT NULL,
+        title TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        considerations_json TEXT NOT NULL,
+        condition_ids_json TEXT NOT NULL,
+        food_preferences TEXT NOT NULL,
+        language TEXT NOT NULL
+      )
+    ''');
+    await db.insert('ai_diagnoses', {
+      'created_at': DateTime.utc(2026, 10, 6).toIso8601String(),
+      'title': 'Cached report',
+      'summary': 'Saved before raw JSON cache.',
+      'considerations_json': '[]',
+      'condition_ids_json': '["diabetes"]',
+      'food_preferences': 'vegetarian',
+      'language': 'en',
+    });
+
+    await DatabaseSchema.upgrade(db, 17, DatabaseSchema.version);
+
+    final columns = await db.rawQuery('PRAGMA table_info(ai_diagnoses)');
+    expect(columns.map((column) => column['name']), contains('response_json'));
+    final rows = await db.query('ai_diagnoses');
+    expect(rows.single['summary'], 'Saved before raw JSON cache.');
+    expect(rows.single['response_json'], '');
+  });
 }

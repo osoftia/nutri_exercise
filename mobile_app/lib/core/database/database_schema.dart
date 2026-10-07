@@ -11,7 +11,7 @@ class DatabaseSchema {
   DatabaseSchema._();
 
   /// Current schema version (bump on every structural change).
-  static const int version = 17;
+  static const int version = 18;
 
   /// The database file name.
   static const String fileName = 'nutri_exercise.db';
@@ -137,6 +137,9 @@ class DatabaseSchema {
     if (oldVersion < 17) {
       await ensureErrorLogRequestBodyColumn(db);
     }
+    if (oldVersion < 18) {
+      await ensureAiDiagnosisResponseJsonColumn(db);
+    }
   }
 
   /// Creates the local technical error history table (version 15).
@@ -187,7 +190,8 @@ class DatabaseSchema {
         considerations_json TEXT NOT NULL,
         condition_ids_json TEXT NOT NULL,
         food_preferences TEXT NOT NULL,
-        language TEXT NOT NULL
+        language TEXT NOT NULL,
+        response_json TEXT NOT NULL DEFAULT ''
       )
     ''');
     await db.execute('''
@@ -204,6 +208,15 @@ class DatabaseSchema {
       CREATE INDEX IF NOT EXISTS idx_ai_suggested_menus_diagnosis
       ON ai_suggested_menus(diagnosis_id)
     ''');
+  }
+
+  /// Adds the original successful backend payload to cached clinical reports.
+  static Future<void> ensureAiDiagnosisResponseJsonColumn(Database db) async {
+    final columns = await db.rawQuery('PRAGMA table_info(ai_diagnoses)');
+    if (columns.any((row) => row['name'] == 'response_json')) return;
+    await db.execute(
+      "ALTER TABLE ai_diagnoses ADD COLUMN response_json TEXT NOT NULL DEFAULT ''",
+    );
   }
 
   /// Creates the `symptom_logs` table (version 12): one severity row per date

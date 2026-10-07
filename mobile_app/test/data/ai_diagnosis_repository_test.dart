@@ -89,7 +89,8 @@ void main() {
     expect(captured.headers['content-type'], contains('application/json'));
     final payload = jsonDecode(captured.body) as Map<String, dynamic>;
     expect(payload.keys.toSet(), {'preferences', 'conditions', 'userId'});
-    expect(payload['preferences'], 'Vegetarian; dislikes mushrooms');
+    expect(payload['preferences'],
+        'Responde en español. Preferencias de comida: Vegetarian; dislikes mushrooms');
     expect(
       payload['conditions'],
       'diabetes:moderate,highCholesterol:high',
@@ -142,7 +143,8 @@ void main() {
           http.Response('bad request', 400, reasonPhrase: 'Bad Request')),
     );
     final expectedPayload = {
-      'preferences': 'Vegetarian; dislikes mushrooms',
+      'preferences':
+          'Responde en español. Preferencias de comida: Vegetarian; dislikes mushrooms',
       'conditions': 'diabetes:moderate,highCholesterol:high',
       'userId': 1,
     };

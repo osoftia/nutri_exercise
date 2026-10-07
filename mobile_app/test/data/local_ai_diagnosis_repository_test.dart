@@ -26,7 +26,8 @@ void main() {
 
   tearDown(() => db.close());
 
-  test('saves report, linked menus, and food preferences for offline use', () async {
+  test('saves report, linked menus, and food preferences for offline use',
+      () async {
     final report = AiDiagnosisReport(
       title: 'Nutrition report',
       summary: 'A balanced pattern may help support your goals.',
@@ -41,6 +42,8 @@ void main() {
           meals: [AiSuggestedMeal(name: 'Oats with berries')],
         ),
       ],
+      responseJson:
+          '{"title":"Nutrition report","summary":"Balanced","menus":[]}',
       createdAt: DateTime.utc(2026, 10, 6),
     );
 
@@ -54,6 +57,10 @@ void main() {
     expect(restored.foodPreferences, report.foodPreferences);
     expect(restored.menus.single.name, 'Monday');
     expect(restored.menus.single.meals.single.name, 'Oats with berries');
+    expect(
+      restored.responseJson,
+      '{"title":"Nutrition report","summary":"Balanced","menus":[]}',
+    );
     expect(await repository.loadFoodPreferences(), report.foodPreferences);
   });
 }

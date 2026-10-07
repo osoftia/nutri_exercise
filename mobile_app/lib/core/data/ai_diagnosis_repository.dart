@@ -8,6 +8,7 @@ import '../models/ai_diagnosis.dart';
 import '../models/ai_diagnosis_request.dart';
 import 'ai_diagnosis_store.dart';
 import '../services/global_error_handler.dart';
+import '../services/http_timeout_configuration.dart';
 
 /// Failure returned when a new report cannot be safely generated.
 class AiDiagnosisException implements Exception {
@@ -30,14 +31,17 @@ class AiDiagnosisRepository {
     this.baseUrl, {
     required AiDiagnosisStore store,
     http.Client? client,
-    this.timeout = const Duration(seconds: 20),
+    Duration? timeout,
   })  : _store = store,
-        _client = client ?? http.Client();
+        _client = client ?? http.Client(),
+        _timeoutOverride = timeout;
 
   final String baseUrl;
   final AiDiagnosisStore _store;
   final http.Client _client;
-  final Duration timeout;
+  final Duration? _timeoutOverride;
+  Duration get timeout =>
+      _timeoutOverride ?? HttpTimeoutConfiguration.currentTimeout;
 
   Future<AiDiagnosisReport> generateDiagnosis({
     required ClinicalConditionProfile profile,
@@ -53,9 +57,10 @@ class AiDiagnosisRepository {
     final request = AiDiagnosisRequest.fromProfile(
       profile: profile,
       foodPreferences: foodPreferences,
+      language: language,
       userId: userId,
     );
-    await _store.saveFoodPreferences(request.preferences);
+    await _store.saveFoodPreferences(foodPreferences.trim());
     final requestBody = jsonEncode(request.toJson());
     final uri = Uri.parse('$baseUrl$endpointPath');
     try {
@@ -88,8 +93,9 @@ class AiDiagnosisRepository {
         decoded,
         conditionIds:
             profile.conditions.keys.map((value) => value.name).toList(),
-        foodPreferences: request.preferences,
+        foodPreferences: foodPreferences.trim(),
         language: language,
+        responseJson: response.body,
       );
       await _store.save(report);
       return report;
