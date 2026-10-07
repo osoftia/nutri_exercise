@@ -32,12 +32,14 @@ void main() {
       errorCode: '404',
       message: 'HTTP 404 Not Found',
       stackTrace: '#0 request (test.dart:10:2)',
+      requestUrl: 'https://api.example.test/api/clinical/diagnosis',
     );
     final newer = ErrorLogEntry(
       timestamp: DateTime.utc(2026, 10, 6, 12),
       errorCode: 'timeout',
       message: 'TimeoutException after 0:00:10',
       stackTrace: '#0 send (test.dart:20:2)',
+      requestUrl: 'https://api.example.test/api/log/parse',
     );
 
     await repository.record(older);
@@ -49,22 +51,45 @@ void main() {
     expect(records.first.message, newer.message);
     expect(records.first.stackTrace, newer.stackTrace);
     expect(records.first.timestamp, newer.timestamp);
+    expect(records.first.requestUrl, newer.requestUrl);
     expect(records.last.errorCode, '404');
+    expect(records.last.requestUrl, older.requestUrl);
   });
 
-  test('v14 migration creates local_error_logs with required columns', () async {
-    final legacyDb = await databaseFactoryFfi.openDatabase(
-      inMemoryDatabasePath,
-      options: OpenDatabaseOptions(version: 14),
-    );
-    addTearDown(legacyDb.close);
+  test('v15 migration adds request_url without losing previous error records', () async {
+    await db.execute('DROP TABLE local_error_logs');
+    await db.execute('''
+      CREATE TABLE local_error_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT NOT NULL,
+        error_code TEXT NOT NULL,
+        message TEXT NOT NULL,
+        stack_trace TEXT NOT NULL
+      )
+    ''');
+    await db.insert('local_error_logs', {
+      'timestamp': DateTime.utc(2026, 10, 6).toIso8601String(),
+      'error_code': '404',
+      'message': 'HTTP 404 Not Found',
+      'stack_trace': 'legacy stack',
+    });
 
-    await DatabaseSchema.upgrade(legacyDb, 14, DatabaseSchema.version);
+    await DatabaseSchema.upgrade(db, 15, DatabaseSchema.version);
 
-    final columns = await legacyDb.rawQuery('PRAGMA table_info(local_error_logs)');
+    final columns = await db.rawQuery('PRAGMA table_info(local_error_logs)');
     expect(
       columns.map((column) => column['name']),
-      containsAll(['id', 'timestamp', 'error_code', 'message', 'stack_trace']),
+      containsAll([
+        'id',
+        'timestamp',
+        'error_code',
+        'message',
+        'stack_trace',
+        'request_url',
+      ]),
     );
+    final rows = await db.query('local_error_logs');
+    expect(rows.single['request_url'], '');
+    expect(rows.single['message'], 'HTTP 404 Not Found');
   });
 }

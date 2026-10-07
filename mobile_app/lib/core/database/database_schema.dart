@@ -11,7 +11,7 @@ class DatabaseSchema {
   DatabaseSchema._();
 
   /// Current schema version (bump on every structural change).
-  static const int version = 15;
+  static const int version = 16;
 
   /// The database file name.
   static const String fileName = 'nutri_exercise.db';
@@ -131,6 +131,9 @@ class DatabaseSchema {
     if (oldVersion < 15) {
       await createLocalErrorLogTable(db);
     }
+    if (oldVersion < 16) {
+      await ensureErrorLogRequestUrlColumn(db);
+    }
   }
 
   /// Creates the local technical error history table (version 15).
@@ -141,13 +144,23 @@ class DatabaseSchema {
         timestamp TEXT NOT NULL,
         error_code TEXT NOT NULL,
         message TEXT NOT NULL,
-        stack_trace TEXT NOT NULL
+        stack_trace TEXT NOT NULL,
+        request_url TEXT NOT NULL DEFAULT ''
       )
     ''');
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_local_error_logs_timestamp
       ON local_error_logs(timestamp DESC, id DESC)
     ''');
+  }
+
+  /// Adds request target metadata to existing local error records (version 16).
+  static Future<void> ensureErrorLogRequestUrlColumn(Database db) async {
+    final columns = await db.rawQuery('PRAGMA table_info(local_error_logs)');
+    if (columns.any((row) => row['name'] == 'request_url')) return;
+    await db.execute(
+      "ALTER TABLE local_error_logs ADD COLUMN request_url TEXT NOT NULL DEFAULT ''",
+    );
   }
 
   /// Creates local tables for generated clinical reports and their menus.
