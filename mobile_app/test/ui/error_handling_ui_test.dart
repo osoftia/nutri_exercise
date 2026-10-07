@@ -52,6 +52,7 @@ void main() {
     await handler.capture(
       const SocketException('Connection refused to 127.0.0.1:5039'),
       StackTrace.current,
+      requestUri: Uri.parse('http://localhost:5039/api/log/parse'),
     );
     await tester.pump();
 
@@ -65,7 +66,7 @@ void main() {
     expect(repository.entries.single.stackTrace, isNotEmpty);
   });
 
-  testWidgets('Pruebas error history shows time, code, message and stack', (
+  testWidgets('Pruebas error history shows time, code, URL, message and stack', (
     tester,
   ) async {
     final timestamp = DateTime.utc(2026, 10, 6, 14, 22, 31, 456);
@@ -77,6 +78,7 @@ void main() {
         message: 'HTTP 404 Not Found at /api/clinical/diagnosis',
         stackTrace:
             '#0 AiDiagnosisRepository.generateDiagnosis (test.dart:42:9)',
+        requestUrl: 'http://10.0.2.2:5039/api/clinical/diagnosis',
       ),
     ]);
     await tester.pumpWidget(
@@ -100,6 +102,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('error_log_sheet_title')), findsOneWidget);
     expect(find.text('Code: 404'), findsOneWidget);
+    expect(find.textContaining('http://10.0.2.2:5039/api/clinical/diagnosis'), findsOneWidget);
     expect(find.textContaining('HTTP 404 Not Found'), findsOneWidget);
     expect(
       find.text(timestamp.toLocal().toString().replaceFirst('T', ' ')),

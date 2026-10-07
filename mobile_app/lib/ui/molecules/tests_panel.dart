@@ -181,6 +181,10 @@ class _ErrorLogCard extends StatelessWidget {
                   children: [
                     Text('Code: ${entry.errorCode}'),
                     const SizedBox(height: AppSpacing.xs),
+                    SelectableText(
+                      'Request URL: ${entry.requestUrl.isEmpty ? '—' : entry.requestUrl}',
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
                     SelectableText(entry.message),
                   ],
                 ),
