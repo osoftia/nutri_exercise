@@ -12,6 +12,7 @@ import {
 
 import { environment } from '../../../environments/environment';
 import { AiInteraction } from '../models/interaction.model';
+import { DEFAULT_TEST_USER_ID } from '../models/interaction.model';
 import { mockInteractions } from '../mocks/mock-interactions.data';
 import { errorInterceptor } from '../interceptors/error.interceptor';
 import { InteractionService } from './interaction.service';
@@ -77,7 +78,7 @@ describe('InteractionService', () => {
       let result: AiInteraction[] | undefined;
       service.getInteractions().subscribe((data) => (result = data));
 
-      const req = http.expectOne('http://localhost:5000/api/interactions');
+      const req = http.expectOne(`${environment.apiUrl}/interactions`);
       expect(req.request.method).toBe('GET');
       req.flush([interaction]);
 
@@ -88,12 +89,51 @@ describe('InteractionService', () => {
       let result: AiInteraction | undefined;
       service.updateFeedback('fixture-id', { feedbackText: 'Nice volume' }).subscribe((data) => (result = data));
 
-      const req = http.expectOne('http://localhost:5000/api/interactions/fixture-id/feedback');
+      const req = http.expectOne(`${environment.apiUrl}/interactions/fixture-id/feedback`);
       expect(req.request.method).toBe('PATCH');
-      expect(req.request.body).toEqual({ feedbackText: 'Nice volume' });
+      expect(req.request.body).toEqual({ feedbackText: 'Nice volume', userId: DEFAULT_TEST_USER_ID });
       req.flush({ ...interaction, feedbackText: 'Nice volume' });
 
       expect(result?.feedbackText).toBe('Nice volume');
+    });
+
+    it('includes a valid custom Test User ID in the HTTP payload', () => {
+      service.updateFeedback('fixture-id', { feedbackText: 'Nice volume' }, 7).subscribe();
+
+      const req = http.expectOne(`${environment.apiUrl}/interactions/fixture-id/feedback`);
+      expect(req.request.body).toEqual({ feedbackText: 'Nice volume', userId: 7 });
+      req.flush({ ...interaction, feedbackText: 'Nice volume' });
+    });
+
+    it.each([0, -1, 1.5, Number.NaN, null, '1', {}])(
+      'throws for invalid Test User ID %p before sending the request',
+      (userId) => {
+        expect(() => service.updateFeedback('fixture-id', { feedbackText: 'Nice volume' }, userId)).toThrow(
+          /Invalid Test User ID/,
+        );
+        http.expectNone(`${environment.apiUrl}/interactions/fixture-id/feedback`);
+      },
+    );
+  });
+
+  describe('user id validation (mock mode)', () => {
+    it('throws for an invalid Test User ID without sending a payload', () => {
+      expect(() => service.updateFeedback('fixture-id', { feedbackText: 'Nice volume' }, 0)).toThrow(
+        /Invalid Test User ID/,
+      );
+    });
+
+    it('accepts the default Test User ID', async () => {
+      vi.useFakeTimers();
+      const id = mockInteractions[0].id;
+      const result = firstValueFrom(
+        service.updateFeedback(id, { feedbackText: 'Nice volume' }),
+      );
+      await vi.advanceTimersByTimeAsync(300);
+
+      const updated = await result;
+      expect(updated?.id).toBe(id);
+      expect(updated?.feedbackText).toBe('Nice volume');
     });
   });
 });

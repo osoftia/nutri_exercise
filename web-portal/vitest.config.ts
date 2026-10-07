@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import angular from '@analogjs/vite-plugin-angular';
 import { isMatch } from 'picomatch';
 import { defineConfig } from 'vitest/config';
 
@@ -85,7 +86,11 @@ function jitResourceInline(): { name: string; enforce: string; transform: (code:
 }
 
 export default defineConfig({
-  plugins: [jitResourceInline(), coverageVirtualFilesPatch()],
+  plugins: [
+    angular({ tsconfig: './tsconfig.app.json', disableTypeChecking: true }),
+    jitResourceInline(),
+    coverageVirtualFilesPatch(),
+  ],
   test: {
     globals: true,
     setupFiles: ['./src/test-setup.ts'],
