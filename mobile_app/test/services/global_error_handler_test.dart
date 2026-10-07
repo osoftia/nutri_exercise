@@ -42,6 +42,7 @@ void main() {
       error,
       stack,
       requestUri: Uri.parse('https://api.example.test/clinical/diagnosis'),
+      requestBody: '{"preferences":"vegan"}',
     );
 
     expect(repository.entries.single.errorCode, '404');
@@ -49,6 +50,7 @@ void main() {
     expect(repository.entries.single.stackTrace, stack.toString());
     expect(repository.entries.single.requestUrl,
         'https://api.example.test/clinical/diagnosis');
+    expect(repository.entries.single.requestBody, '{"preferences":"vegan"}');
     expect(alerts.single, contains('Ha ocurrido un error'));
     expect(alerts.single, isNot(contains('404')));
   });

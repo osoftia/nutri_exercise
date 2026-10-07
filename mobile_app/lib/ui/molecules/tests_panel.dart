@@ -200,6 +200,13 @@ class _ErrorLogCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (entry.requestBody.isNotEmpty)
+              ExpansionTile(
+                key: Key('error_log_request_body_$id'),
+                title: const Text('Request body'),
+                childrenPadding: const EdgeInsets.all(AppSpacing.md),
+                children: [SelectableText(entry.requestBody)],
+              ),
           ],
         ),
       ),

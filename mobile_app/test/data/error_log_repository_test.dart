@@ -34,6 +34,7 @@ void main() {
       message: 'HTTP 404 Not Found',
       stackTrace: '#0 request (test.dart:10:2)',
       requestUrl: 'https://api.example.test/api/clinical/diagnosis',
+      requestBody: '{"preferences":"vegan"}',
     );
     final newer = ErrorLogEntry(
       timestamp: DateTime.utc(2026, 10, 6, 12),
@@ -41,6 +42,7 @@ void main() {
       message: 'TimeoutException after 0:00:10',
       stackTrace: '#0 send (test.dart:20:2)',
       requestUrl: 'https://api.example.test/api/log/parse',
+      requestBody: '{"text":"today lunch"}',
     );
 
     await repository.record(older);
@@ -53,11 +55,13 @@ void main() {
     expect(records.first.stackTrace, newer.stackTrace);
     expect(records.first.timestamp, newer.timestamp);
     expect(records.first.requestUrl, newer.requestUrl);
+    expect(records.first.requestBody, newer.requestBody);
     expect(records.last.errorCode, '404');
     expect(records.last.requestUrl, older.requestUrl);
+    expect(records.last.requestBody, older.requestBody);
   });
 
-  test('v15 migration adds request_url without losing previous error records',
+  test('v16 migration adds request_body without losing previous error records',
       () async {
     await db.execute('DROP TABLE local_error_logs');
     await db.execute('''
@@ -66,7 +70,8 @@ void main() {
         timestamp TEXT NOT NULL,
         error_code TEXT NOT NULL,
         message TEXT NOT NULL,
-        stack_trace TEXT NOT NULL
+        stack_trace TEXT NOT NULL,
+        request_url TEXT NOT NULL DEFAULT ''
       )
     ''');
     await db.insert('local_error_logs', {
@@ -74,9 +79,10 @@ void main() {
       'error_code': '404',
       'message': 'HTTP 404 Not Found',
       'stack_trace': 'legacy stack',
+      'request_url': 'https://api.example.test/missing',
     });
 
-    await DatabaseSchema.upgrade(db, 15, DatabaseSchema.version);
+    await DatabaseSchema.upgrade(db, 16, DatabaseSchema.version);
 
     final columns = await db.rawQuery('PRAGMA table_info(local_error_logs)');
     expect(
@@ -88,10 +94,12 @@ void main() {
         'message',
         'stack_trace',
         'request_url',
+        'request_body',
       ]),
     );
     final rows = await db.query('local_error_logs');
-    expect(rows.single['request_url'], '');
+    expect(rows.single['request_url'], 'https://api.example.test/missing');
+    expect(rows.single['request_body'], '');
     expect(rows.single['message'], 'HTTP 404 Not Found');
   });
 }

@@ -11,7 +11,7 @@ class DatabaseSchema {
   DatabaseSchema._();
 
   /// Current schema version (bump on every structural change).
-  static const int version = 16;
+  static const int version = 17;
 
   /// The database file name.
   static const String fileName = 'nutri_exercise.db';
@@ -134,6 +134,9 @@ class DatabaseSchema {
     if (oldVersion < 16) {
       await ensureErrorLogRequestUrlColumn(db);
     }
+    if (oldVersion < 17) {
+      await ensureErrorLogRequestBodyColumn(db);
+    }
   }
 
   /// Creates the local technical error history table (version 15).
@@ -145,7 +148,8 @@ class DatabaseSchema {
         error_code TEXT NOT NULL,
         message TEXT NOT NULL,
         stack_trace TEXT NOT NULL,
-        request_url TEXT NOT NULL DEFAULT ''
+        request_url TEXT NOT NULL DEFAULT '',
+        request_body TEXT NOT NULL DEFAULT ''
       )
     ''');
     await db.execute('''
@@ -160,6 +164,15 @@ class DatabaseSchema {
     if (columns.any((row) => row['name'] == 'request_url')) return;
     await db.execute(
       "ALTER TABLE local_error_logs ADD COLUMN request_url TEXT NOT NULL DEFAULT ''",
+    );
+  }
+
+  /// Adds captured JSON request bodies to existing local error records.
+  static Future<void> ensureErrorLogRequestBodyColumn(Database db) async {
+    final columns = await db.rawQuery('PRAGMA table_info(local_error_logs)');
+    if (columns.any((row) => row['name'] == 'request_body')) return;
+    await db.execute(
+      "ALTER TABLE local_error_logs ADD COLUMN request_body TEXT NOT NULL DEFAULT ''",
     );
   }
 

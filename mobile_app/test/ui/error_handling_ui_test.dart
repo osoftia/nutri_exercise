@@ -80,6 +80,8 @@ void main() {
         stackTrace:
             '#0 AiDiagnosisRepository.generateDiagnosis (test.dart:42:9)',
         requestUrl: 'http://10.0.2.2:5039/api/clinical/diagnosis',
+        requestBody:
+            '{"preferences":"vegetarian","conditions":"diabetes:high","userId":1}',
       ),
     ]);
     await tester.pumpWidget(
@@ -115,6 +117,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('AiDiagnosisRepository.generateDiagnosis'),
         findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('error_log_request_body_7')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('"userId":1'), findsOneWidget);
   });
 
   testWidgets('error viewer displays a useful empty state', (tester) async {

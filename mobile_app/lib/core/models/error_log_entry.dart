@@ -6,6 +6,7 @@ class ErrorLogEntry {
     required this.message,
     required this.stackTrace,
     this.requestUrl = '',
+    this.requestBody = '',
     this.id,
   });
 
@@ -15,6 +16,7 @@ class ErrorLogEntry {
   final String message;
   final String stackTrace;
   final String requestUrl;
+  final String requestBody;
 
   Map<String, Object?> toMap() => {
         if (id != null) 'id': id,
@@ -23,6 +25,7 @@ class ErrorLogEntry {
         'message': message,
         'stack_trace': stackTrace,
         'request_url': requestUrl,
+        'request_body': requestBody,
       };
 
   factory ErrorLogEntry.fromMap(Map<String, Object?> map) => ErrorLogEntry(
@@ -32,5 +35,6 @@ class ErrorLogEntry {
         message: map['message'] as String,
         stackTrace: map['stack_trace'] as String,
         requestUrl: map['request_url'] as String? ?? '',
+        requestBody: map['request_body'] as String? ?? '',
       );
 }
