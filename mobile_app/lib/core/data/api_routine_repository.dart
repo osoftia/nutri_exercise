@@ -47,10 +47,9 @@ class ApiRoutineRepository implements RoutineRepository {
 
   @override
   Future<List<WorkoutDay>> getWeeklyRoutine() async {
+    final uri = Uri.parse('$baseUrl${ApiConstants.routinesPath}');
     try {
-      final response = await _client
-          .get(Uri.parse('$baseUrl${ApiConstants.routinesPath}'))
-          .timeout(timeout);
+      final response = await _client.get(uri).timeout(timeout);
       if (response.statusCode != 200) {
         await ErrorHandlerRegistry.capture(
           AppHttpStatusException(
@@ -58,6 +57,7 @@ class ApiRoutineRepository implements RoutineRepository {
             response.reasonPhrase ?? 'HTTP error',
           ),
           StackTrace.current,
+          requestUri: uri,
         );
         return await _fallback.getWeeklyRoutine();
       }
@@ -66,6 +66,7 @@ class ApiRoutineRepository implements RoutineRepository {
         await ErrorHandlerRegistry.capture(
           const FormatException('Expected a JSON routine list.'),
           StackTrace.current,
+          requestUri: uri,
         );
         return await _fallback.getWeeklyRoutine();
       }
@@ -73,17 +74,18 @@ class ApiRoutineRepository implements RoutineRepository {
           .map((routine) => _mapRoutine(routine as Map<String, dynamic>))
           .toList();
     } catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace);
+      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
       return _fallback.getWeeklyRoutine();
     }
   }
 
   @override
   Future<String> generateRoutine(String userPreferences) async {
+    final uri = Uri.parse('$baseUrl${ApiConstants.generateRoutinePath}');
     try {
       final response = await _client
           .post(
-            Uri.parse('$baseUrl${ApiConstants.generateRoutinePath}'),
+            uri,
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({'userPreferences': userPreferences}),
           )
@@ -93,6 +95,7 @@ class ApiRoutineRepository implements RoutineRepository {
         await ErrorHandlerRegistry.capture(
           const AppHttpStatusException(400, 'Bad Request'),
           StackTrace.current,
+          requestUri: uri,
         );
         throw const RoutineApiException(
           'Your preferences were not accepted by the server. '
@@ -106,6 +109,7 @@ class ApiRoutineRepository implements RoutineRepository {
             response.reasonPhrase ?? 'HTTP error',
           ),
           StackTrace.current,
+          requestUri: uri,
         );
         return await _fallback.generateRoutine(userPreferences);
       }
@@ -121,7 +125,7 @@ class ApiRoutineRepository implements RoutineRepository {
     } on RoutineApiException {
       rethrow;
     } catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace);
+      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
       return _fallback.generateRoutine(userPreferences);
     }
   }

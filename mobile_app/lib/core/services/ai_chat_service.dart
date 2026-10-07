@@ -87,15 +87,15 @@ class AiChatService {
           )
           .timeout(timeout);
     } on TimeoutException catch (e, stackTrace) {
-      await ErrorHandlerRegistry.capture(e, stackTrace);
+      await ErrorHandlerRegistry.capture(e, stackTrace, requestUri: uri);
       debugPrint('API Error: $e');
       throw const AiChatTimeoutException();
     } on SocketException catch (e, stackTrace) {
-      await ErrorHandlerRegistry.capture(e, stackTrace);
+      await ErrorHandlerRegistry.capture(e, stackTrace, requestUri: uri);
       debugPrint('API Error: $e');
       throw const AiChatNetworkException();
     } catch (e, stackTrace) {
-      await ErrorHandlerRegistry.capture(e, stackTrace);
+      await ErrorHandlerRegistry.capture(e, stackTrace, requestUri: uri);
       debugPrint('API Error: $e');
       throw const AiChatNetworkException();
     }
@@ -107,6 +107,7 @@ class AiChatService {
           response.reasonPhrase ?? 'HTTP error',
         ),
         StackTrace.current,
+        requestUri: uri,
       );
       throw AiChatHttpException(response.statusCode);
     }
@@ -122,10 +123,10 @@ class AiChatService {
       }
       return reply;
     } on AiChatParseException catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace);
+      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
       rethrow;
     } catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace);
+      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
       throw const AiChatParseException();
     }
   }

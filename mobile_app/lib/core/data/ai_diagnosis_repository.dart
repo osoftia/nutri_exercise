@@ -71,6 +71,7 @@ class AiDiagnosisRepository {
             response.reasonPhrase ?? 'HTTP error',
           ),
           StackTrace.current,
+          requestUri: uri,
         );
         throw AiDiagnosisException(
           'The clinical report service returned ${response.statusCode}.',
@@ -91,16 +92,16 @@ class AiDiagnosisRepository {
     } on AiDiagnosisException {
       rethrow;
     } on FormatException catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace);
+      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
       throw AiDiagnosisException(
           'The clinical report response was invalid: $error');
     } on TimeoutException catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace);
+      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
       throw const AiDiagnosisException(
         'The clinical report service timed out. Your saved reports are still available.',
       );
     } catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace);
+      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
       throw AiDiagnosisException(
         'Could not reach the clinical report service. Your saved reports are still available. ($error)',
       );

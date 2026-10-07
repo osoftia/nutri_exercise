@@ -29,13 +29,18 @@ class GlobalErrorHandler {
   final void Function(String message) _showAlert;
   final DateTime Function() _clock;
 
-  Future<void> capture(Object error, StackTrace stackTrace) async {
+  Future<void> capture(
+    Object error,
+    StackTrace stackTrace, {
+    Uri? requestUri,
+  }) async {
     final code = _errorCode(error);
     final entry = ErrorLogEntry(
       timestamp: _clock().toUtc(),
       errorCode: code,
       message: error.toString(),
       stackTrace: stackTrace.toString(),
+      requestUrl: requestUri?.toString() ?? '',
     );
     try {
       _showAlert(_friendlyMessage(code));
@@ -91,7 +96,11 @@ class ErrorHandlerRegistry {
 
   static GlobalErrorHandler? current;
 
-  static Future<void> capture(Object error, StackTrace stackTrace) async {
-    await current?.capture(error, stackTrace);
+  static Future<void> capture(
+    Object error,
+    StackTrace stackTrace, {
+    Uri? requestUri,
+  }) async {
+    await current?.capture(error, stackTrace, requestUri: requestUri);
   }
 }

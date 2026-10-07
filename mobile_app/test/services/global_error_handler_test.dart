@@ -38,11 +38,17 @@ void main() {
     final error = AppHttpStatusException(404, 'Not Found');
     final stack = StackTrace.current;
 
-    await handler.capture(error, stack);
+    await handler.capture(
+      error,
+      stack,
+      requestUri: Uri.parse('https://api.example.test/clinical/diagnosis'),
+    );
 
     expect(repository.entries.single.errorCode, '404');
     expect(repository.entries.single.message, 'HTTP 404 Not Found');
     expect(repository.entries.single.stackTrace, stack.toString());
+    expect(repository.entries.single.requestUrl,
+        'https://api.example.test/clinical/diagnosis');
     expect(alerts.single, contains('Ha ocurrido un error'));
     expect(alerts.single, isNot(contains('404')));
   });
@@ -92,6 +98,8 @@ void main() {
 
     expect(repository.entries.single.errorCode, '404');
     expect(repository.entries.single.message, 'HTTP 404 Not Found');
+    expect(repository.entries.single.requestUrl,
+        'https://api.example.test/api/aiproxy/chat');
     expect(alerts.single, contains('Ha ocurrido un error'));
   });
 }

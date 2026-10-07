@@ -17,9 +17,10 @@ class HttpDietRepository implements DietRepository {
 
   @override
   Future<List<DailyMenu>> getDailyMenus() async {
+    final uri = Uri.parse('$baseUrl/api/v1/diets/menus');
     try {
       final response = await http
-          .get(Uri.parse('$baseUrl/api/v1/diets/menus'))
+          .get(uri)
           .timeout(_timeout);
       if (response.statusCode != 200) {
         throw AppHttpStatusException(
@@ -32,7 +33,7 @@ class HttpDietRepository implements DietRepository {
           .map((menu) => DailyMenu.fromJson(menu as Map<String, dynamic>))
           .toList();
     } catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace);
+      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
       return _fallback?.getDailyMenus() ?? <DailyMenu>[];
     }
   }

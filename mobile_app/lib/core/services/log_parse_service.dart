@@ -75,15 +75,15 @@ class LogParseService {
           )
           .timeout(timeout);
     } on TimeoutException catch (e, stackTrace) {
-      await ErrorHandlerRegistry.capture(e, stackTrace);
+      await ErrorHandlerRegistry.capture(e, stackTrace, requestUri: uri);
       debugPrint('API Error: $e');
       throw const LogParseTimeoutException();
     } on SocketException catch (e, stackTrace) {
-      await ErrorHandlerRegistry.capture(e, stackTrace);
+      await ErrorHandlerRegistry.capture(e, stackTrace, requestUri: uri);
       debugPrint('API Error: $e');
       throw const LogParseNetworkException();
     } catch (e, stackTrace) {
-      await ErrorHandlerRegistry.capture(e, stackTrace);
+      await ErrorHandlerRegistry.capture(e, stackTrace, requestUri: uri);
       debugPrint('API Error: $e');
       throw const LogParseNetworkException();
     }
@@ -95,6 +95,7 @@ class LogParseService {
           response.reasonPhrase ?? 'HTTP error',
         ),
         StackTrace.current,
+        requestUri: uri,
       );
       throw LogParseHttpException(response.statusCode);
     }
@@ -106,10 +107,10 @@ class LogParseService {
       }
       return LogParseResponse.fromJson(body);
     } on LogParseParseException catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace);
+      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
       rethrow;
     } catch (error, stackTrace) {
-      await ErrorHandlerRegistry.capture(error, stackTrace);
+      await ErrorHandlerRegistry.capture(error, stackTrace, requestUri: uri);
       throw const LogParseParseException();
     }
   }
