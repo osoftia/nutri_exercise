@@ -15,6 +15,20 @@
 .health-ai h1 {
   margin: 0;
   font-size: 2rem;
+  font-weight: var(--font-weight-display);
   line-height: 1.2;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--letter-spacing-tight);
+  text-transform: uppercase;
+  color: var(--color-text-high);
+}
+
+@media (max-width: 768px) {
+  .health-ai {
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .health-ai h1 {
+    font-size: var(--font-size-h3);
+  }
 }
