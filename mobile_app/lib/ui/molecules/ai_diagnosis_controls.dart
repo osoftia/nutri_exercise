@@ -69,6 +69,8 @@ class _AiDiagnosisControlsState extends State<AiDiagnosisControls> {
 
   Future<void> _generate(AppLanguage language) async {
     if (!widget.controller.hasConditions || _isLoading) return;
+    if (_latest != null && !await _confirmOverwrite(language)) return;
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _error = null;
@@ -94,6 +96,36 @@ class _AiDiagnosisControlsState extends State<AiDiagnosisControls> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// Confirms before replacing an existing valid local diagnosis.
+  Future<bool> _confirmOverwrite(AppLanguage language) async {
+    final isSpanish = language == AppLanguage.spanish;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const Key('ai_diagnosis_overwrite_dialog'),
+        title: Text(isSpanish ? 'Volver a generar' : 'Regenerate diagnosis'),
+        content: Text(
+          isSpanish
+              ? '¿Está seguro de que desea volver a generar el diagnóstico?'
+              : 'Are you sure you want to regenerate the diagnosis?',
+        ),
+        actions: [
+          TextButton(
+            key: const Key('ai_diagnosis_overwrite_cancel'),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(isSpanish ? 'Cancelar' : 'Cancel'),
+          ),
+          FilledButton(
+            key: const Key('ai_diagnosis_overwrite_confirm'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(isSpanish ? 'Regenerar' : 'Regenerate'),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
   }
 
   @override
