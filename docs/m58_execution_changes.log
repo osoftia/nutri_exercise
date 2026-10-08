@@ -1,0 +1,131 @@
+================================================================================
+MILESTONE 58 — EXECUTION CHANGES
+Success Response Logging, Raw AI Text Viewer & Overwrite Confirmation
+Branch: feature/m58-success-logging-diagnosis-confirmation
+================================================================================
+
+SUMMARY
+-------
+Implemented success forensic logging for the clinical AI diagnosis flow, a
+"Respuestas exitosas" viewer in the Profile Pruebas accordion, exact binding to
+the backend diagnosticReport/mealSuggestions payload, and an overwrite
+confirmation dialog. Delivered under a strict TDD loop with one logical commit
+per step.
+
+VERIFICATION
+------------
+- fvm flutter analyze  -> No issues found! (197.5s)
+- fvm flutter test     -> 875 passed, 0 failed
+- SDK: fvm (Flutter 3.29.0, Dart 3.7.0)
+
+--------------------------------------------------------------------------------
+TASK 1 — Success forensic logging (SQLite)
+--------------------------------------------------------------------------------
+Rationale: error forensics already existed (m51–m55), but successful responses
+(including the raw JSON/text, request URL and timestamp) were discarded after
+parsing. Auditing the AI diagnosis workflow requires the exact payload that
+succeeded.
+
+Created:
+- lib/core/models/success_log_entry.dart
+    SuccessLogEntry {id, timestamp, statusCode, label, requestUrl, requestBody,
+    responseBody} with toMap()/fromMap(). UTC ISO-8601 timestamps.
+- lib/core/data/success_log_repository.dart
+    SuccessLogRepository {Future<void> record(...); Future<List<...>> getAll();}.
+- lib/core/data/local_success_log_repository.dart
+    SQLite implementation delegating to DatabaseHelper.
+- lib/core/mocks/mock_success_log_repository.dart
+    In-memory reverse-ordered store for mock flavors and widget tests.
+- test/data/success_log_repository_test.dart
+    Persistence/newest-first ordering and the v19 -> v20 migration (preserves
+    existing local_error_logs rows).
+
+Modified:
+- lib/core/database/database_schema.dart
+    version 19 -> 20; createLocalSuccessLogTable() with a
+    (timestamp DESC, id DESC) index; createAll() and upgrade() call it.
+- lib/core/database/database_helper.dart
+    insertSuccessLog() / getSuccessLogs().
+- lib/core/data/ai_diagnosis_repository.dart
+    Optional SuccessLogRepository + clock injection; _recordSuccess() persists
+    the raw exchange after a report is parsed and saved. Failure-safe (a storage
+    error never discards the report). Label = 'clinical_diagnosis'.
+- test/data/ai_diagnosis_repository_test.dart
+    Success captured on 200 (URL, request body, response body, status, label,
+    timestamp) and no success entry on failure.
+
+Commit: feat(m58): persist successful AI diagnosis responses in local forensics log
+
+--------------------------------------------------------------------------------
+TASK 2 — "Respuestas exitosas" viewer in Profile Pruebas
+--------------------------------------------------------------------------------
+Created:
+- test/ui/success_log_ui_test.dart
+    Asserts the sheet title, status, label, URL, local timestamp, and the
+    expandable request/response bodies; plus the empty state.
+
+Modified:
+- lib/ui/molecules/tests_panel.dart
+    New optional successLogRepository + 'Respuestas exitosas' button
+    (key settings_success_logs_button); showSuccessLogSheet() with
+    success_log_sheet_title / success_log_list / success_log_request_body_<id> /
+    success_log_response_body_<id>. Spanish/English copy mirroring the error
+    viewer.
+- lib/ui/pages/profile_page.dart, lib/ui/pages/main_shell_page.dart, lib/app.dart
+    Threaded the repository from the app composition root to the Pruebas panel;
+    mock flavor uses MockSuccessLogRepository, real flavors use
+    LocalSuccessLogRepository, and it is injected into AiDiagnosisRepository.
+
+Commit: feat(m58): surface 'Respuestas exitosas' viewer in Profile Pruebas panel
+
+--------------------------------------------------------------------------------
+TASK 3 — Exact backend response mapping (diagnosticReport / mealSuggestions)
+--------------------------------------------------------------------------------
+Rationale: the parser previously injected generic educational placeholder copy
+when fields were missing, which masked the true backend payload.
+
+Created:
+- test/models/ai_diagnosis_payload_mapping_test.dart
+    Binds diagnosticReport (string and object forms) and mealSuggestions; asserts
+    no placeholder substitution (empty title/summary/meal name when absent).
+
+Modified:
+- lib/core/models/ai_diagnosis.dart
+    AiDiagnosisReport.fromJson now prefers diagnosticReport (string or object:
+    summary/report/diagnosis) and mealSuggestions (wrapped into a single menu),
+    while remaining tolerant of legacy title/summary/menus keys. Removed the
+    'Clinical nutrition report'/'Informe de nutrición clínica',
+    'Suggested menu'/'Menú sugerido' and 'Suggested meal'/'Comida sugerida'
+    fallbacks.
+- test/data/ai_diagnosis_repository_test.dart
+    Updated the optional-fields test to assert an empty (not placeholder) title.
+
+Commit: feat(m58): bind diagnosis UI to diagnosticReport and mealSuggestions payloads
+
+--------------------------------------------------------------------------------
+TASK 4 — Overwrite confirmation dialog
+--------------------------------------------------------------------------------
+Created:
+- test/ui/ai_diagnosis_overwrite_confirmation_test.dart
+    Confirmation shown when a valid diagnosis exists; cancel issues no request
+    and keeps the saved report; confirm regenerates; no prompt when empty.
+
+Modified:
+- lib/ui/molecules/ai_diagnosis_controls.dart
+    _generate() now awaits _confirmOverwrite() when _latest != null.
+    AlertDialog (key ai_diagnosis_overwrite_dialog) content:
+    "¿Está seguro de que desea volver a generar el diagnóstico?" with
+    ai_diagnosis_overwrite_cancel / ai_diagnosis_overwrite_confirm actions.
+
+Commit: feat(m58): confirm before overwriting a saved AI diagnosis
+
+--------------------------------------------------------------------------------
+DOCUMENTATION
+--------------------------------------------------------------------------------
+- docs/milestone_58_plan.md
+- docs/specs/m58_success_logging_diagnosis_confirmation.feature
+- docs/m58_execution_changes.log (this file)
+
+================================================================================
+END OF MILESTONE 58 EXECUTION LOG
+================================================================================
