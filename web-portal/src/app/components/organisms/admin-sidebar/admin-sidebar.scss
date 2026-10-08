@@ -4,8 +4,10 @@
   width: 240px;
   height: 100vh;
   padding: 20px 12px;
-  background-color: var(--color-bg);
-  border-right: 1px solid var(--color-surface);
+  background-color: var(--panel-bg);
+  border-right: var(--border-width-thin) solid var(--color-border);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
   position: sticky;
   top: 0;
 }
@@ -86,5 +88,29 @@
   &:hover {
     background-color: var(--color-surface);
     color: var(--color-text-medium);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 64px;
+    padding: 16px 8px;
+  }
+
+  .admin-sidebar__brand {
+    justify-content: center;
+    padding: 8px 0;
+  }
+
+  .admin-sidebar__title,
+  .admin-sidebar__link span,
+  .admin-sidebar__footer span {
+    display: none;
+  }
+
+  .admin-sidebar__link,
+  .admin-sidebar__footer {
+    justify-content: center;
+    padding: 10px 0;
   }
 }

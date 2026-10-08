@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Icon, IconName } from '../../atoms/icon/icon';
+import { ThemeSwitcher } from '../../atoms/theme-switcher/theme-switcher';
 
 interface NavItem {
   label: string;
@@ -10,7 +11,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-admin-sidebar',
-  imports: [RouterLink, RouterLinkActive, Icon],
+  imports: [RouterLink, RouterLinkActive, Icon, ThemeSwitcher],
   templateUrl: './admin-sidebar.html',
   styleUrl: './admin-sidebar.scss',
 })

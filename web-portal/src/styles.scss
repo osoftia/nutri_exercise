@@ -1,10 +1,6 @@
 @use './styles/design-tokens';
 @use '@angular/material' as mat;
 
-html {
-  color-scheme: dark;
-}
-
 $theme: mat.define-theme(
   (
     color: (
@@ -25,44 +21,58 @@ $theme: mat.define-theme(
 
 body {
   margin: 0;
-  font-family: var(--font-family);
+  min-height: 100vh;
+  font-family: var(--font-primary);
   background-color: var(--color-bg);
   color: var(--color-text-high);
+  transition:
+    background-color var(--motion-normal) var(--ease-out),
+    color var(--motion-normal) var(--ease-out);
+}
+
+body.theme-editorial {
+  color-scheme: dark;
+}
+
+body.theme-apple {
+  color-scheme: light;
 }
 
 .mat-mdc-card {
-  background-color: var(--color-surface);
+  background-color: var(--panel-bg);
   border: var(--border-thin);
-  border-radius: var(--radius-none);
-  box-shadow: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-main);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
 }
 
 .mat-mdc-button-base,
 .mdc-button {
-  border-radius: var(--radius-sm);
+  border-radius: var(--border-radius-sm);
   font-weight: var(--font-weight-medium);
 }
 
 .mat-mdc-raised-button:not(:disabled),
 .mat-mdc-unelevated-button:not(:disabled) {
   border: var(--border-thin);
-  border-radius: var(--radius-sm);
-  box-shadow: none;
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--shadow-main);
 }
 
 .mat-mdc-button-base:not(:disabled):hover {
   border-color: var(--color-accent);
-  box-shadow: none;
+  box-shadow: var(--shadow-main);
 }
 
 .mat-mdc-button-base:not(:disabled):active {
   border-color: var(--color-text-high);
-  box-shadow: none;
+  box-shadow: var(--shadow-main);
 }
 
 .mat-mdc-text-field-wrapper {
   background-color: var(--color-bg);
   border: var(--border-thin);
-  border-radius: var(--radius-sm);
-  box-shadow: none;
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--shadow-main);
 }

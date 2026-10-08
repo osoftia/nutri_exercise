@@ -1,10 +1,11 @@
-:root {
+:root,
+body.theme-editorial {
   --color-bg: #0f172a;
   --color-surface: #1e293b;
-  --color-border: #334155;
+  --color-border: #64748b;
   --color-text-high: #f8fafc;
   --color-text-medium: #cbd5e1;
-  --color-text-low: #64748b;
+  --color-text-low: #94a3b8;
   --color-primary: #3b82f6;
   --color-primary-light: #93c5fd;
   --color-accent: #f97316;
@@ -12,14 +13,13 @@
   --color-warning: #eab308;
   --color-danger: #ef4444;
   --color-neutral: #94a3b8;
-
   --color-ink: #0b0f1a;
   --color-block-primary: var(--color-primary);
   --color-block-accent: var(--color-accent);
   --color-block-success: var(--color-success);
   --color-block-danger: var(--color-danger);
-
-  --font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+  --font-primary: 'Montserrat', sans-serif;
+  --font-family: var(--font-primary);
   --font-size-caption: 11px;
   --font-size-label: 13px;
   --font-size-body: 16px;
@@ -30,24 +30,69 @@
   --font-size-hero: 48px;
   --font-size-display: 72px;
   --font-size-display-lg: 96px;
-
   --font-weight-display: 800;
   --font-weight-bold: 700;
   --font-weight-medium: 600;
   --letter-spacing-tight: -0.03em;
   --letter-spacing-overline: 0.14em;
-
-  --border-thin: 1px solid var(--color-border);
-  --border-strong: 2px solid var(--color-text-high);
-  --border-accent: 2px solid var(--color-accent);
-  --radius-none: 0px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-
+  --border-width-thin: 2px;
+  --border-width-heavy: 4px;
+  --border-radius: 0px;
+  --border-radius-sm: 0px;
+  --radius-none: var(--border-radius);
+  --radius-sm: var(--border-radius-sm);
+  --radius-md: var(--border-radius);
+  --radius-lg: var(--border-radius);
+  --border-thin: var(--border-width-thin) solid var(--color-border);
+  --border-strong: var(--border-width-heavy) solid var(--color-text-high);
+  --border-accent: var(--border-width-heavy) solid var(--color-accent);
+  --shadow-main: 6px 6px 0px var(--ink);
+  --ink: var(--color-ink);
+  --shadow-warning: 6px 6px 0 var(--color-danger);
+  --shadow-success: 6px 6px 0 var(--color-success);
+  --state-warning-bg: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
+  --state-recommended-bg: color-mix(in srgb, var(--color-success) 8%, var(--color-surface));
+  --glass-bg: transparent;
+  --glass-filter: none;
+  --panel-bg: var(--color-surface);
   --grid-gutter: 20px;
-
   --motion-fast: 150ms;
   --motion-normal: 250ms;
   --ease-out: ease-out;
+}
+
+body.theme-apple {
+  --color-bg: #f4f6f8;
+  --color-surface: rgba(255, 255, 255, 0.82);
+  --color-border: rgba(31, 41, 55, 0.12);
+  --color-text-high: #17212f;
+  --color-text-medium: #465466;
+  --color-text-low: #6c7a8c;
+  --color-primary: #1769aa;
+  --color-primary-light: #72b5e8;
+  --color-accent: #ba5a16;
+  --color-success: #16834a;
+  --color-warning: #a96800;
+  --color-danger: #c52e38;
+  --color-neutral: #667487;
+  --color-ink: #17212f;
+  --border-width-thin: 1px;
+  --border-width-heavy: 1px;
+  --border-radius: 16px;
+  --border-radius-sm: 8px;
+  --radius-md: var(--border-radius);
+  --radius-lg: 20px;
+  --shadow-main: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-warning: 0 8px 28px rgba(197, 46, 56, 0.18);
+  --shadow-success: 0 8px 28px rgba(22, 131, 74, 0.18);
+  --state-warning-bg: color-mix(in srgb, var(--color-danger) 7%, var(--glass-bg));
+  --state-recommended-bg: color-mix(in srgb, var(--color-success) 7%, var(--glass-bg));
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-filter: blur(20px);
+  --panel-bg: var(--glass-bg);
+  --font-primary: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  --font-family: var(--font-primary);
+  --border-thin: var(--border-width-thin) solid var(--color-border);
+  --border-strong: var(--border-width-heavy) solid var(--color-border);
+  --border-accent: var(--border-width-heavy) solid var(--color-accent);
 }

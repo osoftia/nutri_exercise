@@ -1,0 +1,25 @@
+<article class="exercise-card" [class.exercise-card--selected]="selected()">
+  <label class="exercise-card__select">
+    <input
+      type="checkbox"
+      [checked]="selected()"
+      (change)="toggleSelect.emit(exercise().id)"
+      [attr.aria-label]="'Select ' + exercise().name"
+    />
+  </label>
+  <div class="exercise-card__body">
+    @if (editing()) {
+      <app-form-input label="Exercise name" [(value)]="draft" />
+      <div class="exercise-card__actions">
+        <app-custom-button variant="primary" (click)="saveEdit()">Save</app-custom-button>
+        <app-custom-button variant="ghost" (click)="cancelEdit()">Cancel</app-custom-button>
+      </div>
+    } @else {
+      <h4 class="exercise-card__name" (dblclick)="startEdit()">{{ exercise().name }}</h4>
+      <p class="exercise-card__meta">{{ exercise().sets }} × {{ exercise().reps }} · {{ exercise().restSeconds }}s rest</p>
+      <div class="exercise-card__actions">
+        <app-custom-button variant="text" (click)="startEdit()">Edit</app-custom-button>
+      </div>
+    }
+  </div>
+</article>

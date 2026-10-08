@@ -52,8 +52,8 @@
   flex-wrap: wrap;
   padding: 12px 14px;
   border: var(--border-accent);
-  border-radius: var(--radius-md);
-  background-color: var(--color-ink);
+  border-radius: var(--border-radius);
+  background-color: var(--panel-bg);
 }
 
 .routine-board__duplicate-label {
@@ -94,7 +94,7 @@
 
 .routine-board__select {
   padding: 8px 10px;
-  border-radius: var(--radius-md);
+  border-radius: var(--border-radius);
   border: var(--border-thin);
   background-color: var(--color-bg);
   color: var(--color-text-high);
