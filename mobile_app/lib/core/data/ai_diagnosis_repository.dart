@@ -6,7 +6,9 @@ import 'package:http/http.dart' as http;
 import '../domain/clinical/clinical_condition_profile.dart';
 import '../models/ai_diagnosis.dart';
 import '../models/ai_diagnosis_request.dart';
+import '../models/success_log_entry.dart';
 import 'ai_diagnosis_store.dart';
+import 'success_log_repository.dart';
 import '../services/global_error_handler.dart';
 import '../services/http_timeout_configuration.dart';
 
@@ -32,14 +34,23 @@ class AiDiagnosisRepository {
     required AiDiagnosisStore store,
     http.Client? client,
     Duration? timeout,
+    SuccessLogRepository? successLogRepository,
+    DateTime Function()? clock,
   })  : _store = store,
         _client = client ?? http.Client(),
-        _timeoutOverride = timeout;
+        _timeoutOverride = timeout,
+        _successLogRepository = successLogRepository,
+        _clock = clock ?? DateTime.now;
+
+  /// The label stored with every successful forensic record.
+  static const String successLogLabel = 'clinical_diagnosis';
 
   final String baseUrl;
   final AiDiagnosisStore _store;
   final http.Client _client;
   final Duration? _timeoutOverride;
+  final SuccessLogRepository? _successLogRepository;
+  final DateTime Function() _clock;
   Duration get timeout =>
       _timeoutOverride ?? HttpTimeoutConfiguration.currentTimeout;
 
@@ -101,6 +112,12 @@ class AiDiagnosisRepository {
         responseJson: response.body,
       );
       await _store.save(report);
+      await _recordSuccess(
+        uri: uri,
+        statusCode: response.statusCode,
+        requestBody: requestBody,
+        responseBody: responseBody,
+      );
       return report;
     } on AiDiagnosisException {
       rethrow;
@@ -136,6 +153,34 @@ class AiDiagnosisRepository {
       throw AiDiagnosisException(
         'Could not reach the clinical report service. Your saved reports are still available. ($error)',
       );
+    }
+  }
+
+  /// Persists the raw successful exchange for local diagnostics.
+  ///
+  /// Success forensics are best-effort: a storage failure must never discard a
+  /// report the user already generated.
+  Future<void> _recordSuccess({
+    required Uri uri,
+    required int statusCode,
+    required String requestBody,
+    required String responseBody,
+  }) async {
+    final repository = _successLogRepository;
+    if (repository == null) return;
+    try {
+      await repository.record(
+        SuccessLogEntry(
+          timestamp: _clock().toUtc(),
+          statusCode: statusCode.toString(),
+          label: successLogLabel,
+          requestUrl: uri.toString(),
+          requestBody: requestBody,
+          responseBody: responseBody,
+        ),
+      );
+    } catch (_) {
+      // Forensic storage must not mask a successful diagnosis.
     }
   }
 

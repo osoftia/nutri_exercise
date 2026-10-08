@@ -11,7 +11,7 @@ class DatabaseSchema {
   DatabaseSchema._();
 
   /// Current schema version (bump on every structural change).
-  static const int version = 19;
+  static const int version = 20;
 
   /// The database file name.
   static const String fileName = 'nutri_exercise.db';
@@ -67,6 +67,7 @@ class DatabaseSchema {
     await createSymptomTable(db);
     await createAiDiagnosisTables(db);
     await createLocalErrorLogTable(db);
+    await createLocalSuccessLogTable(db);
   }
 
   /// Applies every migration needed to reach the current schema version.
@@ -143,6 +144,9 @@ class DatabaseSchema {
     if (oldVersion < 19) {
       await ensureErrorLogResponseBodyColumn(db);
     }
+    if (oldVersion < 20) {
+      await createLocalSuccessLogTable(db);
+    }
   }
 
   /// Creates the local technical error history table (version 15).
@@ -181,6 +185,25 @@ class DatabaseSchema {
     await db.execute(
       "ALTER TABLE local_error_logs ADD COLUMN request_body TEXT NOT NULL DEFAULT ''",
     );
+  }
+
+  /// Creates the local successful-exchange history table (version 20).
+  static Future<void> createLocalSuccessLogTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_success_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT NOT NULL,
+        status_code TEXT NOT NULL DEFAULT '200',
+        label TEXT NOT NULL DEFAULT '',
+        request_url TEXT NOT NULL DEFAULT '',
+        request_body TEXT NOT NULL DEFAULT '',
+        response_body TEXT NOT NULL DEFAULT ''
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_local_success_logs_timestamp
+      ON local_success_logs(timestamp DESC, id DESC)
+    ''');
   }
 
   /// Adds raw backend response diagnostics to previously stored failures.

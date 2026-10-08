@@ -11,6 +11,7 @@ import '../models/ai_diagnosis.dart';
 import '../models/meal_action.dart';
 import '../models/projection_models.dart';
 import '../models/routine_models.dart';
+import '../models/success_log_entry.dart';
 import '../models/symptom_log.dart';
 import '../models/tamagotchi_progress.dart';
 import '../models/user_profile.dart';
@@ -315,6 +316,22 @@ class DatabaseHelper {
       orderBy: 'timestamp DESC, id DESC',
     );
     return rows.map(ErrorLogEntry.fromMap).toList(growable: false);
+  }
+
+  /// Inserts a successful-exchange record into the local forensics log.
+  Future<void> insertSuccessLog(SuccessLogEntry entry) async {
+    final db = await database;
+    await db.insert('local_success_logs', entry.toMap());
+  }
+
+  /// Returns local successful-exchange records newest first.
+  Future<List<SuccessLogEntry>> getSuccessLogs() async {
+    final db = await database;
+    final rows = await db.query(
+      'local_success_logs',
+      orderBy: 'timestamp DESC, id DESC',
+    );
+    return rows.map(SuccessLogEntry.fromMap).toList(growable: false);
   }
 
   /// Saves a report and all of its suggested menus atomically.

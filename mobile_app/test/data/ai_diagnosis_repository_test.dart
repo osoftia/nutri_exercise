@@ -8,8 +8,10 @@ import 'package:nutri_mobile_app/core/data/ai_diagnosis_store.dart';
 import 'package:nutri_mobile_app/core/data/error_log_repository.dart';
 import 'package:nutri_mobile_app/core/domain/clinical/clinical_condition.dart';
 import 'package:nutri_mobile_app/core/domain/clinical/clinical_condition_profile.dart';
+import 'package:nutri_mobile_app/core/data/success_log_repository.dart';
 import 'package:nutri_mobile_app/core/models/ai_diagnosis.dart';
 import 'package:nutri_mobile_app/core/models/error_log_entry.dart';
+import 'package:nutri_mobile_app/core/models/success_log_entry.dart';
 import 'package:nutri_mobile_app/core/services/global_error_handler.dart';
 
 class _MemoryStore implements AiDiagnosisStore {
@@ -41,6 +43,16 @@ class _MemoryErrorLogRepository implements ErrorLogRepository {
 
   @override
   Future<void> record(ErrorLogEntry entry) async => entries.add(entry);
+}
+
+class _MemorySuccessLogRepository implements SuccessLogRepository {
+  final List<SuccessLogEntry> entries = [];
+
+  @override
+  Future<List<SuccessLogEntry>> getAll() async => entries;
+
+  @override
+  Future<void> record(SuccessLogEntry entry) async => entries.add(entry);
 }
 
 void main() {
@@ -103,6 +115,58 @@ void main() {
     expect(report.menus.single.meals, hasLength(2));
     expect(store.report, same(report));
     expect(store.preferences, 'Vegetarian; dislikes mushrooms');
+  });
+
+  test('records the raw successful response, URL and timestamp on success',
+      () async {
+    final successLogs = _MemorySuccessLogRepository();
+    late http.Request captured;
+    final repository = AiDiagnosisRepository(
+      'https://api.example.test',
+      store: _MemoryStore(),
+      successLogRepository: successLogs,
+      clock: () => DateTime.utc(2026, 10, 7, 9, 30),
+      client: MockClient((request) async {
+        captured = request;
+        return http.Response(jsonEncode(responseBody), 200);
+      }),
+    );
+
+    await repository.generateDiagnosis(
+      profile: profile,
+      foodPreferences: 'vegetarian',
+      language: 'es',
+    );
+
+    expect(successLogs.entries, hasLength(1));
+    final entry = successLogs.entries.single;
+    expect(entry.requestUrl,
+        'https://api.example.test/api/clinical/diagnosis');
+    expect(entry.requestBody, captured.body);
+    expect(entry.responseBody, jsonEncode(responseBody));
+    expect(entry.statusCode, '200');
+    expect(entry.label, 'clinical_diagnosis');
+    expect(entry.timestamp, DateTime.utc(2026, 10, 7, 9, 30));
+  });
+
+  test('does not record a success entry when the service fails', () async {
+    final successLogs = _MemorySuccessLogRepository();
+    final repository = AiDiagnosisRepository(
+      'https://api.example.test',
+      store: _MemoryStore(),
+      successLogRepository: successLogs,
+      client: MockClient((_) async => http.Response('boom', 500)),
+    );
+
+    await expectLater(
+      repository.generateDiagnosis(
+        profile: profile,
+        foodPreferences: '',
+        language: 'en',
+      ),
+      throwsA(isA<AiDiagnosisException>()),
+    );
+    expect(successLogs.entries, isEmpty);
   });
 
   test('does not issue a request when no active conditions are selected',
