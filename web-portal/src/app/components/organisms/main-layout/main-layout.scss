@@ -1,0 +1,11 @@
+.main-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text-high);
+}
+
+.main-layout__content {
+  flex: 1;
+  min-width: 0;
+}

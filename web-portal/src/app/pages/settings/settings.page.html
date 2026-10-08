@@ -1,0 +1,27 @@
+<main class="settings-page">
+  <header class="settings-page__header">
+    <p class="settings-page__overline">NutriExercise / Preferences</p>
+    <h1>{{ 'settings.title' | translate }}</h1>
+    <p>{{ 'settings.description' | translate }}</p>
+  </header>
+
+  <section class="settings-page__section">
+    <div class="settings-page__section-heading">
+      <div>
+        <h2>{{ 'settings.appearance' | translate }}</h2>
+        <p>{{ 'settings.theme' | translate }}</p>
+      </div>
+    </div>
+    <app-theme-switcher />
+  </section>
+
+  <section class="settings-page__section">
+    <div class="settings-page__section-heading">
+      <div>
+        <h2>{{ 'settings.language' | translate }}</h2>
+        <p>{{ 'settings.languageHint' | translate }}</p>
+      </div>
+    </div>
+    <app-language-switcher />
+  </section>
+</main>

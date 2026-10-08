@@ -3,11 +3,12 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MOCK_CONDITIONS } from '../../../core/mocks/medical-profile.data';
 import { ConditionId } from '../../../core/models/medical-profile.model';
 import { MedicalProfileStore } from '../../../core/stores/medical-profile.store';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-medical-dashboard',
   standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './medical-dashboard.html',
   styleUrl: './medical-dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -4,24 +4,22 @@
     <span class="admin-sidebar__title">NutriExercise</span>
   </a>
 
-  <nav class="admin-sidebar__nav" aria-label="Main navigation">
+  <nav class="admin-sidebar__nav" [attr.aria-label]="'nav.mainNavigation' | translate">
     @for (item of navItems; track item.label) {
       <a
         class="admin-sidebar__link"
         [routerLink]="item.link"
         routerLinkActive="admin-sidebar__link--active"
-        [attr.aria-current]="item.label === 'History' ? 'page' : null"
+        ariaCurrentWhenActive="page"
       >
         <app-icon [name]="item.icon" />
-        <span>{{ item.label }}</span>
+        <span>{{ item.label | translate }}</span>
       </a>
     }
   </nav>
 
-  <app-theme-switcher />
-
   <div class="admin-sidebar__footer">
     <app-icon name="logout" />
-    <span>Sign out</span>
+    <span>{{ 'nav.signOut' | translate }}</span>
   </div>
 </aside>

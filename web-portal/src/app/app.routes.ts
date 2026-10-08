@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { DashboardHome } from './pages/admin-dashboard/dashboard-home/dashboard-home';
+import { MainLayout } from './components/organisms/main-layout/main-layout';
 
 export const routes: Routes = [
   { path: 'history', component: DashboardHome },
@@ -33,8 +34,25 @@ export const routes: Routes = [
   },
   {
     path: 'health-ai',
-    loadComponent: () =>
-      import('./pages/health-ai/health-ai.page').then((m) => m.HealthAiPage),
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/health-ai/health-ai.page').then((m) => m.HealthAiPage),
+      },
+    ],
+  },
+  {
+    path: 'settings',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/settings/settings.page').then((m) => m.SettingsPage),
+      },
+    ],
   },
   { path: 'admin-dashboard', redirectTo: '/history', pathMatch: 'full' },
   { path: '', redirectTo: '/history', pathMatch: 'full' },

@@ -8,6 +8,7 @@ export type IconName =
   | 'nutrition'
   | 'schedule'
   | 'profile'
+  | 'settings'
   | 'search'
   | 'users'
   | 'trend-up'

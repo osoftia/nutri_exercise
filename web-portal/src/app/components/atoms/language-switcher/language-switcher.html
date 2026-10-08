@@ -1,0 +1,21 @@
+<div class="language-switcher">
+  <span class="language-switcher__label">{{ 'settings.language' | translate }}</span>
+  <div class="language-switcher__options" role="group" [attr.aria-label]="'settings.language' | translate">
+    <button
+      type="button"
+      [class.is-active]="store.locale() === 'en'"
+      [attr.aria-pressed]="store.locale() === 'en'"
+      (click)="setLocale('en')"
+    >
+      English
+    </button>
+    <button
+      type="button"
+      [class.is-active]="store.locale() === 'es'"
+      [attr.aria-pressed]="store.locale() === 'es'"
+      (click)="setLocale('es')"
+    >
+      Español
+    </button>
+  </div>
+</div>

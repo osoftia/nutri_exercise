@@ -1,6 +1,6 @@
-<section class="food-grid" aria-label="AI food scanner">
-  <p class="food-grid__overline">AI FOOD SCANNER — MOCK</p>
-  <h2 class="food-grid__title">Food Evaluator</h2>
+<section class="food-grid" [attr.aria-label]="'health.foodScanner' | translate">
+  <p class="food-grid__overline">{{ 'health.foodScanner' | translate }}</p>
+  <h2 class="food-grid__title">{{ 'health.foodEvaluator' | translate }}</h2>
   <p class="food-grid__summary">{{ store.warnings().length }} warnings • {{ store.recommended().length }} recommended</p>
   <div class="food-grid__grid">
     @for (item of store.evaluatedFoods(); track item.food.id) {
@@ -29,7 +29,7 @@
         <p class="food-grid__tags">{{ item.food.tags.join(', ') }}</p>
       </article>
     } @empty {
-      <p class="food-grid__empty">No foods evaluated.</p>
+      <p class="food-grid__empty">{{ 'health.noFoods' | translate }}</p>
     }
   </div>
 </section>

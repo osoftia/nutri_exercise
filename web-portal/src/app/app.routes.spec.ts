@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
+import { MainLayout } from './components/organisms/main-layout/main-layout';
 import { DashboardHome } from './pages/admin-dashboard/dashboard-home/dashboard-home';
 
 describe('app routes', () => {
@@ -41,5 +42,13 @@ describe('app routes', () => {
     const route = router.routerState.root.firstChild;
     expect(router.url).toBe('/analytics');
     expect(route?.routeConfig?.loadComponent).toBeDefined();
+  });
+
+  it('renders health AI and settings as children of the sidebar layout', () => {
+    for (const path of ['health-ai', 'settings']) {
+      const route = routes.find((candidate) => candidate.path === path);
+      expect(route?.component).toBe(MainLayout);
+      expect(route?.children?.[0].loadComponent).toBeDefined();
+    }
   });
 });

@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Icon, IconName } from '../../atoms/icon/icon';
-import { ThemeSwitcher } from '../../atoms/theme-switcher/theme-switcher';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
 interface NavItem {
   label: string;
@@ -11,18 +11,19 @@ interface NavItem {
 
 @Component({
   selector: 'app-admin-sidebar',
-  imports: [RouterLink, RouterLinkActive, Icon, ThemeSwitcher],
+  imports: [RouterLink, RouterLinkActive, Icon, TranslatePipe],
   templateUrl: './admin-sidebar.html',
   styleUrl: './admin-sidebar.scss',
 })
 export class AdminSidebar {
   readonly navItems: NavItem[] = [
-    { label: 'History', icon: 'history', link: '/history' },
-    { label: 'Analytics', icon: 'analytics', link: '/analytics' },
-    { label: 'Routines', icon: 'workout', link: '/routine-board' },
-    { label: 'Nutrition', icon: 'nutrition', link: '/history' },
-    { label: 'Schedule', icon: 'schedule', link: '/history' },
-    { label: 'Profile', icon: 'profile', link: '/history' },
-    { label: 'Health AI', icon: 'nutrition', link: '/health-ai' },
+    { label: 'nav.history', icon: 'history', link: '/history' },
+    { label: 'nav.analytics', icon: 'analytics', link: '/analytics' },
+    { label: 'nav.routines', icon: 'workout', link: '/routine-board' },
+    { label: 'nav.nutrition', icon: 'nutrition', link: '/history' },
+    { label: 'nav.schedule', icon: 'schedule', link: '/history' },
+    { label: 'nav.profile', icon: 'profile', link: '/history' },
+    { label: 'nav.healthAi', icon: 'nutrition', link: '/health-ai' },
+    { label: 'nav.settings', icon: 'settings', link: '/settings' },
   ];
 }

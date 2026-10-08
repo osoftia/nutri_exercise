@@ -1,7 +1,7 @@
-<section class="medical-dashboard" aria-label="Medical profiles dashboard">
+<section class="medical-dashboard" [attr.aria-label]="'health.profile' | translate">
   <div class="medical-dashboard__grid">
     <div class="medical-dashboard__profiles">
-      <p class="medical-dashboard__overline">MEDICAL PROFILE — MOCK</p>
+      <p class="medical-dashboard__overline">{{ 'health.profile' | translate }}</p>
       @if (store.selectedProfile(); as profile) {
         <h2 class="medical-dashboard__title">{{ profile.displayName }} — {{ profile.age }} y/o</h2>
         <p class="medical-dashboard__notes">{{ profile.notes }}</p>
@@ -33,21 +33,21 @@
         }
       </nav>
       <article class="medical-dashboard__condition">
-        <p class="medical-dashboard__overline">Active condition</p>
+        <p class="medical-dashboard__overline">{{ 'health.activeCondition' | translate }}</p>
         <h3 class="medical-dashboard__condition-name">{{ store.activeCondition().name }}</h3>
         <p class="medical-dashboard__condition-desc">{{ store.activeCondition().description }}</p>
       </article>
     </div>
-    <aside class="medical-dashboard__suggestions" aria-label="AI Daily Suggestions">
-      <p class="medical-dashboard__overline">AI Daily Suggestions</p>
-      <h3 class="medical-dashboard__suggestions-title">AI Daily Suggestions</h3>
+    <aside class="medical-dashboard__suggestions" [attr.aria-label]="'health.suggestions' | translate">
+      <p class="medical-dashboard__overline">{{ 'health.suggestions' | translate }}</p>
+      <h3 class="medical-dashboard__suggestions-title">{{ 'health.suggestions' | translate }}</h3>
       @for (s of store.suggestionsForActive(); track s.id) {
         <article class="medical-dashboard__suggestion">
           <p class="medical-dashboard__suggestion-text">{{ s.text }}</p>
           <span class="medical-dashboard__badge">{{ s.context }}</span>
         </article>
       } @empty {
-        <p class="medical-dashboard__empty">No suggestions for this condition.</p>
+        <p class="medical-dashboard__empty">{{ 'health.noSuggestions' | translate }}</p>
       }
     </aside>
   </div>

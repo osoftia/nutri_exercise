@@ -3,11 +3,11 @@
   type="button"
   role="switch"
   [attr.aria-checked]="store.isApple()"
-  [attr.aria-label]="store.isApple() ? 'Switch to editorial design' : 'Switch to Apple design'"
+  [attr.aria-label]="(store.isApple() ? 'settings.switchEditorial' : 'settings.switchApple') | translate"
   (click)="store.toggleTheme()"
 >
   <span class="theme-switcher__copy">
-    <span class="theme-switcher__eyebrow">Visual mode</span>
+    <span class="theme-switcher__eyebrow">{{ 'settings.visualMode' | translate }}</span>
     <span class="theme-switcher__name">{{ store.isApple() ? 'Apple' : 'Editorial' }}</span>
   </span>
   <span class="theme-switcher__track" aria-hidden="true">
