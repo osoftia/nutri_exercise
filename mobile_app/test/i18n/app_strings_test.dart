@@ -87,6 +87,10 @@ void main() {
           strings.requestTimeoutDescription,
           strings.recommendedClinicalNutritionTitle,
           strings.addSuggestedMeal,
+          strings.designStyleTitle,
+          strings.appleMinimalistThemeLabel,
+          strings.technicalBlueprintThemeLabel,
+          strings.appleMinimalistThemeDescription,
         ]) {
           expect(value.trim(), isNotEmpty);
         }

@@ -9,6 +9,7 @@ import 'core/data/body_detail_repository.dart';
 import 'core/data/error_log_repository.dart';
 import 'core/data/local_error_log_repository.dart';
 import 'core/data/local_http_timeout_settings_repository.dart';
+import 'core/data/local_app_theme_mode_repository.dart';
 import 'core/data/ai_diagnosis_repository.dart';
 import 'core/data/local_ai_diagnosis_repository.dart';
 import 'core/data/clinical_profile_repository.dart';
@@ -38,6 +39,7 @@ import 'core/mocks/mock_daily_log_repository.dart';
 import 'core/mocks/mock_body_detail_repository.dart';
 import 'core/mocks/mock_error_log_repository.dart';
 import 'core/mocks/mock_http_timeout_settings_repository.dart';
+import 'core/mocks/mock_app_theme_mode_repository.dart';
 import 'core/mocks/mock_ai_diagnosis_store.dart';
 import 'core/mocks/mock_clinical_profile_repository.dart';
 import 'core/mocks/mock_nutrition_repository.dart';
@@ -64,6 +66,7 @@ import 'core/state/symptom_controller.dart';
 import 'core/state/user_profile_controller.dart';
 import 'core/state/workout_completion_controller.dart';
 import 'core/state/http_timeout_settings_controller.dart';
+import 'core/state/app_theme_mode_controller.dart';
 import 'core/state/muscle_tamagotchi_state.dart';
 import 'core/theme/app_theme.dart';
 import 'ui/pages/main_shell_page.dart';
@@ -100,6 +103,7 @@ class _NutriAppState extends State<NutriApp> {
   late final ErrorLogRepository _errorLogRepository;
   late final GlobalErrorHandler _globalErrorHandler;
   late final HttpTimeoutSettingsController _httpTimeoutSettingsController;
+  late final AppThemeModeController _appThemeModeController;
 
   @override
   void initState() {
@@ -147,6 +151,12 @@ class _NutriAppState extends State<NutriApp> {
           : LocalHttpTimeoutSettingsRepository(),
     );
     unawaited(_httpTimeoutSettingsController.load());
+    _appThemeModeController = AppThemeModeController(
+      repository: widget.config.useMockApi
+          ? MockAppThemeModeRepository()
+          : LocalAppThemeModeRepository(),
+    );
+    unawaited(_appThemeModeController.load());
     final dailyLogRepository = _dailyLogRepository();
     _dailyLogController = DailyLogController(
       repository: dailyLogRepository,
@@ -184,6 +194,7 @@ class _NutriAppState extends State<NutriApp> {
     if (identical(ErrorHandlerRegistry.current, _globalErrorHandler)) {
       ErrorHandlerRegistry.current = null;
     }
+    _appThemeModeController.dispose();
     super.dispose();
   }
 
@@ -310,36 +321,40 @@ class _NutriAppState extends State<NutriApp> {
     // return null so no chat entry point is built.
     final aiChatController = buildAiChatController(widget.config);
 
-    return MaterialApp(
-      navigatorKey: _navigatorKey,
-      scaffoldMessengerKey: _scaffoldMessengerKey,
-      title: 'NutriExercise',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
-      home: ListenableBuilder(
-        listenable: _languageController,
-        builder: (context, _) => LocalizationScope(
-          language: _languageController.language,
-          child: MainShellPage(
-            profileController: profileController,
-            clinicalProfileController: clinicalProfileController,
-            aiDiagnosisRepository: _aiDiagnosisRepository,
-            errorLogRepository: _errorLogRepository,
-            httpTimeoutSettingsController: _httpTimeoutSettingsController,
-            scheduleController: scheduleController,
-            symptomController: symptomController,
-            nutritionController: nutritionController,
-            projectionController: projectionController,
-            bodyDetailController: bodyDetailController,
-            workoutCompletionController: workoutCompletionController,
-            aiChatController: aiChatController,
-            notificationNav: _notificationNav,
-            dailyLogController: _dailyLogController,
-            dailyEntryRepository: dailyEntryRepository,
-            notificationService: _notificationService,
-            languageController: _languageController,
-            notificationPrefsRepository: _notificationPrefsRepository(),
-            syncExerciseReminderPayload: widget.config.enableNotifications,
+    return ListenableBuilder(
+      listenable: _appThemeModeController,
+      builder: (context, _) => MaterialApp(
+        navigatorKey: _navigatorKey,
+        scaffoldMessengerKey: _scaffoldMessengerKey,
+        title: 'NutriExercise',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.forMode(_appThemeModeController.mode),
+        home: ListenableBuilder(
+          listenable: _languageController,
+          builder: (context, _) => LocalizationScope(
+            language: _languageController.language,
+            child: MainShellPage(
+              profileController: profileController,
+              clinicalProfileController: clinicalProfileController,
+              aiDiagnosisRepository: _aiDiagnosisRepository,
+              errorLogRepository: _errorLogRepository,
+              httpTimeoutSettingsController: _httpTimeoutSettingsController,
+              appThemeModeController: _appThemeModeController,
+              scheduleController: scheduleController,
+              symptomController: symptomController,
+              nutritionController: nutritionController,
+              projectionController: projectionController,
+              bodyDetailController: bodyDetailController,
+              workoutCompletionController: workoutCompletionController,
+              aiChatController: aiChatController,
+              notificationNav: _notificationNav,
+              dailyLogController: _dailyLogController,
+              dailyEntryRepository: dailyEntryRepository,
+              notificationService: _notificationService,
+              languageController: _languageController,
+              notificationPrefsRepository: _notificationPrefsRepository(),
+              syncExerciseReminderPayload: widget.config.enableNotifications,
+            ),
           ),
         ),
       ),

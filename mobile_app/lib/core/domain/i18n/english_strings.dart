@@ -368,6 +368,15 @@ class EnglishStrings extends AppStrings {
   @override
   String get addSuggestedMeal => 'Add to daily log';
   @override
+  String get designStyleTitle => 'Design style';
+  @override
+  String get appleMinimalistThemeLabel => 'Apple Minimalist';
+  @override
+  String get technicalBlueprintThemeLabel => 'Technical Blueprint';
+  @override
+  String get appleMinimalistThemeDescription =>
+      'Clean surfaces, refined typography and soft glass effects';
+  @override
   String get deleteRecordTitle => 'Delete record';
   @override
   String get editFocusTitle => 'Edit focus';

@@ -6,6 +6,8 @@ import '../../core/data/notification_prefs_repository.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/models/notification_pref.dart';
 import '../../core/state/http_timeout_settings_controller.dart';
+import '../../core/state/app_theme_mode_controller.dart';
+import '../../core/theme/app_theme_mode.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/typography.dart';
 
@@ -19,6 +21,7 @@ class SettingsPanel extends StatefulWidget {
     super.key,
     this.prefsRepository,
     this.timeoutSettingsController,
+    this.themeModeController,
   });
 
   /// Optional preference store; when absent the toggles are hidden.
@@ -26,6 +29,9 @@ class SettingsPanel extends StatefulWidget {
 
   /// Optional global request-timeout preference.
   final HttpTimeoutSettingsController? timeoutSettingsController;
+
+  /// Optional persisted global design-language setting.
+  final AppThemeModeController? themeModeController;
 
   @override
   State<SettingsPanel> createState() => _SettingsPanelState();
@@ -67,7 +73,10 @@ class _SettingsPanelState extends State<SettingsPanel> {
 
     final repository = widget.prefsRepository;
     final timeoutController = widget.timeoutSettingsController;
-    if (repository == null && timeoutController == null) {
+    final themeController = widget.themeModeController;
+    if (repository == null &&
+        timeoutController == null &&
+        themeController == null) {
       return AppCaption(strings.notificationPreferencesTitle);
     }
 
@@ -135,6 +144,38 @@ class _SettingsPanelState extends State<SettingsPanel> {
               ],
             ),
           ),
+        ],
+        if (themeController != null) ...[
+          if (repository != null || timeoutController != null)
+            const SizedBox(height: AppSpacing.md),
+          ListenableBuilder(
+            listenable: themeController,
+            builder: (context, _) {
+              final appleMode =
+                  themeController.mode == AppThemeMode.appleMinimalist;
+              return SwitchListTile(
+                key: const Key('settings_theme_apple_toggle'),
+                contentPadding: EdgeInsets.zero,
+                title: AppText(strings.designStyleTitle),
+                subtitle: Text(
+                  appleMode
+                      ? strings.appleMinimalistThemeLabel
+                      : strings.technicalBlueprintThemeLabel,
+                ),
+                value: appleMode,
+                onChanged: themeController.isLoaded
+                    ? (enabled) => unawaited(
+                          themeController.setMode(
+                            enabled
+                                ? AppThemeMode.appleMinimalist
+                                : AppThemeMode.technicalBlueprint,
+                          ),
+                        )
+                    : null,
+              );
+            },
+          ),
+          AppCaption(strings.appleMinimalistThemeDescription),
         ],
       ],
     );

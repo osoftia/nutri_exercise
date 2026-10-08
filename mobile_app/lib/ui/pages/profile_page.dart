@@ -13,6 +13,7 @@ import '../../core/state/clinical_profile_controller.dart';
 import '../../core/state/symptom_controller.dart';
 import '../../core/state/user_profile_controller.dart';
 import '../../core/state/http_timeout_settings_controller.dart';
+import '../../core/state/app_theme_mode_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../atoms/neumorphic_container.dart';
 import '../atoms/typography.dart';
@@ -40,6 +41,7 @@ class ProfilePage extends StatefulWidget {
     this.dailyEntryRepository,
     this.errorLogRepository,
     this.httpTimeoutSettingsController,
+    this.appThemeModeController,
   });
 
   final UserProfileController controller;
@@ -70,6 +72,9 @@ class ProfilePage extends StatefulWidget {
 
   /// Optional persisted global HTTP timeout settings.
   final HttpTimeoutSettingsController? httpTimeoutSettingsController;
+
+  /// Optional persisted design-language choice.
+  final AppThemeModeController? appThemeModeController;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -193,6 +198,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ],
         if (widget.notificationPrefsRepository != null ||
             widget.httpTimeoutSettingsController != null ||
+            widget.appThemeModeController != null ||
             widget.languageController != null) ...[
           const SizedBox(height: AppSpacing.xl),
           AccordionSection(
@@ -203,15 +209,18 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (widget.notificationPrefsRepository != null ||
-                    widget.httpTimeoutSettingsController != null)
+                    widget.httpTimeoutSettingsController != null ||
+                    widget.appThemeModeController != null)
                   SettingsPanel(
                     prefsRepository: widget.notificationPrefsRepository,
                     timeoutSettingsController:
                         widget.httpTimeoutSettingsController,
+                    themeModeController: widget.appThemeModeController,
                   ),
                 if (widget.languageController != null) ...[
                   if (widget.notificationPrefsRepository != null ||
-                      widget.httpTimeoutSettingsController != null)
+                      widget.httpTimeoutSettingsController != null ||
+                      widget.appThemeModeController != null)
                     const SizedBox(height: AppSpacing.xl),
                   LanguageSwitcher(controller: widget.languageController!),
                 ],

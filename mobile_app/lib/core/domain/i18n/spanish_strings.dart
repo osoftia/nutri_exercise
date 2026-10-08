@@ -371,6 +371,15 @@ class SpanishStrings extends AppStrings {
   @override
   String get addSuggestedMeal => 'Añadir al registro diario';
   @override
+  String get designStyleTitle => 'Estilo visual';
+  @override
+  String get appleMinimalistThemeLabel => 'Minimalista Apple';
+  @override
+  String get technicalBlueprintThemeLabel => 'Plano técnico';
+  @override
+  String get appleMinimalistThemeDescription =>
+      'Superficies limpias, tipografía refinada y efecto de vidrio suave';
+  @override
   String get deleteRecordTitle => 'Eliminar registro';
   @override
   String get editFocusTitle => 'Editar enfoque';

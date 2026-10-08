@@ -21,6 +21,7 @@ import '../../core/state/symptom_controller.dart';
 import '../../core/state/user_profile_controller.dart';
 import '../../core/state/workout_completion_controller.dart';
 import '../../core/state/http_timeout_settings_controller.dart';
+import '../../core/state/app_theme_mode_controller.dart';
 import '../atoms/neumorphic_fab.dart';
 import '../atoms/typography.dart';
 import '../molecules/ai_chat_sheet.dart';
@@ -42,6 +43,7 @@ class MainShellPage extends StatefulWidget {
     this.aiDiagnosisRepository,
     this.errorLogRepository,
     this.httpTimeoutSettingsController,
+    this.appThemeModeController,
     required this.scheduleController,
     required this.nutritionController,
     required this.projectionController,
@@ -63,6 +65,7 @@ class MainShellPage extends StatefulWidget {
   final AiDiagnosisRepository? aiDiagnosisRepository;
   final ErrorLogRepository? errorLogRepository;
   final HttpTimeoutSettingsController? httpTimeoutSettingsController;
+  final AppThemeModeController? appThemeModeController;
   final ScheduleController scheduleController;
   final NutritionController nutritionController;
   final ProjectionController projectionController;
@@ -123,6 +126,7 @@ class _MainShellPageState extends State<MainShellPage> {
       notificationService: widget.notificationService,
       errorLogRepository: widget.errorLogRepository,
       httpTimeoutSettingsController: widget.httpTimeoutSettingsController,
+      appThemeModeController: widget.appThemeModeController,
       dailyEntryRepository: widget.dailyEntryRepository,
     ),
   ];

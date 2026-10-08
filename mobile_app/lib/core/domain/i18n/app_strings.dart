@@ -217,6 +217,10 @@ abstract class AppStrings {
   String get requestTimeoutDescription;
   String get recommendedClinicalNutritionTitle;
   String get addSuggestedMeal;
+  String get designStyleTitle;
+  String get appleMinimalistThemeLabel;
+  String get technicalBlueprintThemeLabel;
+  String get appleMinimalistThemeDescription;
   String get deleteRecordTitle;
   String get editFocusTitle;
   String get focusAreaLabel;
