@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'app_design_tokens.dart';
+import 'app_theme_mode.dart';
+import 'apple_theme.dart';
+
 class AppColors {
   static const Color primary300 = Color(0xFF93C5FD);
   static const Color primary400 = Color(0xFF60A5FA);
@@ -60,9 +64,9 @@ class AppInputDecoration {
     Widget? suffixIcon,
   }) {
     OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(AppRadius.pill),
-      borderSide: BorderSide(color: color, width: width),
-    );
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          borderSide: BorderSide(color: color, width: width),
+        );
 
     return InputDecoration(
       labelText: label,
@@ -115,6 +119,12 @@ class AppTheme {
   static const String fontFamily = 'Montserrat';
 
   static ThemeData get light => dark;
+
+  /// Resolves the Material theme for the selected design language.
+  static ThemeData forMode(AppThemeMode mode) => switch (mode) {
+        AppThemeMode.technicalBlueprint => dark,
+        AppThemeMode.appleMinimalist => AppleTheme.theme,
+      };
 
   static ThemeData get dark {
     final baseTextTheme = const TextTheme(
@@ -198,6 +208,18 @@ class AppTheme {
           );
         }),
       ),
+      extensions: const [
+        AppDesignTokens(
+          cardColor: AppColors.surface800,
+          cardRadius: AppRadius.lg,
+          cardBorderColor: Colors.transparent,
+          cardShadows: [
+            NeumorphicStyles.lightShadow,
+            NeumorphicStyles.darkShadow,
+          ],
+          insetShadows: [NeumorphicStyles.innerShadow],
+        ),
+      ],
     );
   }
 }
