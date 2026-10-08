@@ -282,7 +282,7 @@ void main() {
       language: 'en',
     );
 
-    expect(report.title, isNotEmpty);
+    expect(report.title, isEmpty);
     expect(report.summary, isA<String>());
     expect(report.considerations, isEmpty);
     expect(report.menus, hasLength(2));

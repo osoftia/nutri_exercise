@@ -65,21 +65,19 @@ class MealSuggestion {
   final int fatG;
 
   factory MealSuggestion.fromJson(Object? value, {String language = 'en'}) {
-    final fallbackName = language.toLowerCase().startsWith('es')
-        ? 'Comida sugerida'
-        : 'Suggested meal';
     if (value is String && value.trim().isNotEmpty) {
       return MealSuggestion(name: value.trim());
     }
     final map = _stringKeyedMap(value);
     return MealSuggestion(
+      // Bind to the backend value exactly: when it omits a name, keep it empty
+      // instead of injecting generic educational placeholder copy.
       name: _text(
         map['name'] ??
             map['meal'] ??
             map['title'] ??
             map['mealName'] ??
             map['foodName'],
-        fallback: fallbackName,
       ),
       description: _text(map['description'] ?? map['details'] ?? map['notes']),
       calories: _integerValue(map['calories'] ?? map['caloriesKcal']),
@@ -142,12 +140,7 @@ class AiSuggestedMenu {
   factory AiSuggestedMenu.fromJson(Object? value, {String language = 'en'}) {
     final json = _stringKeyedMap(value);
     final day = _text(json['day']);
-    final menuName = _text(
-      json['name'] ?? json['title'] ?? day,
-      fallback: language.toLowerCase().startsWith('es')
-          ? 'Menú sugerido'
-          : 'Suggested menu',
-    );
+    final menuName = _text(json['name'] ?? json['title'] ?? day);
     final rawMeals =
         _jsonList(json['meals'] ?? json['suggestions'] ?? json['items']);
     return AiSuggestedMenu(
@@ -203,20 +196,36 @@ class AiDiagnosisReport {
     String responseJson = '',
     DateTime? createdAt,
   }) {
+    // Exact backend binding: prefer the documented `diagnosticReport` and
+    // `mealSuggestions` payload keys, and never substitute generic educational
+    // placeholder copy when a field is absent.
+    final rawDiagnostic = json['diagnosticReport'];
+    final diagnosticMap = rawDiagnostic is Map
+        ? _stringKeyedMap(rawDiagnostic)
+        : const <String, dynamic>{};
     final title = _text(
-      json['title'] ?? json['diagnosisTitle'] ?? json['name'],
-      fallback: language.toLowerCase().startsWith('es')
-          ? 'Informe de nutrición clínica'
-          : 'Clinical nutrition report',
+      json['title'] ??
+          json['diagnosisTitle'] ??
+          json['name'] ??
+          diagnosticMap['title'],
     );
     final summary = _text(
-      json['summary'] ??
-          json['diagnosis'] ??
-          json['description'] ??
-          json['message'],
+      rawDiagnostic is String && rawDiagnostic.trim().isNotEmpty
+          ? rawDiagnostic
+          : (diagnosticMap['summary'] ??
+              diagnosticMap['report'] ??
+              diagnosticMap['diagnosis']),
+      fallback: _text(
+        json['summary'] ??
+            json['diagnosis'] ??
+            json['description'] ??
+            json['message'],
+      ),
     );
-    final rawConsiderations =
-        json['considerations'] ?? json['recommendations'] ?? json['notes'];
+    final rawConsiderations = json['considerations'] ??
+        json['recommendations'] ??
+        json['notes'] ??
+        diagnosticMap['considerations'];
     final considerations =
         rawConsiderations is String && _jsonList(rawConsiderations).isEmpty
             ? [rawConsiderations]
@@ -225,9 +234,18 @@ class AiDiagnosisReport {
       for (final item in considerations)
         if (_text(item).isNotEmpty) _text(item),
     ];
-    final rawMenus = _jsonList(
-      json['menus'] ?? json['suggestedMenus'] ?? json['weeklyMenus'],
-    );
+    final mealSuggestions = _jsonList(json['mealSuggestions']);
+    final rawMenus = mealSuggestions.isNotEmpty
+        ? <Object?>[
+            {
+              'name': _text(json['mealSuggestionsTitle']),
+              'day': '',
+              'meals': mealSuggestions,
+            },
+          ]
+        : _jsonList(
+            json['menus'] ?? json['suggestedMenus'] ?? json['weeklyMenus'],
+          );
     return AiDiagnosisReport(
       title: title.trim(),
       summary: summary.trim(),
