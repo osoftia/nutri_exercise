@@ -11,20 +11,29 @@ class AppThemeModeController extends ChangeNotifier {
   final AppThemeModeRepository _repository;
   AppThemeMode _mode = AppThemeMode.technicalBlueprint;
   bool _isLoaded = false;
+  bool _isDisposed = false;
 
   AppThemeMode get mode => _mode;
   bool get isLoaded => _isLoaded;
 
   Future<void> load() async {
-    _mode = await _repository.loadMode();
+    final savedMode = await _repository.loadMode();
+    if (_isDisposed) return;
+    _mode = savedMode;
     _isLoaded = true;
     notifyListeners();
   }
 
   Future<void> setMode(AppThemeMode mode) async {
-    if (_mode == mode) return;
+    if (_isDisposed || _mode == mode) return;
     _mode = mode;
     notifyListeners();
     await _repository.saveMode(mode);
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
   }
 }
