@@ -8,6 +8,8 @@ import 'core/constants/api_constants.dart';
 import 'core/data/body_detail_repository.dart';
 import 'core/data/error_log_repository.dart';
 import 'core/data/local_error_log_repository.dart';
+import 'core/data/success_log_repository.dart';
+import 'core/data/local_success_log_repository.dart';
 import 'core/data/local_http_timeout_settings_repository.dart';
 import 'core/data/local_app_theme_mode_repository.dart';
 import 'core/data/ai_diagnosis_repository.dart';
@@ -38,6 +40,7 @@ import 'core/mocks/mock_language_repository.dart';
 import 'core/mocks/mock_daily_log_repository.dart';
 import 'core/mocks/mock_body_detail_repository.dart';
 import 'core/mocks/mock_error_log_repository.dart';
+import 'core/mocks/mock_success_log_repository.dart';
 import 'core/mocks/mock_http_timeout_settings_repository.dart';
 import 'core/mocks/mock_app_theme_mode_repository.dart';
 import 'core/mocks/mock_ai_diagnosis_store.dart';
@@ -101,6 +104,7 @@ class _NutriAppState extends State<NutriApp> {
   late final LanguageController _languageController;
   late final AiDiagnosisRepository _aiDiagnosisRepository;
   late final ErrorLogRepository _errorLogRepository;
+  late final SuccessLogRepository _successLogRepository;
   late final GlobalErrorHandler _globalErrorHandler;
   late final HttpTimeoutSettingsController _httpTimeoutSettingsController;
   late final AppThemeModeController _appThemeModeController;
@@ -120,6 +124,9 @@ class _NutriAppState extends State<NutriApp> {
     _errorLogRepository = widget.config.useMockApi
         ? MockErrorLogRepository()
         : LocalErrorLogRepository();
+    _successLogRepository = widget.config.useMockApi
+        ? MockSuccessLogRepository()
+        : LocalSuccessLogRepository();
     _globalErrorHandler = GlobalErrorHandler(
       repository: _errorLogRepository,
       showAlert: (message) {
@@ -144,6 +151,7 @@ class _NutriAppState extends State<NutriApp> {
       store: widget.config.useMockApi
           ? MockAiDiagnosisStore()
           : LocalAiDiagnosisRepository(),
+      successLogRepository: _successLogRepository,
     );
     _httpTimeoutSettingsController = HttpTimeoutSettingsController(
       repository: widget.config.useMockApi
@@ -338,6 +346,7 @@ class _NutriAppState extends State<NutriApp> {
               clinicalProfileController: clinicalProfileController,
               aiDiagnosisRepository: _aiDiagnosisRepository,
               errorLogRepository: _errorLogRepository,
+              successLogRepository: _successLogRepository,
               httpTimeoutSettingsController: _httpTimeoutSettingsController,
               appThemeModeController: _appThemeModeController,
               scheduleController: scheduleController,

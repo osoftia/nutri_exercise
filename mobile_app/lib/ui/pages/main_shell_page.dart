@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/data/daily_entry_repository.dart';
 import '../../core/data/ai_diagnosis_repository.dart';
 import '../../core/data/error_log_repository.dart';
+import '../../core/data/success_log_repository.dart';
 import '../../core/data/notification_prefs_repository.dart';
 import '../../core/domain/i18n/localization_scope.dart';
 import '../../core/domain/notifications/exercise_check_in.dart';
@@ -42,6 +43,7 @@ class MainShellPage extends StatefulWidget {
     this.clinicalProfileController,
     this.aiDiagnosisRepository,
     this.errorLogRepository,
+    this.successLogRepository,
     this.httpTimeoutSettingsController,
     this.appThemeModeController,
     required this.scheduleController,
@@ -64,6 +66,7 @@ class MainShellPage extends StatefulWidget {
   final ClinicalProfileController? clinicalProfileController;
   final AiDiagnosisRepository? aiDiagnosisRepository;
   final ErrorLogRepository? errorLogRepository;
+  final SuccessLogRepository? successLogRepository;
   final HttpTimeoutSettingsController? httpTimeoutSettingsController;
   final AppThemeModeController? appThemeModeController;
   final ScheduleController scheduleController;
@@ -125,6 +128,7 @@ class _MainShellPageState extends State<MainShellPage> {
       notificationPrefsRepository: widget.notificationPrefsRepository,
       notificationService: widget.notificationService,
       errorLogRepository: widget.errorLogRepository,
+      successLogRepository: widget.successLogRepository,
       httpTimeoutSettingsController: widget.httpTimeoutSettingsController,
       appThemeModeController: widget.appThemeModeController,
       dailyEntryRepository: widget.dailyEntryRepository,

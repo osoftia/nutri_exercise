@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/data/daily_entry_repository.dart';
 import '../../core/data/ai_diagnosis_repository.dart';
 import '../../core/data/error_log_repository.dart';
+import '../../core/data/success_log_repository.dart';
 import '../../core/data/notification_prefs_repository.dart';
 import '../../core/domain/i18n/app_strings.dart';
 import '../../core/domain/i18n/localization_scope.dart';
@@ -40,6 +41,7 @@ class ProfilePage extends StatefulWidget {
     this.notificationService,
     this.dailyEntryRepository,
     this.errorLogRepository,
+    this.successLogRepository,
     this.httpTimeoutSettingsController,
     this.appThemeModeController,
   });
@@ -69,6 +71,9 @@ class ProfilePage extends StatefulWidget {
 
   /// Optional local forensic history store for the Profile Testing panel.
   final ErrorLogRepository? errorLogRepository;
+
+  /// Optional local successful-response store for the Profile Testing panel.
+  final SuccessLogRepository? successLogRepository;
 
   /// Optional persisted global HTTP timeout settings.
   final HttpTimeoutSettingsController? httpTimeoutSettingsController;
@@ -238,6 +243,7 @@ class _ProfilePageState extends State<ProfilePage> {
               notificationService: widget.notificationService!,
               dailyEntryRepository: widget.dailyEntryRepository,
               errorLogRepository: widget.errorLogRepository,
+              successLogRepository: widget.successLogRepository,
             ),
           ),
         ],
