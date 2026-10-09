@@ -1,0 +1,117 @@
+<section class="prompt-lab" aria-label="RAG Prompt Laboratory">
+
+  <div class="prompt-lab__controls">
+    <h2 class="prompt-lab__heading">Prompt Lab</h2>
+
+    <label class="prompt-lab__field">
+      <span class="prompt-lab__overline">System Prompt</span>
+      <textarea
+        class="prompt-lab__textarea"
+        rows="6"
+        placeholder="You are a sports nutrition expert…"
+        [value]="store.systemPrompt()"
+        (input)="onSystemPromptInput($event)"
+      ></textarea>
+    </label>
+
+    <label class="prompt-lab__field">
+      <span class="prompt-lab__overline">Temperature</span>
+      <input
+        class="prompt-lab__range"
+        type="range"
+        min="0"
+        max="2"
+        step="0.1"
+        [value]="store.temperature()"
+        (input)="onTemperatureInput($event)"
+      />
+      <span class="prompt-lab__value">{{ store.temperature() }}</span>
+    </label>
+
+    <label class="prompt-lab__field">
+      <span class="prompt-lab__overline">Similarity Threshold</span>
+      <input
+        class="prompt-lab__range"
+        type="range"
+        min="0"
+        max="1"
+        step="0.05"
+        [value]="store.similarityThreshold()"
+        (input)="onThresholdInput($event)"
+      />
+      <span class="prompt-lab__value">{{ store.similarityThreshold() }}</span>
+    </label>
+
+    <label class="prompt-lab__field">
+      <span class="prompt-lab__overline">Test Query</span>
+      <input
+        class="prompt-lab__input"
+        type="text"
+        placeholder="Recovery routine after intense dance rehearsal"
+        [value]="store.query()"
+        (input)="onQueryInput($event)"
+      />
+    </label>
+
+    <div class="prompt-lab__actions">
+      <button
+        class="prompt-lab__button prompt-lab__button--run"
+        [disabled]="store.loading()"
+        (click)="onRunQuery()"
+      >
+        Run Query
+      </button>
+      <button class="prompt-lab__button prompt-lab__button--reset" (click)="onReset()">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="prompt-lab__results">
+    @if (store.loading()) {
+      <div class="prompt-lab__loading">
+        <span class="prompt-lab__overline">Processing…</span>
+      </div>
+    }
+
+    @if (store.error(); as message) {
+      <div class="prompt-lab__error">
+        <p>{{ message }}</p>
+      </div>
+    }
+
+    @if (store.hasResult() && !store.loading()) {
+      <div class="prompt-lab__latency-hero">
+        <span class="prompt-lab__overline">Latency</span>
+        <span class="prompt-lab__latency-number">{{ store.latencyMs() }}<small>ms</small></span>
+        <span class="prompt-lab__tps">{{ store.tokensPerSecond() }} tok/s</span>
+      </div>
+
+      <div class="prompt-lab__answer">
+        <h3 class="prompt-lab__subheading">Generated Answer</h3>
+        <div class="prompt-lab__answer-text">{{ store.result()?.answer }}</div>
+      </div>
+
+      <div class="prompt-lab__sources">
+        <h3 class="prompt-lab__subheading">Matched Sources</h3>
+        <table class="prompt-lab__table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (source of store.result()?.matchedSources ?? []; track source.id) {
+              <tr>
+                <td>{{ source.title }}</td>
+                <td>{{ (source.score * 100).toFixed(1) }}%</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+</section>
