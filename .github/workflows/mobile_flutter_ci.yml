@@ -1,0 +1,97 @@
+name: Mobile Flutter CI
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'mobile_app/**'
+      - '.github/workflows/mobile_flutter_ci.yml'
+  pull_request:
+    paths:
+      - 'mobile_app/**'
+      - '.github/workflows/mobile_flutter_ci.yml'
+  workflow_dispatch:
+
+jobs:
+  flutter-quality:
+    name: Analyze, test, coverage and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile_app
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java for Android build
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up pinned Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.0'
+          channel: stable
+          cache: true
+          cache-key: flutter-3.29.0-${{ runner.os }}-${{ hashFiles('mobile_app/pubspec.lock') }}
+
+      - name: Verify FVM pin
+        run: python3 -c "import json; assert json.load(open('.fvmrc'))['flutter'] == '3.29.0'"
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test with coverage
+        run: flutter test --coverage
+
+      - name: Enforce core domain and state coverage above 80 percent
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          coverage = Path('coverage/lcov.info')
+          if not coverage.exists():
+              raise SystemExit('coverage/lcov.info was not generated')
+
+          totals = {
+              'lib/core/domain/': [0, 0],
+              'lib/core/state/': [0, 0],
+          }
+          current_group = None
+          for line in coverage.read_text().splitlines():
+              if line.startswith('SF:'):
+                  source = line[3:].replace('\\', '/')
+                  current_group = next(
+                      (group for group in totals if source.startswith(group)),
+                      None,
+                  )
+              elif line.startswith('DA:') and current_group is not None:
+                  _, count = line[3:].split(',', 1)
+                  totals[current_group][1] += 1
+                  totals[current_group][0] += int(count) > 0
+
+          failed = False
+          for group, (covered, total) in totals.items():
+              percentage = 100 * covered / total if total else 0
+              print(f'{group}: {covered}/{total} lines ({percentage:.2f}%)')
+              if total == 0 or percentage <= 80:
+                  failed = True
+          if failed:
+              raise SystemExit('Core domain/state coverage must exceed 80%')
+          PY
+
+      - name: Build Android debug APK
+        run: flutter build apk --debug
+
+      - name: Upload LCOV coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-lcov-coverage
+          path: mobile_app/coverage/lcov.info
+          if-no-files-found: warn
