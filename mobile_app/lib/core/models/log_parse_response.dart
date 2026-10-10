@@ -34,30 +34,28 @@ class LogParseResponse {
 
   factory LogParseResponse.fromJson(Map<String, dynamic> json) {
     final macros = json['macros'];
-    final macrosMap = macros is Map<String, dynamic>
-        ? macros
-        : const <String, dynamic>{};
+    final macrosMap =
+        macros is Map<String, dynamic> ? macros : const <String, dynamic>{};
+    final groups = json['muscleGroups'] ?? json['muscles'] ?? const <dynamic>[];
 
     return LogParseResponse(
       calories: (json['calories'] as num?)?.toInt() ?? 0,
-      protein: _readInt(macrosMap['protein']),
-      carbs: _readInt(macrosMap['carbs']),
-      fat: _readInt(macrosMap['fat']),
-      muscleGroups: (json['muscleGroups'] as List<dynamic>? ?? const [])
-          .whereType<String>()
-          .toList(),
+      protein: _readInt(macrosMap['protein'] ?? json['protein']),
+      carbs: _readInt(macrosMap['carbs'] ?? json['carbs']),
+      fat: _readInt(macrosMap['fat'] ?? json['fat']),
+      muscleGroups: (groups as List<dynamic>).whereType<String>().toList(),
     );
   }
 
   /// Serializes back to the JSON shape produced by [fromJson] so parsed results
   /// can be cached in SQLite.
   Map<String, dynamic> toJson() => {
-    'calories': calories,
-    'protein': protein,
-    'carbs': carbs,
-    'fat': fat,
-    'muscleGroups': muscleGroups,
-  };
+        'calories': calories,
+        'protein': protein,
+        'carbs': carbs,
+        'fat': fat,
+        'muscleGroups': muscleGroups,
+      };
 
   static int? _readInt(dynamic value) {
     if (value is int) return value;

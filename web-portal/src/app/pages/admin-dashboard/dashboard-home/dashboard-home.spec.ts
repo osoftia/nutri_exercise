@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { DebugElement } from '@angular/core';
+import { By } from '@angular/platform-browser';
+import { RouterLink, provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -204,5 +206,33 @@ describe('DashboardHome', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('app-analytics-summary')).toBeNull();
+  });
+
+  it('renders the brutalist RAG Lab launch action in the toolbar', () => {
+    const launch = fixture.nativeElement.querySelector(
+      '.dashboard-home__rag-launch',
+    ) as HTMLAnchorElement;
+
+    expect(launch).not.toBeNull();
+    expect(launch.textContent).toContain('// LAUNCH RAG LAB');
+    expect(
+      fixture.nativeElement.querySelector('.dashboard-home__toolbar'),
+    ).not.toBeNull();
+  });
+
+  it('routes the launch action directly to the RAG lab', () => {
+    const launchLink = fixture.debugElement
+      .queryAll(By.directive(RouterLink))
+      .find((candidate) =>
+        (candidate.nativeElement as HTMLElement).classList.contains(
+          'dashboard-home__rag-launch',
+        ),
+      ) as DebugElement;
+
+    expect(launchLink).toBeDefined();
+    expect(launchLink.nativeElement.textContent).toContain('// LAUNCH RAG LAB');
+    expect(
+      (launchLink.nativeElement as HTMLAnchorElement).getAttribute('href'),
+    ).toBe('/rag-lab');
   });
 });

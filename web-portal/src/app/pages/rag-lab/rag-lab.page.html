@@ -1,0 +1,17 @@
+<div class="rag-lab-page">
+  <header class="rag-lab-page__header">
+    <span class="rag-lab-page__overline">Retrieval-Augmented Generation</span>
+    <h1 class="rag-lab-page__title">RAG Lab</h1>
+    <p class="rag-lab-page__subtitle">
+      Experiment with system prompts, sampling temperature, and pgvector similarity
+      thresholds — then inspect the ranked semantic matches with full traceability.
+    </p>
+    <p class="rag-lab-page__status" role="status">{{ status() }}</p>
+  </header>
+
+  <div class="rag-lab-page__grid">
+    <app-rag-lab-controls class="rag-lab-page__controls" />
+    <app-rag-lab-results class="rag-lab-page__results" />
+    <app-audit-log class="rag-lab-page__audit" />
+  </div>
+</div>

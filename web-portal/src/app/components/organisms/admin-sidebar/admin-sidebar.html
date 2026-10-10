@@ -1,4 +1,14 @@
-<aside class="admin-sidebar">
+<aside class="admin-sidebar" [class.admin-sidebar--collapsed]="isCollapsed()">
+  <button
+    class="admin-sidebar__toggle"
+    type="button"
+    [attr.aria-expanded]="!isCollapsed()"
+    [attr.aria-label]="(isCollapsed() ? 'nav.expandSidebar' : 'nav.collapseSidebar') | translate"
+    (click)="toggleCollapsed()"
+  >
+    <span aria-hidden="true">{{ isCollapsed() ? '›' : '‹' }}</span>
+  </button>
+
   <a class="admin-sidebar__brand" routerLink="/history">
     <span class="admin-sidebar__logo">N</span>
     <span class="admin-sidebar__title">NutriExercise</span>

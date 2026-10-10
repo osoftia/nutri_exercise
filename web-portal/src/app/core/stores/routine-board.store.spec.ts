@@ -25,10 +25,12 @@ function setup(serviceMock: {
   update: ReturnType<typeof vi.fn>;
   bulkDelete: ReturnType<typeof vi.fn>;
 }): RoutineBoardStore {
-  const injector = Injector.create([
-    { provide: ExerciseRoutineService, useValue: serviceMock },
-    RoutineBoardStore,
-  ]);
+  const injector = Injector.create({
+    providers: [
+      { provide: ExerciseRoutineService, useValue: serviceMock },
+      RoutineBoardStore,
+    ],
+  });
   return runInInjectionContext(injector, () => injector.get(RoutineBoardStore));
 }
 

@@ -6,6 +6,8 @@ import { routes } from './app.routes';
 import { MainLayout } from './components/organisms/main-layout/main-layout';
 import { DashboardHome } from './pages/admin-dashboard/dashboard-home/dashboard-home';
 
+const layoutRoute = routes.find((route) => route.component === MainLayout);
+
 describe('app routes', () => {
   let router: Router;
 
@@ -21,7 +23,9 @@ describe('app routes', () => {
     await router.navigateByUrl('/history');
 
     expect(router.url).toBe('/history');
-    expect(router.routerState.root.firstChild?.component).toBe(DashboardHome);
+    const shell = router.routerState.root.firstChild;
+    expect(shell?.component).toBe(MainLayout);
+    expect(shell?.firstChild?.component).toBe(DashboardHome);
   });
 
   it('redirects the root path to /history', async () => {
@@ -39,16 +43,16 @@ describe('app routes', () => {
   it('registers a lazy route for /analytics', async () => {
     await router.navigateByUrl('/analytics');
 
-    const route = router.routerState.root.firstChild;
+    const route = router.routerState.root.firstChild?.firstChild;
     expect(router.url).toBe('/analytics');
     expect(route?.routeConfig?.loadComponent).toBeDefined();
   });
 
-  it('renders health AI and settings as children of the sidebar layout', () => {
-    for (const path of ['health-ai', 'settings']) {
-      const route = routes.find((candidate) => candidate.path === path);
-      expect(route?.component).toBe(MainLayout);
-      expect(route?.children?.[0].loadComponent).toBeDefined();
-    }
+  it('places all workspace pages under the sidebar layout', () => {
+    const childPaths = layoutRoute?.children?.map((route) => route.path);
+    expect(childPaths).toEqual(expect.arrayContaining([
+      'history', 'analytics', 'routine-board', 'rag-lab', 'rag-ingest', 'health-ai', 'settings',
+    ]));
+    expect(layoutRoute?.component).toBe(MainLayout);
   });
 });

@@ -1,8 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { AdminSidebar } from '../../components/organisms/admin-sidebar/admin-sidebar';
-import { TopNavbar } from '../../components/organisms/top-navbar/top-navbar';
 import { AnalyticsStore } from '../../core/stores/analytics.store';
 import { VectorInspectorStore } from '../../core/stores/vector-inspector.store';
 import { MobileUsage } from '../../components/organisms/mobile-usage/mobile-usage';
@@ -12,8 +10,6 @@ import { VectorInspector } from '../../components/organisms/vector-inspector/vec
 @Component({
   selector: 'app-analytics-page',
   imports: [
-    AdminSidebar,
-    TopNavbar,
     MobileUsage,
     AiPerformanceComponent,
     VectorInspector,

@@ -1,9 +1,9 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
-import { AdminSidebar } from '../../../components/organisms/admin-sidebar/admin-sidebar';
-import { TopNavbar } from '../../../components/organisms/top-navbar/top-navbar';
 import { StatCard } from '../../../components/molecules/stat-card/stat-card';
 import {
   DataTable,
@@ -22,8 +22,7 @@ import { WorkoutDay } from '../../../core/mocks/mock-routine.data';
 @Component({
   selector: 'app-dashboard-home',
   imports: [
-    AdminSidebar,
-    TopNavbar,
+    RouterLink,
     StatCard,
     DataTable,
     RoutineCard,
@@ -32,6 +31,7 @@ import { WorkoutDay } from '../../../core/mocks/mock-routine.data';
     AnalyticsSummary,
     MatProgressSpinnerModule,
     MatButtonModule,
+    TranslatePipe,
   ],
   templateUrl: './dashboard-home.html',
   styleUrl: './dashboard-home.scss',
@@ -46,15 +46,15 @@ export class DashboardHome implements OnInit {
   readonly loading = signal(true);
 
   readonly routineColumns: DataTableColumn[] = [
-    { key: 'weekday', label: 'Day' },
-    { key: 'focus', label: 'Focus' },
-    { key: 'exercises', label: 'Exercises' },
+    { key: 'weekday', label: 'history.day' },
+    { key: 'focus', label: 'history.focus' },
+    { key: 'exercises', label: 'history.exercises' },
   ];
 
   readonly dietColumns: DataTableColumn[] = [
-    { key: 'date', label: 'Date' },
-    { key: 'meals', label: 'Meals' },
-    { key: 'totalCalories', label: 'Calories' },
+    { key: 'date', label: 'history.date' },
+    { key: 'meals', label: 'history.meals' },
+    { key: 'totalCalories', label: 'history.calories' },
   ];
 
   readonly routineRows = computed(() =>

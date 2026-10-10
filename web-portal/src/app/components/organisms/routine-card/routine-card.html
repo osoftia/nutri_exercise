@@ -1,21 +1,21 @@
 <mat-card class="routine-card" appearance="outlined">
   <mat-card-header>
-    <mat-card-title class="routine-card__title">{{ interaction().userPrompt }}</mat-card-title>
+    <mat-card-title class="routine-card__title">{{ interaction().userPrompt | translate }}</mat-card-title>
     @if (interaction().model || interaction().status) {
-      <mat-chip-set class="routine-card__chips" aria-label="Routine metadata">
+        <mat-chip-set class="routine-card__chips" [attr.aria-label]="'history.routineMetadata' | translate">
         @if (interaction().model) {
           <mat-chip>{{ interaction().model }}</mat-chip>
         }
         @if (interaction().status) {
-          <mat-chip>{{ interaction().status }}</mat-chip>
+          <mat-chip>{{ interaction().status | translate }}</mat-chip>
         }
       </mat-chip-set>
     }
   </mat-card-header>
   <mat-card-content>
-    <p class="routine-card__body">{{ interaction().generatedRoutine }}</p>
+    <p class="routine-card__body">{{ interaction().generatedRoutine | translate }}</p>
     @if (interaction().feedbackText) {
-      <p class="routine-card__feedback">Saved feedback: {{ interaction().feedbackText }}</p>
+      <p class="routine-card__feedback">{{ 'history.savedFeedback' | translate }} {{ interaction().feedbackText | translate }}</p>
     }
     <app-feedback-form
       [initialFeedback]="interaction().feedbackText"

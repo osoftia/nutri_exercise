@@ -106,3 +106,36 @@
   font-weight: var(--font-weight-bold);
   color: rgba(11, 15, 26, 0.8);
 }
+
+@media (max-width: 768px) {
+  .analytics-summary {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'hero'
+      'band'
+      'split';
+  }
+
+  .analytics-summary__hero,
+  .analytics-summary__band {
+    min-height: 0;
+    padding: 24px;
+  }
+
+  .analytics-summary__hero-value {
+    font-size: clamp(48px, 18vw, 72px);
+  }
+
+  .analytics-summary__band-value {
+    font-size: clamp(40px, 15vw, 60px);
+  }
+
+  .analytics-summary__split {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-summary__split-tile {
+    min-height: 0;
+    padding: 20px 24px;
+  }
+}

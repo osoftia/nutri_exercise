@@ -17,4 +17,10 @@ public class AiInteraction
     public bool? IsCorrect { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Owner of the interaction. Defaults to the seeded test user
+    /// (<c>UserId = 1</c>) when no auth token is provided.
+    /// </summary>
+    public int UserId { get; set; } = 1;
 }

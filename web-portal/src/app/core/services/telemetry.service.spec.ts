@@ -14,10 +14,12 @@ describe('TelemetryService', () => {
 
   beforeEach(() => {
     httpGet = vi.fn();
-    const injector = Injector.create([
-      { provide: HttpClient, useValue: { get: httpGet } },
-      TelemetryService,
-    ]);
+    const injector = Injector.create({
+      providers: [
+        { provide: HttpClient, useValue: { get: httpGet } },
+        TelemetryService,
+      ],
+    });
     service = runInInjectionContext(injector, () => injector.get(TelemetryService));
   });
 

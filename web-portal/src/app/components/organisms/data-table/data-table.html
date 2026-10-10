@@ -3,7 +3,7 @@
     <thead>
       <tr>
         @for (col of columns(); track col.key) {
-          <th class="data-table__th">{{ col.label }}</th>
+          <th class="data-table__th">{{ col.label | translate }}</th>
         }
       </tr>
     </thead>
@@ -11,13 +11,13 @@
       @for (row of rows(); track $index) {
         <tr class="data-table__row">
           @for (col of columns(); track col.key) {
-            <td class="data-table__td">{{ row[col.key] }}</td>
+            <td class="data-table__td">{{ row[col.key] | translate }}</td>
           }
         </tr>
       } @empty {
         <tr>
           <td class="data-table__empty" [attr.colspan]="columns().length">
-            No data available
+            {{ 'history.noData' | translate }}
           </td>
         </tr>
       }

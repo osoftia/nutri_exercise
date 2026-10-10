@@ -3,11 +3,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 
 import { AiInteraction } from '../../../core/models/interaction.model';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { FeedbackForm } from '../feedback-form/feedback-form';
 
 @Component({
   selector: 'app-routine-card',
-  imports: [MatCardModule, MatChipsModule, FeedbackForm],
+  imports: [MatCardModule, MatChipsModule, FeedbackForm, TranslatePipe],
   templateUrl: './routine-card.html',
   styleUrl: './routine-card.scss',
 })

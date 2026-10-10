@@ -6,10 +6,10 @@ import 'package:http/testing.dart';
 import 'package:nutri_mobile_app/core/services/log_parse_service.dart';
 
 void main() {
-  test('parse POSTs rawText and returns the parsed response', () async {
+  test('parse POSTs text and returns the parsed response', () async {
     final client = MockClient((request) async {
       expect(request.url.path, '/api/log/parse');
-      expect(jsonDecode(request.body), {'rawText': 'Ate chicken and rice'});
+      expect(jsonDecode(request.body), {'text': 'Ate chicken and rice'});
       return http.Response(
         jsonEncode({
           'calories': 500,
@@ -47,5 +47,29 @@ void main() {
       service.parse('x'),
       throwsA(isA<LogParseParseException>()),
     );
+  });
+
+  test('parse accepts the backend flat/muscles shape', () async {
+    final client = MockClient((request) async {
+      expect(jsonDecode(request.body), {'text': 'Ran chest day'});
+      return http.Response(
+        jsonEncode({
+          'calories': 320,
+          'protein': 25,
+          'carbs': 30,
+          'fat': 10,
+          'muscles': ['Chest'],
+        }),
+        200,
+        headers: {'content-type': 'application/json'},
+      );
+    });
+    final service = LogParseService(baseUrl: 'http://test', client: client);
+
+    final result = await service.parse('Ran chest day');
+
+    expect(result.calories, 320);
+    expect(result.protein, 25);
+    expect(result.muscleGroups, ['Chest']);
   });
 }

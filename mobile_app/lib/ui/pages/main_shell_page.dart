@@ -27,6 +27,7 @@ class MainShellPage extends StatefulWidget {
     required this.aiChatController,
     required this.notificationNav,
     required this.dailyLogController,
+    this.enableAI = true,
   });
 
   final UserProfileController profileController;
@@ -36,6 +37,10 @@ class MainShellPage extends StatefulWidget {
   final AiChatController aiChatController;
   final NotificationNavigationController notificationNav;
   final DailyLogController dailyLogController;
+
+  /// When false, no AI chat entry point (FAB) is rendered. Wired to
+  /// `EnvironmentConfig.enableAI` so flavors can disable the assistant.
+  final bool enableAI;
 
   @override
   State<MainShellPage> createState() => _MainShellPageState();
@@ -97,15 +102,17 @@ class _MainShellPageState extends State<MainShellPage> {
             tooltip: 'Daily Log',
           ),
           const SizedBox(height: AppSpacing.md),
-          NeumorphicFab(
-            onPressed: () => showAiChatSheet(context, widget.aiChatController),
-          ),
+          if (widget.enableAI)
+            NeumorphicFab(
+              key: const Key('ai_chat_fab'),
+              onPressed: () =>
+                  showAiChatSheet(context, widget.aiChatController),
+            ),
         ],
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
-        onDestinationSelected: (index) =>
-            setState(() => _currentIndex = index),
+        onDestinationSelected: (index) => setState(() => _currentIndex = index),
       ),
     );
   }

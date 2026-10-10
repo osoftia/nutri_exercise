@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
 export interface DataTableColumn {
   key: string;
@@ -7,7 +8,7 @@ export interface DataTableColumn {
 
 @Component({
   selector: 'app-data-table',
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './data-table.html',
   styleUrl: './data-table.scss',
 })

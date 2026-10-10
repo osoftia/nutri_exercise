@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Icon, IconName } from '../../atoms/icon/icon';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
@@ -16,6 +16,8 @@ interface NavItem {
   styleUrl: './admin-sidebar.scss',
 })
 export class AdminSidebar {
+  readonly isCollapsed = signal(false);
+
   readonly navItems: NavItem[] = [
     { label: 'nav.history', icon: 'history', link: '/history' },
     { label: 'nav.analytics', icon: 'analytics', link: '/analytics' },
@@ -26,4 +28,8 @@ export class AdminSidebar {
     { label: 'nav.healthAi', icon: 'nutrition', link: '/health-ai' },
     { label: 'nav.settings', icon: 'settings', link: '/settings' },
   ];
+
+  toggleCollapsed(): void {
+    this.isCollapsed.update((collapsed) => !collapsed);
+  }
 }

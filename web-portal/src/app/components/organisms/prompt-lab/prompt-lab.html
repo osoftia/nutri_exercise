@@ -102,7 +102,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (source of store.result()?.matchedSources ?? []; track source.id) {
+            @for (source of store.sortedSources(); track source.id) {
               <tr>
                 <td>{{ source.title }}</td>
                 <td>{{ (source.score * 100).toFixed(1) }}%</td>
@@ -113,5 +113,7 @@
       </div>
     }
   </div>
+
+  <app-audit-log />
 
 </section>

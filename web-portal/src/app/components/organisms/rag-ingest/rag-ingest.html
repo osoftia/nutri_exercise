@@ -1,0 +1,90 @@
+<section class="rag-ingest" aria-label="RAG Knowledge Ingestion">
+
+  <div class="rag-ingest__controls">
+    <h2 class="rag-ingest__heading">Knowledge Ingestion</h2>
+    <p class="rag-ingest__lede">
+      Submit a custom document to the vector store.
+      <span class="rag-ingest__chip">Linked to test user #{{ defaultUserId }} — no login required</span>
+    </p>
+
+    <label class="rag-ingest__field">
+      <span class="rag-ingest__overline">Title</span>
+      <input
+        class="rag-ingest__input"
+        type="text"
+        placeholder="Hip mobility basics"
+        [value]="title()"
+        (input)="onTitleInput($event)"
+      />
+    </label>
+
+    <label class="rag-ingest__field">
+      <span class="rag-ingest__overline">Body Zone</span>
+      <select
+        class="rag-ingest__select"
+        [value]="bodyZone()"
+        (change)="onBodyZoneChange($event)"
+      >
+        @for (zone of bodyZoneOptions; track zone) {
+          <option [value]="zone">{{ zone }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="rag-ingest__field">
+      <span class="rag-ingest__overline">Content</span>
+      <textarea
+        class="rag-ingest__textarea"
+        rows="8"
+        placeholder="Paste the document text to embed…"
+        [value]="content()"
+        (input)="onContentInput($event)"
+      ></textarea>
+    </label>
+
+    <div class="rag-ingest__actions">
+      <button
+        class="rag-ingest__button rag-ingest__button--submit"
+        [disabled]="!canSubmit()"
+        (click)="onSubmit()"
+      >
+        Ingest Document
+      </button>
+      <button class="rag-ingest__button rag-ingest__button--reset" (click)="onReset()">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="rag-ingest__status">
+    @if (loading()) {
+      <div class="rag-ingest__loading">
+        <span class="rag-ingest__overline">Embedding…</span>
+      </div>
+    }
+
+    @if (error(); as message) {
+      <div class="rag-ingest__error">
+        <p>{{ message }}</p>
+      </div>
+    }
+
+    @if (hasResult() && !loading()) {
+      <div class="rag-ingest__success">
+        <span class="rag-ingest__overline">Ingested</span>
+        <p class="rag-ingest__message">{{ result()?.Message }}</p>
+        <dl class="rag-ingest__meta">
+          <div>
+            <dt>Document Id</dt>
+            <dd>{{ result()?.Id }}</dd>
+          </div>
+          <div>
+            <dt>User Id</dt>
+            <dd>{{ result()?.UserId }}</dd>
+          </div>
+        </dl>
+      </div>
+    }
+  </div>
+
+</section>

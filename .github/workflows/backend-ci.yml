@@ -35,12 +35,38 @@ jobs:
     - name: Run BDD & Unit Tests
       run: dotnet test --no-build --configuration Release --verbosity normal
 
+  # AI-in-the-loop gate: extracts Gherkin requirements and validates test
+  # coverage. Exits 1 to block the publish/deploy job below.
+  ai-qa-gate:
+    needs: build-and-test
+    uses: ./.github/workflows/ai_qa_gate.yml
+    with:
+      project: backend
+      threshold: 80
+    secrets: inherit
+
+  publish:
+    name: Publish Production Artifact
+    needs: ai-qa-gate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
     - name: Publish Production Artifact
-      if: github.ref == 'refs/heads/main'
       run: dotnet publish NutriExercise.Api/NutriExercise.Api.csproj -c Release -o ./publish /p:UseAppHost=false
 
     - name: Upload Artifact
-      if: github.ref == 'refs/heads/main'
       uses: actions/upload-artifact@v4
       with:
         name: backend-production-build

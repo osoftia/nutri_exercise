@@ -44,6 +44,42 @@ To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use th
 ng test
 ```
 
+Pure unit specs (no `TestBed`) also run directly:
+
+```bash
+npx vitest run src/app/core/stores/routine-board.store.spec.ts src/app/core/utils/routine-drag.util.spec.ts src/app/core/utils/exercise.mapper.spec.ts src/app/core/services/telemetry.service.spec.ts --coverage.enabled=false
+```
+
+## Routine Board (`/routine-board`)
+
+Trello-style exercise routine creator (contract: `src/app/features/routine-board.feature`):
+
+- Columns per muscle group reorder horizontally (`cdkDropListGroup`); cards move
+  within a column (`moveItemInArray` semantics) or across columns
+  (`transferArrayItem` semantics) via `RoutineBoardStore`.
+- Cards support checkbox bulk-select/delete and inline rename (double-click Edit,
+  `form-input` + Save/Cancel) persisted to the generic table.
+- Add-custom-exercise form persists to the catalog for future reuse.
+- Sidebar entry **Routines** navigates to `/routine-board`.
+
+Backend endpoints consumed by `ExerciseRoutineService`:
+
+```text
+GET   /api/v1/exercises/generic
+POST  /api/v1/exercises/generic
+PATCH /api/v1/exercises/generic/{id}
+POST  /api/v1/exercises/generic/bulk-delete
+```
+
+With `environment.useMocks` the catalog falls back to `mock-routine.data.ts` +
+`localStorage` persistence.
+
+## Logging
+
+`TelemetryService` is the global logger — the only place allowed to call
+`console.*`. Use `debug/info/warn/error()`; HTTP errors are routed through it
+by `error.interceptor.ts`.
+
 ## Running end-to-end tests
 
 For end-to-end (e2e) testing, run:

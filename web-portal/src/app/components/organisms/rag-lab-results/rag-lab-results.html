@@ -1,0 +1,147 @@
+<section class="rag-lab-results" aria-label="Semantic Results">
+  @if (store.isLoading()) {
+    <div class="rag-lab-results__loading" role="status" aria-live="polite">
+      <span class="rag-lab-results__overline">Retrieving semantic matches…</span>
+      <span class="rag-lab-results__loading-metric">···</span>
+    </div>
+  } @else if (store.error(); as message) {
+    <div class="rag-lab-results__error" role="alert">
+      <span class="rag-lab-results__overline">Query failed</span>
+      <p>{{ message }}</p>
+    </div>
+  } @else if (!store.hasResults()) {
+    <div class="rag-lab-results__empty">
+      <span class="rag-lab-results__overline">No semantic results yet</span>
+      <p class="rag-lab-results__empty-text">
+        Tune the controls and run a semantic search to see ranked matches here.
+      </p>
+    </div>
+  } @else {
+    <div class="rag-lab-results__summary">
+      <span class="rag-lab-results__overline">Semantic matches</span>
+      <span class="rag-lab-results__count">{{ cards().length }}</span>
+      @if (store.latencyMs(); as latency) {
+        <span class="rag-lab-results__latency">{{ latency }}ms · {{ store.tokensPerSecond() }} tok/s</span>
+      }
+      <span
+        class="rag-lab-results__feedback-count"
+        aria-label="{{ feedbackDistribution().positive }} positive, {{ feedbackDistribution().negative }} negative"
+      >
+        + {{ feedbackDistribution().positive }} / − {{ feedbackDistribution().negative }}
+      </span>
+    </div>
+
+    @if (store.results()?.answer; as answer) {
+      <div class="rag-lab-results__answer">
+        <h3 class="rag-lab-results__subheading">Generated Answer</h3>
+        <div class="rag-lab-results__answer-text">{{ answer }}</div>
+      </div>
+    }
+
+    @if (cards().length === 0) {
+      <div class="rag-lab-results__empty">
+        <span class="rag-lab-results__overline">No matches above threshold</span>
+        <p class="rag-lab-results__empty-text">
+          Lower the similarity threshold and run the query again.
+        </p>
+      </div>
+    } @else {
+      <ol class="rag-lab-results__list">
+        @for (card of cards(); track card.id; let i = $index) {
+          <li
+            class="rag-lab-results__card"
+            tabindex="0"
+            role="button"
+            [attr.aria-label]="'View details for ' + card.title"
+            (click)="openDetails(card.id)"
+            (keydown.enter)="openDetails(card.id)"
+            (keydown.space)="$event.preventDefault(); openDetails(card.id)"
+          >
+            <div class="rag-lab-results__card-head">
+              <span class="rag-lab-results__overline">Match {{ i + 1 }}</span>
+              @if (card.bodyZone) {
+                <span class="rag-lab-results__chip">{{ card.bodyZone }}</span>
+              }
+            </div>
+            <h3 class="rag-lab-results__card-title">{{ card.title }}</h3>
+            @if (card.content) {
+              <p class="rag-lab-results__card-content">{{ card.content }}</p>
+            }
+            <div class="rag-lab-results__score">
+              <span class="rag-lab-results__score-number">{{ formatScore(card.score) }}</span>
+              <span class="rag-lab-results__overline">similarity</span>
+            </div>
+            <div class="rag-lab-results__card-foot">
+              <div
+                class="rag-lab-results__feedback"
+                role="group"
+                [attr.aria-label]="'Feedback for ' + card.title"
+              >
+                <button
+                  type="button"
+                  class="rag-lab-results__feedback-btn"
+                  [class.rag-lab-results__feedback-btn--active]="feedback()[card.id] === 'positive'"
+                  [attr.aria-pressed]="feedback()[card.id] === 'positive'"
+                  [attr.aria-label]="'Mark ' + card.title + ' as relevant'"
+                  (click)="rate(card.id, 'positive'); $event.stopPropagation()"
+                >
+                  [ + ]
+                </button>
+                <button
+                  type="button"
+                  class="rag-lab-results__feedback-btn"
+                  [class.rag-lab-results__feedback-btn--active]="feedback()[card.id] === 'negative'"
+                  [attr.aria-pressed]="feedback()[card.id] === 'negative'"
+                  [attr.aria-label]="'Mark ' + card.title + ' as irrelevant'"
+                  (click)="rate(card.id, 'negative'); $event.stopPropagation()"
+                >
+                  [ - ]
+                </button>
+              </div>
+              <span class="rag-lab-results__details-hint" aria-hidden="true">[ DETAILS ]</span>
+            </div>
+          </li>
+        }
+      </ol>
+    }
+  }
+
+  @if (selectedCard(); as detail) {
+    <div class="rag-lab-results__modal-backdrop" (click)="closeDetails()">
+      <div
+        class="rag-lab-results__modal"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-label]="'Details for ' + detail.title"
+        (click)="$event.stopPropagation()"
+      >
+        <span class="rag-lab-results__overline">Source details</span>
+        <h3 class="rag-lab-results__modal-title">{{ detail.title }}</h3>
+        <div class="rag-lab-results__modal-meta">
+          @if (detail.bodyZone) {
+            <span class="rag-lab-results__chip">{{ detail.bodyZone }}</span>
+          }
+          <span class="rag-lab-results__mono">ID: {{ detail.id }}</span>
+        </div>
+        <div class="rag-lab-results__score">
+          <span class="rag-lab-results__score-number">{{ formatScore(detail.score) }}</span>
+          <span class="rag-lab-results__overline">similarity</span>
+        </div>
+        @if (detail.content) {
+          <p class="rag-lab-results__modal-content">{{ detail.content }}</p>
+        } @else {
+          <p class="rag-lab-results__modal-content rag-lab-results__modal-content--muted">
+            No excerpt indexed for this source.
+          </p>
+        }
+        <button
+          type="button"
+          class="rag-lab-results__modal-close"
+          (click)="closeDetails()"
+        >
+          [ CLOSE ]
+        </button>
+      </div>
+    </div>
+  }
+</section>

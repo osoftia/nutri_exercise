@@ -3,10 +3,12 @@ import { finalize } from 'rxjs';
 
 import { PromptLabRequest, PromptLabResult } from '../models/prompt-lab.model';
 import { PromptLabService } from '../services/prompt-lab.service';
+import { AuditLogStore } from './audit-log.store';
 
 @Service()
 export class PromptLabStore {
   private readonly promptLabService = inject(PromptLabService);
+  private readonly auditLog = inject(AuditLogStore);
 
   readonly temperature = signal<number>(0.7);
   readonly similarityThreshold = signal<number>(0.8);
@@ -19,6 +21,9 @@ export class PromptLabStore {
   readonly latencyMs = computed(() => this.result()?.latencyMs ?? null);
   readonly tokensPerSecond = computed(() => this.result()?.tokensPerSecond ?? null);
   readonly hasResult = computed(() => this.result() !== null);
+  readonly sortedSources = computed(() =>
+    [...(this.result()?.matchedSources ?? [])].sort((a, b) => b.score - a.score),
+  );
 
   setTemperature(value: number): void {
     this.temperature.set(value);
@@ -52,8 +57,14 @@ export class PromptLabStore {
       .runQuery(request)
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: (result) => this.result.set(result),
-        error: () => this.error.set('Could not execute the prompt query.'),
+        next: (result) => {
+          this.result.set(result);
+          this.auditLog.log({ ...request, latencyMs: result.latencyMs, topMatchScore: topScore(result), status: 'success' });
+        },
+        error: () => {
+          this.error.set('Could not execute the prompt query.');
+          this.auditLog.log({ ...request, latencyMs: null, topMatchScore: null, status: 'error' });
+        },
       });
   }
 
@@ -66,4 +77,9 @@ export class PromptLabStore {
     this.result.set(null);
     this.error.set(null);
   }
+}
+
+function topScore(result: PromptLabResult): number | null {
+  if (!result.matchedSources.length) return null;
+  return result.matchedSources.reduce((max, s) => Math.max(max, s.score), 0);
 }

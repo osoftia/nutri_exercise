@@ -1,10 +1,11 @@
 import { Component, inject } from '@angular/core';
 
 import { PromptLabStore } from '../../../core/stores/prompt-lab.store';
+import { AuditLog } from '../audit-log/audit-log';
 
 @Component({
   selector: 'app-prompt-lab',
-  imports: [],
+  imports: [AuditLog],
   templateUrl: './prompt-lab.html',
   styleUrl: './prompt-lab.scss',
 })

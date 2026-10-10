@@ -45,3 +45,8 @@ PROMPT*
 
 # Reqnroll auto-generated code-behind
 **/*.feature.cs
+
+# Python / AI QA auditor
+__pycache__/
+*.py[cod]
+artifacts/

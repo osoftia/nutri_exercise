@@ -1,0 +1,28 @@
+<section class="connection-test" aria-label="Backend connection test">
+  <span class="connection-test__overline">Windows → Mac · Backend link</span>
+  <h2 class="connection-test__heading">Connection Test</h2>
+  <p class="connection-test__target">{{ backendUrl }}</p>
+
+  <div
+    class="connection-test__status"
+    [class.connection-test__status--online]="status() === 'online'"
+    [class.connection-test__status--offline]="status() === 'unreachable'"
+    [class.connection-test__status--timeout]="status() === 'timeout'"
+    [class.connection-test__status--checking]="isChecking()"
+    role="status"
+    aria-live="polite"
+  >
+    <span class="connection-test__headline">{{ headline() }}</span>
+    @if (latencyMs() !== null) {
+      <span class="connection-test__latency">{{ latencyMs() }}<small>ms</small></span>
+    }
+  </div>
+
+  <p class="connection-test__detail">{{ detail() || 'Press the button to verify connectivity.' }}</p>
+
+  <div class="connection-test__actions">
+    <app-custom-button variant="primary" (click)="testConnection()" [disabled]="isChecking()">
+      {{ isChecking() ? 'Testing…' : 'Test Connection' }}
+    </app-custom-button>
+  </div>
+</section>

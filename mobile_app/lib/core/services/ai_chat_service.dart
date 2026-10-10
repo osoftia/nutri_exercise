@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import '../constants/api_constants.dart';
+import '../config/ai_endpoint.dart';
 
 /// A single conversational turn sent to the backend for context.
 class ChatTurn {
@@ -71,7 +71,7 @@ class AiChatService {
     required String message,
     List<ChatTurn> history = const [],
   }) async {
-    final uri = Uri.parse('$baseUrl${ApiConstants.aiChatPath}');
+    final uri = resolveAiChatUri(baseUrl);
 
     final http.Response response;
     try {

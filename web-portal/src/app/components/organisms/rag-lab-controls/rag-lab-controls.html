@@ -1,0 +1,79 @@
+<section class="rag-lab-controls" aria-label="RAG Controls Panel">
+  <h2 class="rag-lab-controls__heading">RAG Controls</h2>
+
+  <label class="rag-lab-controls__field">
+    <span class="rag-lab-controls__overline">System Prompt</span>
+    <textarea
+      class="rag-lab-controls__textarea"
+      rows="6"
+      placeholder="You are a sports nutrition expert…"
+      [value]="store.systemPrompt()"
+      (input)="onSystemPromptInput($event)"
+    ></textarea>
+  </label>
+
+  <label class="rag-lab-controls__field">
+    <span class="rag-lab-controls__overline">Temperature</span>
+    <input
+      class="rag-lab-controls__range"
+      type="range"
+      min="0"
+      max="1"
+      step="0.05"
+      [value]="store.temperature()"
+      (input)="onTemperatureInput($event)"
+    />
+    <span class="rag-lab-controls__value">{{ store.temperature() }}</span>
+  </label>
+
+  <label class="rag-lab-controls__field">
+    <span class="rag-lab-controls__overline">Similarity Threshold</span>
+    <input
+      class="rag-lab-controls__range"
+      type="range"
+      min="0"
+      max="1"
+      step="0.05"
+      [value]="store.similarityThreshold()"
+      (input)="onThresholdInput($event)"
+    />
+    <span class="rag-lab-controls__value">{{ store.similarityThreshold() }}</span>
+  </label>
+
+  <label class="rag-lab-controls__field">
+    <span class="rag-lab-controls__overline">Search Query</span>
+    <input
+      class="rag-lab-controls__input"
+      type="text"
+      placeholder="Recovery routine after intense dance rehearsal"
+      [value]="store.query()"
+      (input)="onQueryInput($event)"
+    />
+  </label>
+
+  <div class="rag-lab-controls__actions">
+    <button
+      class="rag-lab-controls__button rag-lab-controls__button--execute"
+      [disabled]="store.isLoading()"
+      (click)="onExecute()"
+    >
+      @if (store.isLoading()) {
+        Executing…
+      } @else {
+        Execute Semantic Search
+      }
+    </button>
+    <button
+      class="rag-lab-controls__button rag-lab-controls__button--reset"
+      (click)="onReset()"
+    >
+      Reset
+    </button>
+  </div>
+
+  @if (store.error(); as message) {
+    <div class="rag-lab-controls__error" role="alert">
+      <p>{{ message }}</p>
+    </div>
+  }
+</section>

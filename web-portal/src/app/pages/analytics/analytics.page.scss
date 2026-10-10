@@ -1,13 +1,8 @@
 .analytics-page {
-  display: flex;
+  width: 100%;
   min-height: 100vh;
   background-color: var(--color-bg);
   color: var(--color-text-high);
-}
-
-.analytics-page__body {
-  flex: 1;
-  min-width: 0;
 }
 
 .analytics-page__content {

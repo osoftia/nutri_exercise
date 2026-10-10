@@ -43,7 +43,10 @@ describe('errorInterceptor', () => {
     const req = controller.expectOne('/api/interactions');
     req.flush('boom', { status: 500, statusText: 'Server Error' });
 
-    expect(consoleError).toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalledWith(
+      expect.stringContaining('[Telemetry:error] [HTTP 500]'),
+      expect.anything(),
+    );
     expect(caught).toBeInstanceOf(HttpErrorResponse);
     expect((caught as HttpErrorResponse).status).toBe(500);
   });

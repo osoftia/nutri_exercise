@@ -5,8 +5,19 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # AI-in-the-loop gate: extracts Gherkin requirements and validates test
+  # coverage. Exits 1 to block the release APK build below.
+  ai-qa-gate:
+    name: AI QA Gate - Gherkin Coverage
+    uses: ./.github/workflows/ai_qa_gate.yml
+    with:
+      project: mobile_app
+      threshold: 80
+    secrets: inherit
+
   build-apk:
     name: Build Android APK
+    needs: ai-qa-gate
     runs-on: ubuntu-latest
     defaults:
       run:

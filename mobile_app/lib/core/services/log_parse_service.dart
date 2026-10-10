@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import '../constants/api_constants.dart';
+import '../config/ai_endpoint.dart';
 import '../models/log_parse_response.dart';
 
 /// The parse request did not complete within the configured timeout.
@@ -56,13 +56,16 @@ class LogParseService {
   final http.Client _client;
   final Duration timeout;
 
-  /// Posts [rawText] and returns the parsed [LogParseResponse].
+  /// Posts [rawText] as `{"text": ...}` and returns the parsed
+  /// [LogParseResponse].
   ///
-  /// Throws [LogParseTimeoutException], [LogParseNetworkException],
+  /// The backend `POST /api/log/parse` binds `ParseLogRequest.Text`, so the
+  /// JSON key must be `text` (case-insensitive). Throws
+  /// [LogParseTimeoutException], [LogParseNetworkException],
   /// [LogParseHttpException] or [LogParseParseException] on failure. Network and
   /// timeout failures are logged to the console with the exact error.
   Future<LogParseResponse> parse(String rawText) async {
-    final uri = Uri.parse('$baseUrl${ApiConstants.logParsePath}');
+    final uri = resolveLogParseUri(baseUrl);
 
     final http.Response response;
     try {
@@ -70,7 +73,7 @@ class LogParseService {
           .post(
             uri,
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'rawText': rawText}),
+            body: jsonEncode({'text': rawText}),
           )
           .timeout(timeout);
     } on TimeoutException catch (e) {

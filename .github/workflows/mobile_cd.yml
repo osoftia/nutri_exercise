@@ -42,10 +42,21 @@ jobs:
       - name: Run tests
         run: flutter test
 
+  # AI-in-the-loop gate: extracts Gherkin requirements and validates test
+  # coverage. Exits 1 to block the release build below.
+  ai-qa-gate:
+    name: AI QA Gate - Gherkin Coverage
+    needs: test
+    uses: ./.github/workflows/ai_qa_gate.yml
+    with:
+      project: mobile_app
+      threshold: 80
+    secrets: inherit
+
   build:
     name: CD - Deployment
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, ai-qa-gate]
     defaults:
       run:
         working-directory: ./mobile_app

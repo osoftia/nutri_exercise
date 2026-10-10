@@ -21,6 +21,10 @@
   gap: 20px;
 }
 
+.prompt-lab app-audit-log {
+  grid-column: 1 / 13;
+}
+
 .prompt-lab__heading {
   margin: 0;
   font-size: var(--font-size-hero);

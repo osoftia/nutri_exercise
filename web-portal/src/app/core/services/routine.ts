@@ -1,4 +1,4 @@
-import { Service, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
@@ -6,7 +6,7 @@ import { delay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { WorkoutDay, mockWorkoutRoutines } from '../mocks/mock-routine.data';
 
-@Service()
+@Injectable({ providedIn: 'root' })
 export class Routine {
   private readonly http = inject(HttpClient);
 

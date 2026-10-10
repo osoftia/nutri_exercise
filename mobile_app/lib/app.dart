@@ -132,6 +132,7 @@ class _NutriAppState extends State<NutriApp> {
         aiChatController: aiChatController,
         notificationNav: _notificationNav,
         dailyLogController: _dailyLogController,
+        enableAI: widget.config.enableAI,
       ),
     );
   }

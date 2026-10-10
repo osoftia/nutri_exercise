@@ -4,4 +4,5 @@ export const environment: Environment = {
   production: true,
   useMocks: false,
   apiUrl: 'https://api.example.com',
+  backendUrl: 'https://api.example.com',
 };

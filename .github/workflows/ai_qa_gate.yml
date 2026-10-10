@@ -1,0 +1,79 @@
+name: AI QA Gate
+
+# Reusable, project-agnostic AI-in-the-loop QA gate.
+#
+# It extracts business requirements as strict Gherkin (Prompt 1) and verifies
+# that the existing tests cover those scenarios (Prompt 2). The auditor exits
+# 0 on pass and 1 on failure, so any job that `needs` this gate is blocked from
+# deploying when coverage is insufficient or the model output is malformed.
+#
+# Callers pass the project key and (optionally) the coverage threshold:
+#
+#   ai-qa-gate:
+#     needs: build-and-test
+#     uses: ./.github/workflows/ai_qa_gate.yml
+#     with:
+#       project: backend
+#       threshold: 80
+#     secrets: inherit
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: "Project key to audit: backend | web-portal | mobile_app"
+        required: true
+        type: string
+      threshold:
+        description: "Minimum Gherkin scenario coverage percentage to pass."
+        required: false
+        type: number
+        default: 80
+      runner:
+        description: "Runner label for the audit job."
+        required: false
+        type: string
+        default: ubuntu-latest
+
+permissions:
+  contents: read
+  models: read
+
+jobs:
+  audit:
+    name: Audit (${{ inputs.project }})
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install auditor dependencies
+        run: pip install -r scripts/ai_qa_auditor/requirements.txt
+
+      - name: Run AI QA auditor (Gherkin coverage gate)
+        env:
+          # Provider config; override via repository/org Variables.
+          # `github` uses the built-in token against GitHub Models.
+          LLM_PROVIDER: ${{ vars.LLM_PROVIDER || 'github' }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/ai_qa_auditor/auditor.py \
+            --project "${{ inputs.project }}" \
+            --threshold "${{ inputs.threshold }}"
+
+      - name: Upload AI QA artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-qa-${{ inputs.project }}
+          path: artifacts/ai-qa/
+          if-no-files-found: warn
+          retention-days: 14

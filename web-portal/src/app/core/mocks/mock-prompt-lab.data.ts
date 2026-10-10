@@ -1,4 +1,5 @@
 import { PromptLabResult } from '../models/prompt-lab.model';
+import { DEFAULT_RAG_USER_ID, RagIngestRequest, RagIngestResponse } from '../models/rag.model';
 
 export const MOCK_PROMPT_LAB_RESULT: PromptLabResult = {
   answer:
@@ -24,5 +25,13 @@ export function mockPromptLabResponse(query: string): PromptLabResult {
       'Recovery Routine After Intense Dance Rehearsal',
       `Response to: "${query}"`,
     ),
+  };
+}
+
+export function mockRagIngestResponse(request: RagIngestRequest): RagIngestResponse {
+  return {
+    Id: 'doc-mock-001',
+    UserId: DEFAULT_RAG_USER_ID,
+    Message: `Document "${request.Title}" ingested successfully.`,
   };
 }

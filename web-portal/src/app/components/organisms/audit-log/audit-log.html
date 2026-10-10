@@ -1,0 +1,71 @@
+<section class="audit-log" aria-label="RAG traceability and audit logs">
+  <button
+    type="button"
+    class="audit-log__header"
+    (click)="store.toggle()"
+    [attr.aria-expanded]="store.expanded()"
+    aria-controls="audit-log-body"
+  >
+    <span class="audit-log__title">RAG Traceability</span>
+    <span class="audit-log__count" aria-label="{{ store.count() }} recorded events">
+      {{ store.count() }}
+    </span>
+    <span class="audit-log__chevron" aria-hidden="true">
+      {{ store.expanded() ? '▾' : '▸' }}
+    </span>
+  </button>
+
+  @if (store.expanded()) {
+    <div class="audit-log__body" id="audit-log-body">
+      @if (store.hasEntries()) {
+        <ol class="audit-log__list">
+          @for (entry of store.entries(); track entry.id) {
+            <li
+              class="audit-log__entry"
+              [class.audit-log__entry--error]="entry.status === 'error'"
+            >
+              <span
+                class="audit-log__status"
+                [class.audit-log__status--error]="entry.status === 'error'"
+              >
+                {{ entry.status === 'success' ? 'OK' : 'ERR' }}
+              </span>
+              <div class="audit-log__main">
+                <p class="audit-log__query">{{ entry.query }}</p>
+                <p class="audit-log__meta">
+                  <span class="audit-log__mono">{{ entry.timestamp }}</span>
+                  <span class="audit-log__mono">temp {{ entry.temperature }}</span>
+                  <span class="audit-log__mono">thr {{ entry.similarityThreshold }}</span>
+                  <span class="audit-log__mono">
+                    @if (entry.latencyMs !== null) {
+                      {{ entry.latencyMs }} ms
+                    } @else {
+                      n/a
+                    }
+                  </span>
+                  <span class="audit-log__mono">
+                    @if (entry.topMatchScore !== null) {
+                      top {{ (entry.topMatchScore * 100).toFixed(1) }}%
+                    } @else {
+                      no match
+                    }
+                  </span>
+                </p>
+              </div>
+            </li>
+          }
+        </ol>
+        <div class="audit-log__actions">
+          <app-custom-button variant="ghost" (click)="store.exportCsv()">
+            EXPORT AUDIT CSV
+          </app-custom-button>
+          <app-custom-button variant="ghost" (click)="store.clear()">
+            Clear Logs
+          </app-custom-button>
+        </div>
+      } @else {
+        <p class="audit-log__empty">No queries recorded yet. Run a query to start the trace.</p>
+      }
+    </div>
+  }
+</section>

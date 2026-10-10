@@ -1,13 +1,8 @@
 .dashboard-home {
-  display: flex;
+  width: 100%;
   min-height: 100vh;
   background-color: var(--color-bg);
   color: var(--color-text-high);
-}
-
-.dashboard-home__body {
-  flex: 1;
-  min-width: 0;
 }
 
 .dashboard-home__content {
@@ -29,6 +24,64 @@
   font-size: var(--font-size-label);
 }
 
+.dashboard-home__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 28px;
+  background-color: var(--color-surface);
+  border: var(--border-strong);
+  border-radius: var(--radius-none);
+}
+
+.dashboard-home__toolbar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dashboard-home__overline {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-overline);
+  text-transform: uppercase;
+  color: var(--color-text-low);
+}
+
+.dashboard-home__title {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-display);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: 0.95;
+  color: var(--color-text-high);
+}
+
+.dashboard-home__rag-launch {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 24px;
+  background-color: var(--color-block-accent);
+  border: var(--border-strong);
+  border-radius: var(--radius-none);
+  font-family: var(--font-family);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-overline);
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.dashboard-home__rag-launch:hover {
+  background-color: var(--color-text-high);
+}
+
 .dashboard-home__stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -45,6 +98,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .dashboard-home__header-actions {
@@ -85,4 +140,10 @@
   margin: 0;
   color: var(--color-text-medium);
   font-size: var(--font-size-label);
+}
+
+@media (max-width: 768px) {
+  .dashboard-home__content {
+    padding: 16px;
+  }
 }

@@ -1,0 +1,62 @@
+name: Web Portal CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web-portal/**'
+      - '.github/workflows/web-portal-ci.yml'
+      - '.github/workflows/ai_qa_gate.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'web-portal/**'
+      - '.github/workflows/web-portal-ci.yml'
+      - '.github/workflows/ai_qa_gate.yml'
+
+concurrency:
+  group: web-portal-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Lint, test and build
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    defaults:
+      run:
+        working-directory: ./web-portal
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: web-portal/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Vitest unit tests with coverage
+        run: npx vitest run --coverage
+
+      - name: Build production application
+        run: npm run build
+
+  # AI-in-the-loop gate: extracts Gherkin requirements and validates test
+  # coverage. Exits 1 to fail the workflow on insufficient coverage.
+  ai-qa-gate:
+    needs: build-test
+    uses: ./.github/workflows/ai_qa_gate.yml
+    with:
+      project: web-portal
+      threshold: 80
+    secrets: inherit

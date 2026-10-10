@@ -1,0 +1,7 @@
+# The AI QA Auditor intentionally relies only on the Python standard library
+# (urllib, json, argparse, pathlib, re). No third-party packages are required,
+# which keeps the GitHub Actions gate offline-safe and dependency-free.
+#
+# This file is kept so the pipeline can run:
+#     pip install -r scripts/ai_qa_auditor/requirements.txt
+# without failing, and so optional extras can be added later if needed.

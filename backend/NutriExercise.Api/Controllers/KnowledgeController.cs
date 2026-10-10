@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using NutriExercise.Api.Logging;
+using NutriExercise.Core.Constants;
 using NutriExercise.Core.Entities;
 using NutriExercise.Core.Interfaces;
 using Pgvector;
@@ -11,11 +13,16 @@ public class KnowledgeController : ControllerBase
 {
     private readonly IAiService _aiService;
     private readonly IResearchDocumentRepository _researchDocumentRepository;
+    private readonly ILogger<KnowledgeController> _logger;
 
-    public KnowledgeController(IAiService aiService, IResearchDocumentRepository researchDocumentRepository)
+    public KnowledgeController(
+        IAiService aiService,
+        IResearchDocumentRepository researchDocumentRepository,
+        ILogger<KnowledgeController> logger)
     {
         _aiService = aiService;
         _researchDocumentRepository = researchDocumentRepository;
+        _logger = logger;
     }
 
     [HttpPost("document")]
@@ -25,13 +32,27 @@ public class KnowledgeController : ControllerBase
             string.IsNullOrWhiteSpace(request.Content) ||
             string.IsNullOrWhiteSpace(request.Source))
         {
+            _logger.LogRagError("knowledge ingest validation failed — Title, Content and Source are required.");
             return BadRequest("Title, Content, and Source are required.");
         }
 
-        var embeddingArray = await _aiService.GenerateEmbeddingAsync(request.Content);
+        // Legacy endpoint: no auth concept — always attribute to the default test user.
+        var userId = RagDefaults.ResolveUserId(request.UserId);
+
+        float[] embeddingArray;
+        try
+        {
+            embeddingArray = await _aiService.GenerateEmbeddingAsync(request.Content);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogRagError(ex, "pgvector exception while embedding knowledge document '{Title}'.", request.Title);
+            return StatusCode(StatusCodes.Status502BadGateway, "Failed to generate embedding.");
+        }
 
         if (embeddingArray.Length == 0)
         {
+            _logger.LogRagError("embedding generation returned empty vector for '{Title}'.", request.Title);
             return StatusCode(StatusCodes.Status502BadGateway, "Failed to generate embedding.");
         }
 
@@ -41,10 +62,24 @@ public class KnowledgeController : ControllerBase
             Title = request.Title,
             Content = request.Content,
             Source = request.Source,
+            BodyZone = request.Source,
+            UserId = userId,
             Embedding = new Vector(embeddingArray)
         };
 
-        await _researchDocumentRepository.AddDocumentAsync(document);
+        try
+        {
+            await _researchDocumentRepository.AddDocumentAsync(document);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogRagError(ex, "database connectivity failure while storing knowledge document '{Title}'.", request.Title);
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Database unavailable during ingestion.");
+        }
+
+        _logger.LogRagInfo(
+            "vector insertion succeeded — knowledge document '{Title}' ingested for UserId = {UserId} (DocumentId = {DocumentId}).",
+            document.Title, userId, document.Id);
 
         return Ok(new { Message = "Document ingested successfully.", Id = document.Id });
     }
@@ -66,7 +101,17 @@ public class KnowledgeController : ControllerBase
 
         foreach (var item in documents)
         {
-            var vectorArray = await _aiService.GenerateEmbeddingAsync(item.Content);
+            Vector vector;
+            try
+            {
+                var vectorArray = await _aiService.GenerateEmbeddingAsync(item.Content);
+                vector = new Vector(vectorArray);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogRagError(ex, "pgvector exception while seeding knowledge document '{Title}'.", item.Title);
+                return StatusCode(StatusCodes.Status502BadGateway, "Failed to generate embedding.");
+            }
 
             var doc = new ResearchDocument
             {
@@ -74,14 +119,25 @@ public class KnowledgeController : ControllerBase
                 Title = item.Title,
                 Content = item.Content,
                 Source = item.Source,
-                Embedding = new Vector(vectorArray)
+                BodyZone = item.Source,
+                UserId = RagDefaults.DefaultUserId,
+                Embedding = vector
             };
 
-            await _researchDocumentRepository.AddDocumentAsync(doc);
+            try
+            {
+                await _researchDocumentRepository.AddDocumentAsync(doc);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogRagError(ex, "database connectivity failure while seeding knowledge document '{Title}'.", item.Title);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, "Database unavailable during seeding.");
+            }
         }
 
+        _logger.LogRagInfo("database seeding completed — scientific knowledge injected (Documents = 3).");
         return Ok("Conocimiento científico inyectado correctamente.");
     }
 }
 
-public record AddDocumentRequest(string Title, string Content, string Source);
+public record AddDocumentRequest(string Title, string Content, string Source, int? UserId = null);
