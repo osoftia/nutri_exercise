@@ -21,6 +21,11 @@ export class AdminSidebar {
   readonly navItems: NavItem[] = [
     { label: 'nav.history', icon: 'history', link: '/history' },
     { label: 'nav.analytics', icon: 'analytics', link: '/analytics' },
+    {
+      label: 'nav.clinicalEvolution',
+      icon: 'trend-up',
+      link: '/clinical-evolution',
+    },
     { label: 'nav.routines', icon: 'workout', link: '/routine-board' },
     { label: 'nav.nutrition', icon: 'nutrition', link: '/history' },
     { label: 'nav.schedule', icon: 'schedule', link: '/history' },

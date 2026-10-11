@@ -1,0 +1,155 @@
+<figure class="evolution-chart">
+  <figcaption class="evolution-chart__legend">
+    <span class="evolution-chart__legend-item">
+      <span class="evolution-chart__swatch evolution-chart__swatch--bar" aria-hidden="true"></span>
+      {{ 'evolution.consumption' | translate }}
+    </span>
+    <span class="evolution-chart__legend-item">
+      <span class="evolution-chart__swatch evolution-chart__swatch--actual" aria-hidden="true"></span>
+      {{ 'evolution.actual' | translate }}
+    </span>
+    <span class="evolution-chart__legend-item">
+      <span class="evolution-chart__swatch evolution-chart__swatch--projected" aria-hidden="true"></span>
+      {{ 'evolution.projected' | translate }}
+    </span>
+  </figcaption>
+
+  @if (layout(); as chart) {
+    <svg
+      class="evolution-chart__svg"
+      [attr.viewBox]="'0 0 ' + chart.width + ' ' + chart.height"
+      role="img"
+      [attr.aria-label]="'evolution.chartAria' | translate"
+    >
+      @for (tick of chart.consumptionTicks; track tick.value) {
+        <line
+          class="evolution-chart__grid"
+          [attr.x1]="chart.plotLeft"
+          [attr.x2]="chart.plotRight"
+          [attr.y1]="tick.y"
+          [attr.y2]="tick.y"
+        ></line>
+        <text
+          class="evolution-chart__axis"
+          [attr.x]="chart.plotLeft - 12"
+          [attr.y]="tick.y + 4"
+          text-anchor="end"
+        >{{ tick.label }}</text>
+      }
+
+      @for (tick of chart.markerTicks; track tick.value) {
+        <text
+          class="evolution-chart__axis"
+          [attr.x]="chart.plotRight + 12"
+          [attr.y]="tick.y + 4"
+          text-anchor="start"
+        >{{ tick.label }}</text>
+      }
+
+      @for (bar of chart.bars; track bar.key) {
+        <rect
+          class="evolution-chart__bar"
+          [class.evolution-chart__bar--muted]="hoveredBand() !== null && !isActiveBand(bar.key)"
+          [attr.x]="bar.x"
+          [attr.y]="bar.y"
+          [attr.width]="bar.width"
+          [attr.height]="bar.height"
+        ></rect>
+      }
+
+      <polyline
+        class="evolution-chart__line evolution-chart__line--actual"
+        [attr.points]="chart.historicalLine"
+      ></polyline>
+
+      <polyline
+        class="evolution-chart__line evolution-chart__line--projected"
+        [attr.points]="chart.projectionLine"
+      ></polyline>
+
+      @for (vertex of chart.historicalVertices; track vertex.date) {
+        <circle
+          class="evolution-chart__dot evolution-chart__dot--actual"
+          [attr.cx]="vertex.x"
+          [attr.cy]="vertex.y"
+          r="4"
+        ></circle>
+      }
+
+      @for (vertex of chart.projectionVertices; track vertex.date + vertex.kind) {
+        <circle
+          class="evolution-chart__dot evolution-chart__dot--projected"
+          [attr.cx]="vertex.x"
+          [attr.cy]="vertex.y"
+          r="4"
+        ></circle>
+      }
+
+      <line
+        class="evolution-chart__today"
+        [attr.x1]="chart.todayX"
+        [attr.x2]="chart.todayX"
+        [attr.y1]="chart.plotTop"
+        [attr.y2]="chart.plotBottom"
+      ></line>
+      <text
+        class="evolution-chart__today-label"
+        [attr.x]="chart.todayX"
+        [attr.y]="chart.plotTop - 12"
+        text-anchor="middle"
+      >{{ 'evolution.today' | translate }}</text>
+
+      @for (band of chart.bands; track band.key) {
+        <rect
+          class="evolution-chart__hit"
+          [attr.x]="band.x"
+          [attr.y]="chart.plotTop"
+          [attr.width]="band.width"
+          [attr.height]="chart.plotHeight"
+          tabindex="0"
+          role="img"
+          [attr.aria-label]="band.label + ' — ' + ('evolution.marker' | translate) + ': ' + band.marker + ' ' + (metric()?.marker_unit ?? '')"
+          (mouseenter)="hoverBand(band)"
+          (mouseleave)="clearHover()"
+          (focus)="hoverBand(band)"
+          (blur)="clearHover()"
+        ></rect>
+      }
+
+      @if (tooltip(); as tip) {
+        <g
+          class="evolution-chart__tooltip"
+          [attr.transform]="'translate(' + tip.x + ',' + tip.y + ')'"
+          pointer-events="none"
+        >
+          <rect
+            class="evolution-chart__tooltip-box"
+            [attr.width]="tip.width"
+            [attr.height]="tip.height"
+          ></rect>
+          <text class="evolution-chart__tooltip-date" x="12" y="20">{{ tip.band.label }}</text>
+          @if (tip.band.isFuture) {
+            <text
+              class="evolution-chart__tooltip-tag"
+              [attr.x]="tip.width - 12"
+              y="20"
+              text-anchor="end"
+            >{{ 'evolution.projected' | translate }}</text>
+          }
+          @if (tip.band.consumption !== null) {
+            <text class="evolution-chart__tooltip-line" x="12" y="42">
+              {{ 'evolution.consumption' | translate }}: {{ tip.band.consumption }} {{ metric()?.consumption_unit }}
+            </text>
+          }
+          <text
+            class="evolution-chart__tooltip-line"
+            x="12"
+            [attr.y]="tip.band.consumption !== null ? 60 : 42"
+          >
+            {{ 'evolution.marker' | translate }}: {{ tip.band.marker }} {{ metric()?.marker_unit }}
+          </text>
+        </g>
+      }
+    </svg>
+  }
+</figure>

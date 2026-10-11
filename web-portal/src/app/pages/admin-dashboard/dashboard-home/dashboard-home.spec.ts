@@ -214,7 +214,7 @@ describe('DashboardHome', () => {
     ) as HTMLAnchorElement;
 
     expect(launch).not.toBeNull();
-    expect(launch.textContent).toContain('// LAUNCH RAG LAB');
+    expect(launch.textContent).toContain('Launch RAG Lab');
     expect(
       fixture.nativeElement.querySelector('.dashboard-home__toolbar'),
     ).not.toBeNull();
@@ -230,7 +230,7 @@ describe('DashboardHome', () => {
       ) as DebugElement;
 
     expect(launchLink).toBeDefined();
-    expect(launchLink.nativeElement.textContent).toContain('// LAUNCH RAG LAB');
+    expect(launchLink.nativeElement.textContent).toContain('Launch RAG Lab');
     expect(
       (launchLink.nativeElement as HTMLAnchorElement).getAttribute('href'),
     ).toBe('/rag-lab');

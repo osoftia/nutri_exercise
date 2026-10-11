@@ -1,0 +1,82 @@
+<section class="clinical-evolution">
+  <header class="clinical-evolution__header">
+    <span class="clinical-evolution__overline">{{ 'evolution.overline' | translate }}</span>
+    <h1 class="clinical-evolution__title">{{ 'evolution.title' | translate }}</h1>
+    <p class="clinical-evolution__subtitle">{{ 'evolution.subtitle' | translate }}</p>
+  </header>
+
+  @if (store.isLoading()) {
+    <div class="clinical-evolution__state" role="status" aria-live="polite">
+      <span class="clinical-evolution__overline">{{ 'evolution.loading' | translate }}</span>
+      <span class="clinical-evolution__pulse"></span>
+    </div>
+  } @else if (store.error(); as message) {
+    <div class="clinical-evolution__state clinical-evolution__state--error" role="alert">
+      <span class="clinical-evolution__overline">{{ 'evolution.error' | translate }}</span>
+      <p class="clinical-evolution__state-text">{{ message }}</p>
+      <button type="button" class="clinical-evolution__retry" (click)="store.load()">
+        {{ 'evolution.retry' | translate }}
+      </button>
+    </div>
+  } @else {
+    <div class="clinical-evolution__grid">
+      <div class="clinical-evolution__gauge">
+        <app-health-risk-gauge />
+      </div>
+
+      <div class="clinical-evolution__kpis">
+        <article class="clinical-evolution__stat">
+          <span class="clinical-evolution__stat-label">{{ 'evolution.currentMarker' | translate }}</span>
+          @if (currentMarker(); as value) {
+            <span class="clinical-evolution__stat-value">
+              {{ value }}<small class="clinical-evolution__stat-unit">{{ markerUnit() }}</small>
+            </span>
+          } @else {
+            <span class="clinical-evolution__stat-value">—</span>
+          }
+        </article>
+
+        <article class="clinical-evolution__stat">
+          <span class="clinical-evolution__stat-label">{{ 'evolution.projectedMarker' | translate }}</span>
+          @if (projectedMarker(); as value) {
+            <span class="clinical-evolution__stat-value clinical-evolution__stat-value--projected">
+              {{ value }}<small class="clinical-evolution__stat-unit">{{ markerUnit() }}</small>
+            </span>
+          } @else {
+            <span class="clinical-evolution__stat-value">—</span>
+          }
+        </article>
+
+        <article class="clinical-evolution__stat">
+          <span class="clinical-evolution__stat-label">{{ 'evolution.consumptionTrend' | translate }}</span>
+          @if (consumptionChange(); as value) {
+            <span class="clinical-evolution__stat-value">
+              {{ signed(value) }}<small class="clinical-evolution__stat-unit">{{ consumptionUnit() }}</small>
+            </span>
+          } @else {
+            <span class="clinical-evolution__stat-value">—</span>
+          }
+        </article>
+
+        <article class="clinical-evolution__stat">
+          <span class="clinical-evolution__stat-label">{{ 'evolution.projectedChange' | translate }}</span>
+          @if (markerDelta(); as value) {
+            <span
+              class="clinical-evolution__stat-value"
+              [class.clinical-evolution__stat-value--good]="improved()"
+              [class.clinical-evolution__stat-value--bad]="!improved()"
+            >
+              {{ signed(value) }}<small class="clinical-evolution__stat-unit">{{ markerUnit() }}</small>
+            </span>
+          } @else {
+            <span class="clinical-evolution__stat-value">—</span>
+          }
+        </article>
+      </div>
+
+      <div class="clinical-evolution__chart">
+        <app-health-evolution-chart />
+      </div>
+    </div>
+  }
+</section>

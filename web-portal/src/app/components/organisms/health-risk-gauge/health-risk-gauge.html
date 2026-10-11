@@ -1,0 +1,33 @@
+<div class="risk-gauge">
+  <span class="risk-gauge__overline">{{ 'evolution.riskGauge' | translate }}</span>
+
+  <div class="risk-gauge__dial">
+    <svg
+      class="risk-gauge__svg"
+      viewBox="0 0 200 200"
+      role="img"
+      [attr.aria-label]="('evolution.riskGauge' | translate) + ': ' + score() + '%, ' + (levelLabelKey() | translate)"
+    >
+      <circle class="risk-gauge__track" cx="100" cy="100" [attr.r]="radius"></circle>
+      <circle
+        class="risk-gauge__progress"
+        cx="100"
+        cy="100"
+        [attr.r]="radius"
+        transform="rotate(-90 100 100)"
+        [style.stroke]="color()"
+        [style.stroke-dasharray]="circumference"
+        [style.stroke-dashoffset]="dashOffset()"
+      ></circle>
+    </svg>
+
+    <div class="risk-gauge__readout">
+      <span class="risk-gauge__value">{{ score() }}%</span>
+      <span class="risk-gauge__level" [style.color]="color()">
+        {{ levelLabelKey() | translate }}
+      </span>
+    </div>
+  </div>
+
+  <p class="risk-gauge__hint">{{ 'evolution.riskHint' | translate }}</p>
+</div>

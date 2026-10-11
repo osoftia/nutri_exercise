@@ -13,6 +13,13 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/analytics/analytics.page').then((m) => m.AnalyticsPage),
       },
       {
+        path: 'clinical-evolution',
+        loadComponent: () =>
+          import('./pages/clinical-evolution/clinical-evolution.page').then(
+            (m) => m.ClinicalEvolutionPage,
+          ),
+      },
+      {
         path: 'rag-lab',
         loadComponent: () => import('./components/organisms/prompt-lab/prompt-lab').then((m) => m.PromptLab),
       },
