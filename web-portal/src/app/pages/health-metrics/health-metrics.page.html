@@ -5,26 +5,85 @@
     <p class="health-metrics__subtitle">{{ 'metrics.subtitle' | translate }}</p>
   </header>
 
-  @if (store.isLoading()) {
-    <div class="health-metrics__state" role="status" aria-live="polite">
-      <span class="health-metrics__overline">{{ 'metrics.loading' | translate }}</span>
-      <span class="health-metrics__pulse"></span>
-    </div>
-  } @else if (store.error(); as message) {
-    <div class="health-metrics__state health-metrics__state--error" role="alert">
-      <span class="health-metrics__overline">{{ 'metrics.error' | translate }}</span>
-      <p class="health-metrics__state-text">{{ message }}</p>
-      <button type="button" class="health-metrics__retry" (click)="store.load()">
-        {{ 'metrics.retry' | translate }}
-      </button>
-    </div>
-  } @else {
-    <div class="health-metrics__grid">
-      <app-blood-pressure-scatter class="health-metrics__span-12" [data]="store.bloodPressure()" />
-      <app-glucose-line class="health-metrics__span-6" [data]="store.glucose()" />
-      <app-bmi-area class="health-metrics__span-6" [data]="store.bmi()" />
-      <app-sleep-quality-heatmap class="health-metrics__span-12" [data]="store.sleep()" />
-      <app-active-calories-bar class="health-metrics__span-12" [data]="store.activeCalories()" />
-    </div>
-  }
+  <div class="health-metrics__tabs" role="tablist" [attr.aria-label]="'metrics.title' | translate">
+    <button
+      type="button"
+      role="tab"
+      class="health-metrics__tab"
+      [class.health-metrics__tab--active]="ui.activeTab() === 'dashboard'"
+      [attr.aria-selected]="ui.activeTab() === 'dashboard'"
+      (click)="ui.setTab('dashboard')"
+    >
+      {{ 'metrics.tab.dashboard' | translate }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="health-metrics__tab"
+      [class.health-metrics__tab--active]="ui.activeTab() === 'rag'"
+      [attr.aria-selected]="ui.activeTab() === 'rag'"
+      (click)="ui.setTab('rag')"
+    >
+      {{ 'metrics.tab.rag' | translate }}
+    </button>
+  </div>
+
+  <div class="health-metrics__view" [hidden]="ui.activeTab() !== 'dashboard'">
+    @if (store.isLoading()) {
+      <div class="health-metrics__state" role="status" aria-live="polite">
+        <span class="health-metrics__overline">{{ 'metrics.loading' | translate }}</span>
+        <span class="health-metrics__pulse"></span>
+      </div>
+    } @else if (store.error(); as message) {
+      <div class="health-metrics__state health-metrics__state--error" role="alert">
+        <span class="health-metrics__overline">{{ 'metrics.error' | translate }}</span>
+        <p class="health-metrics__state-text">{{ message }}</p>
+        <button type="button" class="health-metrics__retry" (click)="store.load()">
+          {{ 'metrics.retry' | translate }}
+        </button>
+      </div>
+    } @else {
+      <div class="health-metrics__grid">
+        <div
+          id="chart-blood-pressure"
+          class="health-metrics__card health-metrics__span-12"
+          [class.health-metrics__card--focused]="ui.focusedChartId() === 'blood-pressure'"
+        >
+          <app-blood-pressure-scatter [data]="store.bloodPressure()" />
+        </div>
+        <div
+          id="chart-glucose"
+          class="health-metrics__card health-metrics__span-6"
+          [class.health-metrics__card--focused]="ui.focusedChartId() === 'glucose'"
+        >
+          <app-glucose-line [data]="store.glucose()" />
+        </div>
+        <div
+          id="chart-bmi"
+          class="health-metrics__card health-metrics__span-6"
+          [class.health-metrics__card--focused]="ui.focusedChartId() === 'bmi'"
+        >
+          <app-bmi-area [data]="store.bmi()" />
+        </div>
+        <div
+          id="chart-sleep"
+          class="health-metrics__card health-metrics__span-12"
+          [class.health-metrics__card--focused]="ui.focusedChartId() === 'sleep'"
+        >
+          <app-sleep-quality-heatmap [data]="store.sleep()" />
+        </div>
+        <div
+          id="chart-calories"
+          class="health-metrics__card health-metrics__span-12"
+          [class.health-metrics__card--focused]="ui.focusedChartId() === 'calories'"
+        >
+          <app-active-calories-bar [data]="store.activeCalories()" />
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="health-metrics__view" [hidden]="ui.activeTab() !== 'rag'">
+    <app-rag-insights />
+  </div>
 </section>

@@ -129,3 +129,64 @@
     padding: 20px;
   }
 }
+
+.health-metrics__tabs {
+  display: inline-flex;
+  align-self: flex-start;
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.health-metrics__tab {
+  padding: 12px 24px;
+  background-color: var(--color-surface);
+  border: none;
+  font-family: var(--font-family);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-overline);
+  text-transform: uppercase;
+  color: var(--color-text-medium);
+  cursor: pointer;
+}
+
+.health-metrics__tab + .health-metrics__tab {
+  border-left: var(--border-thin);
+}
+
+.health-metrics__tab--active {
+  background-color: var(--color-block-primary);
+  color: var(--color-ink);
+}
+
+.health-metrics__view[hidden] {
+  display: none;
+}
+
+.health-metrics__card {
+  display: block;
+  border-radius: var(--radius-lg);
+  transition: outline-color var(--motion-normal) var(--ease-out);
+}
+
+.health-metrics__card > * {
+  display: block;
+  width: 100%;
+}
+
+.health-metrics__card--focused {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 4px;
+  animation: health-metrics-focus 1.4s ease-in-out 2;
+}
+
+@keyframes health-metrics-focus {
+  0%,
+  100% {
+    outline-color: var(--color-accent);
+  }
+  50% {
+    outline-color: transparent;
+  }
+}

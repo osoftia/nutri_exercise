@@ -1,0 +1,78 @@
+<article class="rag-report">
+  <header class="rag-report__head">
+    <div class="rag-report__heading">
+      <span class="rag-report__badge">{{ 'rag.report.badge' | translate }}</span>
+      <h2 class="rag-report__title">{{ 'rag.report.title' | translate }}</h2>
+      <p class="rag-report__subtitle">{{ 'rag.report.subtitle' | translate }}</p>
+    </div>
+    <button
+      type="button"
+      class="rag-report__download"
+      [disabled]="isDownloading()"
+      (click)="download()"
+    >
+      {{ (isDownloading() ? 'rag.report.downloading' : 'rag.report.download') | translate }}
+    </button>
+  </header>
+
+  <section class="rag-report__summary">
+    <div class="rag-report__summary-head">
+      <h3 class="rag-report__summary-title">{{ 'rag.report.summaryTitle' | translate }}</h3>
+      <span class="rag-report__generated">
+        {{ 'rag.report.generated' | translate }}: {{ report.generatedAt }}
+      </span>
+    </div>
+    <p class="rag-report__summary-text">{{ report.summaryKey | translate }}</p>
+    <p class="rag-report__hint">{{ 'rag.report.hint' | translate }}</p>
+  </section>
+
+  @for (category of report.categories; track category.id) {
+    <section class="rag-report__category">
+      <h3 class="rag-report__category-title">{{ category.titleKey | translate }}</h3>
+      <div class="rag-report__table-wrap">
+        <table class="rag-report__table">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'rag.table.finding' | translate }}</th>
+              <th scope="col">{{ 'rag.table.detail' | translate }}</th>
+              <th scope="col">{{ 'rag.table.metric' | translate }}</th>
+              <th scope="col">{{ 'rag.table.severity' | translate }}</th>
+              <th scope="col">{{ 'rag.table.link' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of category.rows; track row.id) {
+              <tr
+                class="rag-report__row"
+                [class.rag-report__row--linked]="isLinked(row)"
+                [attr.tabindex]="isLinked(row) ? 0 : null"
+                [attr.role]="isLinked(row) ? 'button' : null"
+                [attr.aria-label]="isLinked(row) ? (row.labelKey | translate) : null"
+                (click)="openChart(row)"
+                (keydown.enter)="openChart(row)"
+              >
+                <td class="rag-report__finding">{{ row.labelKey | translate }}</td>
+                <td class="rag-report__detail">{{ row.detailKey | translate }}</td>
+                <td class="rag-report__metric">{{ row.metric }}</td>
+                <td>
+                  <span class="rag-report__severity" [attr.data-severity]="row.severity">
+                    {{ ('rag.severity.' + row.severity) | translate }}
+                  </span>
+                </td>
+                <td class="rag-report__link-cell">
+                  @if (row.chartId; as chartId) {
+                    <span class="rag-report__link">
+                      &rarr; {{ chartLabelKey(chartId) | translate }}
+                    </span>
+                  } @else {
+                    <span class="rag-report__link rag-report__link--muted">&mdash;</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</article>
