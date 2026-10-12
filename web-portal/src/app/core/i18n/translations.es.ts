@@ -120,4 +120,5 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   'bmi.overweight': 'Sobrepeso', 'bmi.obese': 'Obesidad',
   'sleep.score': 'Puntaje', 'sleep.hours': 'Horas', 'sleep.low': 'Bajo', 'sleep.high': 'Alto',
   'calories.bars': 'Calorías', 'calories.rolling': 'Media 7 días',
+  'tooltip.risk': 'Riesgo', 'tooltip.warning': 'Advertencia', 'tooltip.advice': 'Consejo',
 };

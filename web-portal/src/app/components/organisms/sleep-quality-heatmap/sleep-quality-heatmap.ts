@@ -16,7 +16,8 @@ import {
   HeatmapDatum,
   buildHeatmapLayout,
 } from '../../../core/charts/builders/heatmap.builder';
-import { ChartPadding } from '../../../core/charts/models/chart.model';
+import { buildInsightRows } from '../../../core/charts/insight';
+import { ChartPadding, TooltipRow } from '../../../core/charts/models/chart.model';
 import { SleepRecord } from '../../../core/models/health-metrics.model';
 import { LocaleStore } from '../../../core/stores/locale.store';
 import { translate } from '../../../core/i18n/translate';
@@ -38,7 +39,7 @@ interface HeatTooltip {
   y: number;
   width: number;
   height: number;
-  lines: string[];
+  rows: TooltipRow[];
 }
 
 @Component({
@@ -84,19 +85,23 @@ export class SleepQualityHeatmap {
       return null;
     }
     const record = this.recordsByDate().get(cell.date);
-    const lines = [
-      cell.date,
-      `${translate(this.locale.locale(), 'sleep.score')}: ${cell.value}`,
-      `${translate(this.locale.locale(), 'sleep.hours')}: ${record?.hours ?? '—'} h`,
+    const rows: TooltipRow[] = [
+      { kind: 'title', text: cell.date },
+      { kind: 'line', text: `${translate(this.locale.locale(), 'sleep.score')}: ${cell.value}` },
+      {
+        kind: 'line',
+        text: `${translate(this.locale.locale(), 'sleep.hours')}: ${record?.hours ?? '—'} h`,
+      },
+      ...buildInsightRows(record?.insights, this.locale.locale()),
     ];
-    const width = 180;
-    const height = lines.length * 18 + 12;
+    const width = 240;
+    const height = rows.length * 17 + 12;
     const plot = chart.frame.plot;
     const x = Math.min(
       Math.max(cell.x + cell.width / 2 - width / 2, plot.x),
       plot.x + plot.width - width,
     );
-    return { x, y: plot.y + 6, width, height, lines };
+    return { x, y: plot.y + 6, width, height, rows };
   });
 
   onMove(event: MouseEvent): void {
@@ -120,6 +125,10 @@ export class SleepQualityHeatmap {
   }
 
   private toData(records: readonly SleepRecord[]): HeatmapDatum[] {
-    return records.map((record) => ({ date: record.date, value: record.score }));
+    return records.map((record) => ({
+      date: record.date,
+      value: record.score,
+      insights: record.insights,
+    }));
   }
 }

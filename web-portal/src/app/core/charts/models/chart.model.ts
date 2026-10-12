@@ -53,9 +53,24 @@ export interface Marker {
 export interface DataPoint {
   date: string;
   value: number;
+  insights?: ChartInsight;
 }
 
 export interface SeriesPoint extends Point {
   date: string;
   value: number;
+  insights?: ChartInsight;
+}
+
+export interface ChartInsight {
+  risk?: string;
+  warning?: string;
+  advice?: string;
+}
+
+export type TooltipRowKind = 'title' | 'line' | 'risk' | 'warning' | 'advice';
+
+export interface TooltipRow {
+  kind: TooltipRowKind;
+  text: string;
 }

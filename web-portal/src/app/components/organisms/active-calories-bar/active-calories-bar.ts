@@ -11,6 +11,7 @@ import {
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { observeWidth } from '../../../core/charts/resize';
 import { useNearestHover } from '../../../core/charts/hover';
+import { buildInsightRows } from '../../../core/charts/insight';
 import { buildBarChartLayout } from '../../../core/charts/builders/bar.builder';
 import { DEFAULT_PADDING, DataPoint, SeriesPoint } from '../../../core/charts/models/chart.model';
 import { LocaleStore } from '../../../core/stores/locale.store';
@@ -58,6 +59,7 @@ export class ActiveCaloriesBar {
       y: bar.y,
       date: bar.date,
       value: bar.value,
+      insights: bar.insights,
     })),
   );
 
@@ -69,5 +71,6 @@ export class ActiveCaloriesBar {
       point.date,
       `${translate(this.locale.locale(), 'calories.bars')}: ${point.value} kcal`,
     ],
+    insight: (point) => buildInsightRows(point.insights, this.locale.locale()),
   });
 }

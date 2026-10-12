@@ -6,12 +6,13 @@ import {
   toIsoDate,
   weekdayIndexMonday,
 } from '../geometry/date';
-import { ChartFrame, ChartPadding } from '../models/chart.model';
+import { ChartFrame, ChartInsight, ChartPadding } from '../models/chart.model';
 import { buildFrame, round2 } from './frame.builder';
 
 export interface HeatmapDatum {
   date: string;
   value: number | null;
+  insights?: ChartInsight;
 }
 
 export interface HeatmapSpec {
@@ -33,6 +34,7 @@ export interface HeatmapCell {
   level: number | null;
   column: number;
   row: number;
+  insights?: ChartInsight;
 }
 
 export interface ColumnLabel {
@@ -92,6 +94,7 @@ export function buildHeatmapLayout(
       level: datum.value === null ? null : levelFor(datum.value, spec),
       column,
       row,
+      insights: datum.insights,
     };
   });
 

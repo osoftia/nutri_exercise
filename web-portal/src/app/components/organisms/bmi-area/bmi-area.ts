@@ -11,6 +11,7 @@ import {
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { observeWidth } from '../../../core/charts/resize';
 import { useNearestHover } from '../../../core/charts/hover';
+import { buildInsightRows } from '../../../core/charts/insight';
 import { toPolyline } from '../../../core/charts/geometry/path';
 import { buildLineChartLayout } from '../../../core/charts/builders/line.builder';
 import {
@@ -84,6 +85,7 @@ export class BmiArea {
       point.date,
       `${translate(this.locale.locale(), 'bmi.series')}: ${point.value} kg/m²`,
     ],
+    insight: (point) => buildInsightRows(point.insights, this.locale.locale()),
   });
 
   polyline(points: readonly SeriesPoint[]): string {

@@ -11,6 +11,7 @@ import {
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { observeWidth } from '../../../core/charts/resize';
 import { useNearestHover } from '../../../core/charts/hover';
+import { buildInsightRows } from '../../../core/charts/insight';
 import {
   ScatterDatum,
   buildScatterChartLayout,
@@ -78,7 +79,13 @@ export class BloodPressureScatter {
   private readonly systolicPoints = computed<SeriesPoint[]>(() =>
     this.layout()
       .points.filter((point) => point.kind === 'primary')
-      .map((point) => ({ x: point.x, y: point.y, date: point.date, value: point.value })),
+      .map((point) => ({
+        x: point.x,
+        y: point.y,
+        date: point.date,
+        value: point.value,
+        insights: point.insights,
+      })),
   );
 
   readonly hover = useNearestHover({
@@ -98,6 +105,7 @@ export class BloodPressureScatter {
         `${diastolic}: ${reading.diastolic} mmHg`,
       ];
     },
+    insight: (point) => buildInsightRows(point.insights, this.locale.locale()),
   });
 
   private toData(readings: readonly BloodPressureReading[]): ScatterDatum[] {
@@ -105,6 +113,7 @@ export class BloodPressureScatter {
       date: reading.date,
       primary: reading.systolic,
       secondary: reading.diastolic,
+      insights: reading.insights,
     }));
   }
 }

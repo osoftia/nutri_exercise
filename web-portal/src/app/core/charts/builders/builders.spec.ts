@@ -83,6 +83,16 @@ describe('buildLineChartLayout', () => {
     expect(layout.series).toHaveLength(0);
     expect(layout.xTicks).toHaveLength(0);
   });
+
+  it('carries point insights through to the series points', () => {
+    const data: DataPoint[] = [
+      { date: iso(0), value: 10, insights: { warning: 'elevated' } },
+      { date: iso(1), value: 20 },
+    ];
+    const layout = buildLineChartLayout(data, 720, { padding: DEFAULT_PADDING, height: 300 });
+    expect(layout.series[0].points[0].insights).toEqual({ warning: 'elevated' });
+    expect(layout.series[0].points[1].insights).toBeUndefined();
+  });
 });
 
 describe('buildBarChartLayout', () => {

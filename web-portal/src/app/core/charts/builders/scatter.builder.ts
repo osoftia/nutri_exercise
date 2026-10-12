@@ -4,6 +4,7 @@ import { buildTicks, niceDomain } from '../geometry/ticks';
 import {
   AxisTick,
   ChartFrame,
+  ChartInsight,
   ChartPadding,
   Point,
   ReferenceBand,
@@ -16,6 +17,7 @@ export interface ScatterDatum {
   date: string;
   primary: number;
   secondary: number;
+  insights?: ChartInsight;
 }
 
 export interface ScatterSpec {
@@ -29,6 +31,7 @@ export interface ScatterPoint extends Point {
   value: number;
   kind: 'primary' | 'secondary';
   tone: Tone;
+  insights?: ChartInsight;
 }
 
 export interface ScatterChartLayout {
@@ -71,6 +74,7 @@ export function buildScatterChartLayout(
       value: datum.primary,
       kind: 'primary' as const,
       tone: toneForValue(datum.primary, spec.bands),
+      insights: datum.insights,
     },
     {
       x: round2(xScale.map(times[index])),
@@ -79,6 +83,7 @@ export function buildScatterChartLayout(
       value: datum.secondary,
       kind: 'secondary' as const,
       tone: toneForValue(datum.secondary, spec.bands),
+      insights: datum.insights,
     },
   ]);
 

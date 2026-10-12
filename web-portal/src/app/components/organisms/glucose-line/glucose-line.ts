@@ -11,6 +11,7 @@ import {
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { observeWidth } from '../../../core/charts/resize';
 import { useNearestHover } from '../../../core/charts/hover';
+import { buildInsightRows } from '../../../core/charts/insight';
 import { toPolyline } from '../../../core/charts/geometry/path';
 import { buildLineChartLayout } from '../../../core/charts/builders/line.builder';
 import { DEFAULT_PADDING, DataPoint, SeriesPoint } from '../../../core/charts/models/chart.model';
@@ -75,6 +76,7 @@ export class GlucoseLine {
       point.date,
       `${translate(this.locale.locale(), 'glucose.series')}: ${point.value} mg/dL`,
     ],
+    insight: (point) => buildInsightRows(point.insights, this.locale.locale()),
   });
 
   polyline(points: readonly SeriesPoint[]): string {

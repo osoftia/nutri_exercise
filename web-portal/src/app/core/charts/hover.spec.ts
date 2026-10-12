@@ -27,7 +27,7 @@ describe('useNearestHover', () => {
     expect(hover.tooltip()).toBeNull();
   });
 
-  it('selects the nearest point and exposes a tooltip', () => {
+  it('selects the nearest point and exposes typed tooltip rows', () => {
     const hover = useNearestHover({
       points: () => POINTS,
       plot: () => ({ x: 0, y: 0, width: 200, height: 100 }),
@@ -37,11 +37,30 @@ describe('useNearestHover', () => {
 
     hover.onMove(moveEvent(105));
     expect(hover.hoveredIndex()).toBe(1);
-    expect(hover.tooltip()?.lines).toEqual(['2024-01-02', 'value 2']);
+    expect(hover.tooltip()?.rows).toEqual([
+      { kind: 'title', text: '2024-01-02' },
+      { kind: 'line', text: 'value 2' },
+    ]);
 
     hover.clear();
     expect(hover.hoveredIndex()).toBe(-1);
     expect(hover.tooltip()).toBeNull();
+  });
+
+  it('appends insight rows supplied by the caller', () => {
+    const hover = useNearestHover({
+      points: () => POINTS,
+      plot: () => ({ x: 0, y: 0, width: 200, height: 100 }),
+      viewWidth: () => 200,
+      lines: (point) => [point.date],
+      insight: () => [{ kind: 'warning', text: 'Warning: elevated' }],
+    });
+
+    hover.onMove(moveEvent(5));
+    const rows = hover.tooltip()?.rows ?? [];
+    expect(rows).toHaveLength(2);
+    expect(rows[1]).toEqual({ kind: 'warning', text: 'Warning: elevated' });
+    expect(hover.tooltip()?.height).toBe(rows.length * 17 + 12);
   });
 
   it('ignores moves when there are no points', () => {

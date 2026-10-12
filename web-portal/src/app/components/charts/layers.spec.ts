@@ -61,16 +61,22 @@ describe('chart layers', () => {
     expect(rect.getAttribute('data-tone')).toBe('success');
   });
 
-  it('renders tooltip box and lines', async () => {
+  it('renders tooltip box and rows with semantic kinds', async () => {
     const fixture = await create(ChartTooltip);
     fixture.componentRef.setInput('x', 10);
     fixture.componentRef.setInput('y', 20);
-    fixture.componentRef.setInput('width', 160);
-    fixture.componentRef.setInput('height', 50);
-    fixture.componentRef.setInput('lines', ['2026-08-17', 'Cholesterol: 198 mg/dL']);
+    fixture.componentRef.setInput('width', 240);
+    fixture.componentRef.setInput('height', 63);
+    fixture.componentRef.setInput('rows', [
+      { kind: 'title', text: '2026-08-17' },
+      { kind: 'line', text: 'Cholesterol: 198 mg/dL' },
+      { kind: 'warning', text: 'Warning: elevated blood pressure' },
+    ]);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.chart-tooltip__box')).not.toBeNull();
-    expect(fixture.nativeElement.querySelectorAll('.chart-tooltip__line')).toHaveLength(2);
+    const rows = fixture.nativeElement.querySelectorAll('.chart-tooltip__row');
+    expect(rows).toHaveLength(3);
+    expect(rows[2].getAttribute('data-kind')).toBe('warning');
   });
 
   it('renders legend items', async () => {

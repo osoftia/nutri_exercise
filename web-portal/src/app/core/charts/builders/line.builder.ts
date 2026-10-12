@@ -105,6 +105,7 @@ function buildSeries(
       y: round2(yScale.map(values[index])),
       date: data[index].date,
       value: values[index],
+      insights: data[index].insights,
     }));
 
   const split = spec.dashedFrom;

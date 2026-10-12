@@ -1,14 +1,14 @@
 import { Signal, WritableSignal, computed, signal } from '@angular/core';
 
 import { nearestIndex } from './geometry/nearest';
-import { Rect, SeriesPoint } from './models/chart.model';
+import { Rect, SeriesPoint, TooltipRow } from './models/chart.model';
 
 export interface HoverTooltip {
   x: number;
   y: number;
   width: number;
   height: number;
-  lines: string[];
+  rows: TooltipRow[];
 }
 
 export interface NearestHoverOptions {
@@ -17,6 +17,7 @@ export interface NearestHoverOptions {
   plot: () => Rect | null;
   viewWidth: () => number;
   width?: number;
+  insight?: (point: SeriesPoint) => TooltipRow[];
 }
 
 export interface NearestHover {
@@ -28,7 +29,7 @@ export interface NearestHover {
 
 export function useNearestHover(options: NearestHoverOptions): NearestHover {
   const hoveredIndex = signal(-1);
-  const boxWidth = options.width ?? 168;
+  const boxWidth = options.width ?? 240;
 
   const tooltip = computed<HoverTooltip | null>(() => {
     const plot = options.plot();
@@ -37,10 +38,14 @@ export function useNearestHover(options: NearestHoverOptions): NearestHover {
     if (!plot || !point) {
       return null;
     }
-    const lines = options.lines(point);
-    const height = lines.length * 18 + 12;
+    const base: TooltipRow[] = options.lines(point).map((text, index) => ({
+      kind: index === 0 ? 'title' : 'line',
+      text,
+    }));
+    const rows = [...base, ...(options.insight?.(point) ?? [])];
+    const height = rows.length * 17 + 12;
     const x = Math.min(Math.max(point.x - boxWidth / 2, plot.x), plot.x + plot.width - boxWidth);
-    return { x, y: plot.y + 6, width: boxWidth, height, lines };
+    return { x, y: plot.y + 6, width: boxWidth, height, rows };
   });
 
   return {
@@ -56,7 +61,7 @@ export function useNearestHover(options: NearestHoverOptions): NearestHover {
       const bounds = element.getBoundingClientRect();
       const ratio = options.viewWidth() / (bounds.width || 1);
       const x = (event.clientX - bounds.left) * ratio;
-      hoveredIndex.set(nearestIndex(points.map((point) => point.x), x));
+      hoveredIndex.set(nearestIndex(points.map((p) => p.x), x));
     },
     clear(): void {
       hoveredIndex.set(-1);

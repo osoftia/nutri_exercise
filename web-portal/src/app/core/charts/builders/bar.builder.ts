@@ -7,6 +7,7 @@ import { buildTicks, niceCeil } from '../geometry/ticks';
 import {
   AxisTick,
   ChartFrame,
+  ChartInsight,
   ChartPadding,
   DataPoint,
   Point,
@@ -28,6 +29,7 @@ export interface BarRect {
   centerX: number;
   date: string;
   value: number;
+  insights?: ChartInsight;
 }
 
 export interface BarChartLayout {
@@ -64,6 +66,7 @@ export function buildBarChartLayout(
       centerX: round2(band.center(index)),
       date: point.date,
       value: point.value,
+      insights: point.insights,
     };
   });
 
