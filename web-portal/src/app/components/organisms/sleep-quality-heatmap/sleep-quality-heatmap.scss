@@ -1,0 +1,36 @@
+@use '../../charts/styles/metric-chart';
+
+.metric-chart__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-overline);
+  text-transform: uppercase;
+  color: var(--color-text-low);
+}
+
+.metric-chart__legend-cell {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+}
+
+.metric-chart__legend-cell[data-level='0'] {
+  background-color: var(--color-border);
+  opacity: 0.35;
+}
+.metric-chart__legend-cell[data-level='1'] {
+  background-color: color-mix(in srgb, var(--color-success) 28%, var(--color-border));
+}
+.metric-chart__legend-cell[data-level='2'] {
+  background-color: color-mix(in srgb, var(--color-success) 50%, var(--color-border));
+}
+.metric-chart__legend-cell[data-level='3'] {
+  background-color: color-mix(in srgb, var(--color-success) 72%, var(--color-border));
+}
+.metric-chart__legend-cell[data-level='4'] {
+  background-color: var(--color-success);
+}

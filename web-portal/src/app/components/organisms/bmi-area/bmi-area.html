@@ -1,0 +1,62 @@
+<figure class="metric-chart">
+  <div class="metric-chart__head">
+    <div class="metric-chart__heading">
+      <h3 class="metric-chart__title">{{ 'metrics.bmi.title' | translate }}</h3>
+      <span class="metric-chart__meta">{{ 'metrics.bmi.meta' | translate }}</span>
+    </div>
+    <chart-legend [items]="legend" />
+  </div>
+
+  <div class="metric-chart__canvas">
+    @if (layout(); as chart) {
+      <svg
+        class="metric-chart__svg"
+        [attr.viewBox]="'0 0 ' + chart.frame.width + ' ' + chart.frame.height"
+        role="img"
+        [attr.aria-label]="'metrics.bmi.aria' | translate"
+      >
+        <g chartGrid [plot]="chart.frame.plot" [yTicks]="chart.yTicks"></g>
+        <g chartReferenceBands [plot]="chart.frame.plot" [bands]="chart.bands"></g>
+
+        @if (chart.area; as area) {
+          <path class="metric-chart__area" [attr.d]="area"></path>
+        }
+
+        @for (series of chart.series; track series.id) {
+          <polyline
+            class="metric-chart__line"
+            [attr.points]="polyline(series.points)"
+          ></polyline>
+        }
+
+        <g chartAxisY [plot]="chart.frame.plot" [ticks]="chart.yTicks"></g>
+        <g chartAxisX [plot]="chart.frame.plot" [ticks]="chart.xTicks"></g>
+
+        <rect
+          class="metric-chart__hit"
+          [attr.x]="chart.frame.plot.x"
+          [attr.y]="chart.frame.plot.y"
+          [attr.width]="chart.frame.plot.width"
+          [attr.height]="chart.frame.plot.height"
+          tabindex="0"
+          (mousemove)="hover.onMove($event)"
+          (mouseleave)="hover.clear()"
+          (blur)="hover.clear()"
+        ></rect>
+
+        @if (hover.tooltip(); as tip) {
+          <g
+            chartTooltip
+            [x]="tip.x"
+            [y]="tip.y"
+            [width]="tip.width"
+            [height]="tip.height"
+            [lines]="tip.lines"
+          ></g>
+        }
+      </svg>
+    } @else {
+      <p class="metric-chart__empty">{{ 'metrics.empty' | translate }}</p>
+    }
+  </div>
+</figure>

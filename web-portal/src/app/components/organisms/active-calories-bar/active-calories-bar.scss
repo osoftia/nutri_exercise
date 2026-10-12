@@ -1,0 +1,6 @@
+@use '../../charts/styles/metric-chart';
+
+.metric-chart__bar {
+  fill: var(--color-block-primary);
+  fill-opacity: 0.85;
+}

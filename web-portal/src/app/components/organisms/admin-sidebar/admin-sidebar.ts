@@ -26,6 +26,11 @@ export class AdminSidebar {
       icon: 'trend-up',
       link: '/clinical-evolution',
     },
+    {
+      label: 'nav.healthMetrics',
+      icon: 'dashboard',
+      link: '/health-metrics',
+    },
     { label: 'nav.routines', icon: 'workout', link: '/routine-board' },
     { label: 'nav.nutrition', icon: 'nutrition', link: '/history' },
     { label: 'nav.schedule', icon: 'schedule', link: '/history' },

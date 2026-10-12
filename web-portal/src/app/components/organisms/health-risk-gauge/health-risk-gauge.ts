@@ -1,6 +1,7 @@
-import { Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { buildGaugeArc } from '../../../core/charts/geometry/gauge';
 import { HealthRiskLevel } from '../../../core/models/clinical-evolution.model';
 import { ClinicalEvolutionStore } from '../../../core/stores/clinical-evolution.store';
 
@@ -23,6 +24,7 @@ const RISK_LABEL_KEYS: Record<HealthRiskLevel, string> = {
   imports: [TranslatePipe],
   templateUrl: './health-risk-gauge.html',
   styleUrl: './health-risk-gauge.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HealthRiskGauge {
   private readonly store = inject(ClinicalEvolutionStore);
@@ -32,8 +34,6 @@ export class HealthRiskGauge {
   readonly level = this.store.riskLevel;
   readonly levelLabelKey = computed(() => RISK_LABEL_KEYS[this.level()]);
   readonly color = computed(() => RISK_COLORS[this.level()]);
-  readonly circumference = 2 * Math.PI * GAUGE_RADIUS;
-  readonly dashOffset = computed(
-    () => this.circumference * (1 - Math.min(Math.max(this.score(), 0), 100) / 100),
-  );
+  readonly circumference = buildGaugeArc(0, GAUGE_RADIUS).circumference;
+  readonly dashOffset = computed(() => buildGaugeArc(this.score(), GAUGE_RADIUS).dashOffset);
 }

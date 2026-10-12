@@ -51,7 +51,7 @@ describe('app routes', () => {
   it('places all workspace pages under the sidebar layout', () => {
     const childPaths = layoutRoute?.children?.map((route) => route.path);
     expect(childPaths).toEqual(expect.arrayContaining([
-      'history', 'analytics', 'clinical-evolution', 'routine-board', 'rag-lab', 'rag-ingest', 'health-ai', 'settings',
+      'history', 'analytics', 'clinical-evolution', 'health-metrics', 'routine-board', 'rag-lab', 'rag-ingest', 'health-ai', 'settings',
     ]));
     expect(layoutRoute?.component).toBe(MainLayout);
   });

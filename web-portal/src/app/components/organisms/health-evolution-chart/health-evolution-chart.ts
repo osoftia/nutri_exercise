@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { ChartBand } from '../../../core/models/clinical-evolution.model';
@@ -17,6 +17,7 @@ interface ChartTooltip {
   imports: [TranslatePipe],
   templateUrl: './health-evolution-chart.html',
   styleUrl: './health-evolution-chart.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HealthEvolutionChart {
   readonly store = inject(ClinicalEvolutionStore);

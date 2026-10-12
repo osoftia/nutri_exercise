@@ -20,6 +20,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'health-metrics',
+        loadComponent: () =>
+          import('./pages/health-metrics/health-metrics.page').then((m) => m.HealthMetricsPage),
+      },
+      {
         path: 'rag-lab',
         loadComponent: () => import('./components/organisms/prompt-lab/prompt-lab').then((m) => m.PromptLab),
       },

@@ -1,0 +1,80 @@
+<figure class="metric-chart">
+  <div class="metric-chart__head">
+    <div class="metric-chart__heading">
+      <h3 class="metric-chart__title">{{ 'metrics.sleep.title' | translate }}</h3>
+      <span class="metric-chart__meta">{{ 'metrics.sleep.meta' | translate }}</span>
+    </div>
+    <div class="metric-chart__legend">
+      <span>{{ 'sleep.low' | translate }}</span>
+      @for (level of levels; track level) {
+        <span class="metric-chart__legend-cell" [attr.data-level]="level"></span>
+      }
+      <span>{{ 'sleep.high' | translate }}</span>
+    </div>
+  </div>
+
+  <div class="metric-chart__canvas">
+    @if (layout(); as chart) {
+      <svg
+        class="metric-chart__svg"
+        [attr.viewBox]="'0 0 ' + chart.frame.width + ' ' + chart.frame.height"
+        role="img"
+        [attr.aria-label]="'metrics.sleep.aria' | translate"
+      >
+        @for (day of weekdays; track day; let row = $index) {
+          <text
+            class="metric-chart__heatmap-label"
+            [attr.x]="chart.frame.plot.x - 10"
+            [attr.y]="chart.frame.plot.y + row * chart.cellHeight + chart.cellHeight / 2 + 4"
+            text-anchor="end"
+          >{{ day | translate }}</text>
+        }
+
+        @for (cell of chart.cells; track cell.date) {
+          <rect
+            class="metric-chart__heatmap-cell"
+            [attr.data-level]="cell.level"
+            [attr.x]="cell.x"
+            [attr.y]="cell.y"
+            [attr.width]="cell.width"
+            [attr.height]="cell.height"
+          ></rect>
+        }
+
+        @for (label of chart.columnLabels; track label.column) {
+          <text
+            class="metric-chart__heatmap-label"
+            [attr.x]="label.x"
+            [attr.y]="chart.frame.plot.y + chart.frame.plot.height + 18"
+            text-anchor="middle"
+          >{{ label.label }}</text>
+        }
+
+        <rect
+          class="metric-chart__hit"
+          [attr.x]="chart.frame.plot.x"
+          [attr.y]="chart.frame.plot.y"
+          [attr.width]="chart.frame.plot.width"
+          [attr.height]="chart.frame.plot.height"
+          tabindex="0"
+          (mousemove)="onMove($event)"
+          (mouseleave)="clear()"
+          (blur)="clear()"
+        ></rect>
+
+        @if (tooltip(); as tip) {
+          <g
+            chartTooltip
+            [x]="tip.x"
+            [y]="tip.y"
+            [width]="tip.width"
+            [height]="tip.height"
+            [lines]="tip.lines"
+          ></g>
+        }
+      </svg>
+    } @else {
+      <p class="metric-chart__empty">{{ 'metrics.empty' | translate }}</p>
+    }
+  </div>
+</figure>

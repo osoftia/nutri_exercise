@@ -1,0 +1,64 @@
+<figure class="metric-chart">
+  <div class="metric-chart__head">
+    <div class="metric-chart__heading">
+      <h3 class="metric-chart__title">{{ 'metrics.calories.title' | translate }}</h3>
+      <span class="metric-chart__meta">{{ 'metrics.calories.meta' | translate }}</span>
+    </div>
+    <chart-legend [items]="legend" />
+  </div>
+
+  <div class="metric-chart__canvas">
+    @if (layout(); as chart) {
+      <svg
+        class="metric-chart__svg"
+        [attr.viewBox]="'0 0 ' + chart.frame.width + ' ' + chart.frame.height"
+        role="img"
+        [attr.aria-label]="'metrics.calories.aria' | translate"
+      >
+        <g chartGrid [plot]="chart.frame.plot" [yTicks]="chart.yTicks"></g>
+
+        @for (bar of chart.bars; track bar.date) {
+          <rect
+            class="metric-chart__bar"
+            [attr.x]="bar.x"
+            [attr.y]="bar.y"
+            [attr.width]="bar.width"
+            [attr.height]="bar.height"
+          ></rect>
+        }
+
+        @if (chart.rollingLine; as rolling) {
+          <polyline class="metric-chart__rolling" [attr.points]="rolling"></polyline>
+        }
+
+        <g chartAxisY [plot]="chart.frame.plot" [ticks]="chart.yTicks"></g>
+        <g chartAxisX [plot]="chart.frame.plot" [ticks]="chart.xTicks"></g>
+
+        <rect
+          class="metric-chart__hit"
+          [attr.x]="chart.frame.plot.x"
+          [attr.y]="chart.frame.plot.y"
+          [attr.width]="chart.frame.plot.width"
+          [attr.height]="chart.frame.plot.height"
+          tabindex="0"
+          (mousemove)="hover.onMove($event)"
+          (mouseleave)="hover.clear()"
+          (blur)="hover.clear()"
+        ></rect>
+
+        @if (hover.tooltip(); as tip) {
+          <g
+            chartTooltip
+            [x]="tip.x"
+            [y]="tip.y"
+            [width]="tip.width"
+            [height]="tip.height"
+            [lines]="tip.lines"
+          ></g>
+        }
+      </svg>
+    } @else {
+      <p class="metric-chart__empty">{{ 'metrics.empty' | translate }}</p>
+    }
+  </div>
+</figure>
