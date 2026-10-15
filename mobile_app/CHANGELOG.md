@@ -13,6 +13,11 @@ The mobile app is a **Flutter** application designed for a resilient, offline-fi
 - **Interactive UI**: vector-based interactive body map with custom hit-testing and gym-themed styling.
 - **Design system**: design tokens and atomic UI scaffolding for consistent, reusable components.
 
+
+## [2026-10-14]
+
+- \`0f9b8c0\` chore(m63): sync health-sync API, admin log viewer, file logging, CI workflow and green test suite
+
 ## [2026-08-14]
 
 ### Added

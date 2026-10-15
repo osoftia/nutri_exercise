@@ -26,6 +26,11 @@ The backend is a **Clean Architecture** solution built on **ASP.NET Core** (.NET
 
 
 
+
+## [2026-10-14]
+
+- \`0f9b8c0\` chore(m63): sync health-sync API, admin log viewer, file logging, CI workflow and green test suite
+
 ## [2026-09-15]
 
 - \`dd7e5b4\` feat(m50): RAG contracts, /api/rag/query endpoint, CORS and health checks
