@@ -1,0 +1,146 @@
+<div class="log-viewer">
+  <app-admin-sidebar />
+
+  <div class="log-viewer__body">
+    <app-top-navbar />
+
+    <main class="log-viewer__content">
+      <header class="log-viewer__header">
+        <h1 class="log-viewer__title">Application Logs</h1>
+        <p class="log-viewer__subtitle">
+          Structured Serilog entries read from the server&apos;s Logs/ directory
+        </p>
+      </header>
+
+      <section class="log-viewer__filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Level</mat-label>
+          <mat-select
+            [value]="logLevel()"
+            (selectionChange)="logLevel.set($event.value)"
+          >
+            @for (level of levels; track level) {
+              <mat-option [value]="level">{{ level }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tag / error type</mat-label>
+          <input
+            matInput
+            [value]="tag()"
+            (input)="tag.set($any($event.target).value)"
+            placeholder="[RAG-ERROR]"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>From</mat-label>
+          <input
+            matInput
+            type="date"
+            [value]="startDate()"
+            (change)="startDate.set($any($event.target).value)"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>To</mat-label>
+          <input
+            matInput
+            type="date"
+            [value]="endDate()"
+            (change)="endDate.set($any($event.target).value)"
+          />
+        </mat-form-field>
+
+        <div class="log-viewer__filter-actions">
+          <button mat-flat-button color="primary" type="button" (click)="applyFilters()">
+            Apply
+          </button>
+          <button mat-stroked-button type="button" (click)="resetFilters()">
+            Reset
+          </button>
+        </div>
+      </section>
+
+      @if (loading()) {
+        <div class="log-viewer__loading">
+          <mat-spinner diameter="40" />
+        </div>
+      } @else {
+        <div class="log-viewer__table-wrap">
+          <table class="log-viewer__table">
+            <thead>
+              <tr>
+                <th class="log-viewer__th">Time</th>
+                <th class="log-viewer__th">Level</th>
+                <th class="log-viewer__th">Source</th>
+                <th class="log-viewer__th">Message</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (log of logs(); track $index) {
+                <tr class="log-viewer__row" (click)="toggleRow($index)">
+                  <td class="log-viewer__time">{{ log.timestamp | date: 'short' }}</td>
+                  <td>
+                    <span [class]="levelClass(log.level)">{{ log.level }}</span>
+                  </td>
+                  <td class="log-viewer__source">{{ log.sourceFile }}</td>
+                  <td class="log-viewer__message">{{ log.message }}</td>
+                </tr>
+                @if (expandedIndex() === $index) {
+                  <tr class="log-viewer__detail-row">
+                    <td colspan="4">
+                      @if (log.exception) {
+                        <pre class="log-viewer__exception">{{ log.exception }}</pre>
+                      } @else {
+                        <p class="log-viewer__no-exception">
+                          No exception detail for this entry.
+                        </p>
+                      }
+                    </td>
+                  </tr>
+                }
+              } @empty {
+                <tr>
+                  <td class="log-viewer__empty" colspan="4">
+                    No log entries match your filters.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <footer class="log-viewer__pagination">
+          <span class="log-viewer__range">
+            Showing {{ rangeStart() }}–{{ rangeEnd() }} of {{ totalCount() }}
+          </span>
+          <div class="log-viewer__pager">
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="pageNumber() <= 1"
+              (click)="goToPage(pageNumber() - 1)"
+            >
+              Previous
+            </button>
+            <span class="log-viewer__page">
+              Page {{ pageNumber() }} of {{ totalPages() }}
+            </span>
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="pageNumber() >= totalPages()"
+              (click)="goToPage(pageNumber() + 1)"
+            >
+              Next
+            </button>
+          </div>
+        </footer>
+      }
+    </main>
+  </div>
+</div>

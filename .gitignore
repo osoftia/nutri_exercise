@@ -1,54 +1,139 @@
-# macOS
+# =========================================================
+# NutriExercise - Monorepo (.NET 8 + Angular) .gitignore
+# =========================================================
+
+# -----------------------------
+# OS - macOS
+# -----------------------------
 .DS_Store
-*.swp
 .AppleDouble
 .LSOverride
 ._*
+.Spotlight-V100
+.Trashes
 
+# -----------------------------
+# OS - Windows
+# -----------------------------
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.stackdump
+
+# -----------------------------
+# IDE - VS Code / Visual Studio / Rider
+# -----------------------------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.idea/
+*.sln.docstates
+*.user
+*.suo
+*.userprefs
+*.DotSettings.user
+*.code-workspace
+
+# -----------------------------
+# .NET / C#
+# -----------------------------
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+build/
+bld/
+artifacts/
+publish/
+*.dll
+*.pdb
+*.cache
+*.tlog
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+project.lock.json
+project.fragment.lock.json
+
+# Reqnroll / SpecFlow auto-generated feature code-behind
+**/*.feature.cs
+
+# -----------------------------
 # Node / Angular
+# -----------------------------
 node_modules/
 dist/
+dist-ssr/
 tmp/
+out-tsc/
 .vite/
+.angular/
+coverage/
+.npm/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
+# -----------------------------
 # Flutter / Dart
+# -----------------------------
 .dart_tool/
-build/
 .flutter-plugins
 .flutter-plugins-dependencies
 *.iml
 
-# .NET / C#
-bin/
-obj/
-*.user
+# -----------------------------
+# Docker database volumes
+# -----------------------------
+**/pgdata/
+**/postgres-data/
+**/db-data/
+**/docker-data/
+**/volumes/
+docker-compose.override.yml
 
+# -----------------------------
 # Environments / Secrets
+# -----------------------------
 .env
 .env.*
 !.env.example
-PROMPT*.txt
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.Local.json
+secrets.json
+*.pfx
+*.p12
 
-# IDE
-.idea/
-.vscode/*
-!.vscode/extensions.json
-*.code-workspace
-
+# -----------------------------
 # Logs
+# -----------------------------
 *.log
-!docs/*_execution_changes.log
 npm-debug.log*
 **/Logs/
+!docs/*_execution_changes.log
 
-# Prompt files (root-level only, keep source files like PromptLab* tracked)
-/PROMPT*
-
-# Reqnroll auto-generated code-behind
-**/*.feature.cs
-
+# -----------------------------
 # Local database backups and config
+# -----------------------------
 backend/*.sql
 backend/*.backup
 backend/.config/
 backend/docker-compose.yaml
+
+# -----------------------------
+# Prompt files (root-level only)
+# -----------------------------
+/PROMPT*
+PROMPT*.txt

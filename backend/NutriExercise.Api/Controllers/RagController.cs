@@ -1,6 +1,7 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using NutriExercise.Core.Configuration;
 using NutriExercise.Core.DTOs;
+using NutriExercise.Core.Interfaces;
 
 namespace NutriExercise.Api.Controllers;
 
@@ -8,30 +9,92 @@ namespace NutriExercise.Api.Controllers;
 [Route("api/[controller]")]
 public class RagController : ControllerBase
 {
+    private readonly IRagOrchestrator _orchestrator;
+    private readonly IUserRepository _userRepository;
+    private readonly IRagLogger _ragLogger;
+
+    public RagController(
+        IRagOrchestrator orchestrator,
+        IUserRepository userRepository,
+        IRagLogger ragLogger)
+    {
+        ArgumentNullException.ThrowIfNull(orchestrator);
+        ArgumentNullException.ThrowIfNull(userRepository);
+        ArgumentNullException.ThrowIfNull(ragLogger);
+
+        _orchestrator = orchestrator;
+        _userRepository = userRepository;
+        _ragLogger = ragLogger;
+    }
+
     [HttpPost("query")]
-    public IActionResult Query([FromBody] RagRequest request)
+    public async Task<IActionResult> Query(
+        [FromBody] RagRequest request,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var stopwatch = Stopwatch.StartNew();
+        var userId = await ResolveUserIdAsync(request.UserId, cancellationToken);
 
-        var retrievedContexts = new List<string>
-        {
-            "ACSM: at least 10 weekly sets per muscle group for hypertrophy.",
-            "NIH: 2 to 3 minutes of rest between sets maximizes myofibrillar growth."
-        };
+        var response = await _orchestrator.ExecuteQueryAsync(request, cancellationToken);
 
-        var pgVectorScores = new List<double> { 0.92, 0.87 };
-
-        var generatedText = "Mocked RAG response: build volume progressively and keep protein high.";
-
-        stopwatch.Stop();
-
-        var response = new RagResponse(
-            generatedText,
-            retrievedContexts,
-            new TelemetryData(stopwatch.ElapsedMilliseconds, pgVectorScores));
+        _ragLogger.LogInfo(
+            "Query executed. UserId={UserId}, LatencyMs={LatencyMs}, Contexts={ContextCount}.",
+            userId,
+            response.Telemetry.LatencyMs,
+            response.RetrievedContexts.Count);
 
         return Ok(response);
+    }
+
+    [HttpPost("ingest")]
+    public async Task<IActionResult> Ingest(
+        [FromBody] RagIngestRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (string.IsNullOrWhiteSpace(request.Title) ||
+            string.IsNullOrWhiteSpace(request.Content) ||
+            string.IsNullOrWhiteSpace(request.BodyZone))
+        {
+            return BadRequest("Title, Content, and BodyZone are required.");
+        }
+
+        var userId = await ResolveUserIdAsync(request.UserId, cancellationToken);
+
+        var response = await _orchestrator.IngestAsync(
+            request,
+            userId,
+            cancellationToken);
+
+        _ragLogger.LogInfo(
+            "Ingest endpoint completed. DocumentId={DocumentId}, UserId={UserId}, BodyZone={BodyZone}.",
+            response.Id,
+            userId,
+            response.BodyZone);
+
+        return Ok(response);
+    }
+
+    private async Task<int> ResolveUserIdAsync(
+        int? requestedUserId,
+        CancellationToken cancellationToken)
+    {
+        if (requestedUserId.HasValue && requestedUserId.Value > 0)
+        {
+            var user = await _userRepository.GetByIdAsync(
+                requestedUserId.Value,
+                cancellationToken);
+
+            if (user is not null)
+            {
+                return user.Id;
+            }
+        }
+
+        var defaultUser = await _userRepository.EnsureSeedUserAsync(cancellationToken);
+
+        return defaultUser.Id;
     }
 }

@@ -11,15 +11,30 @@ public class KnowledgeController : ControllerBase
 {
     private readonly IAiService _aiService;
     private readonly IResearchDocumentRepository _researchDocumentRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IRagLogger _ragLogger;
 
-    public KnowledgeController(IAiService aiService, IResearchDocumentRepository researchDocumentRepository)
+    public KnowledgeController(
+        IAiService aiService,
+        IResearchDocumentRepository researchDocumentRepository,
+        IUserRepository userRepository,
+        IRagLogger ragLogger)
     {
+        ArgumentNullException.ThrowIfNull(aiService);
+        ArgumentNullException.ThrowIfNull(researchDocumentRepository);
+        ArgumentNullException.ThrowIfNull(userRepository);
+        ArgumentNullException.ThrowIfNull(ragLogger);
+
         _aiService = aiService;
         _researchDocumentRepository = researchDocumentRepository;
+        _userRepository = userRepository;
+        _ragLogger = ragLogger;
     }
 
     [HttpPost("document")]
-    public async Task<IActionResult> AddDocument([FromBody] AddDocumentRequest request)
+    public async Task<IActionResult> AddDocument(
+        [FromBody] AddDocumentRequest request,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -30,34 +45,64 @@ public class KnowledgeController : ControllerBase
             return BadRequest("Title, Content, and Source are required.");
         }
 
-        var embeddingArray = await _aiService.GenerateEmbeddingAsync(request.Content);
+        var userId = await ResolveUserIdAsync(request.UserId, cancellationToken);
 
-        if (embeddingArray.Length == 0)
+        try
         {
-            return StatusCode(StatusCodes.Status502BadGateway, "Failed to generate embedding.");
+            var embeddingArray = await _aiService.GenerateEmbeddingAsync(
+                request.Content,
+                cancellationToken);
+
+            if (embeddingArray.Length == 0)
+            {
+                return StatusCode(
+                    StatusCodes.Status502BadGateway,
+                    "Failed to generate embedding.");
+            }
+
+            var document = new ResearchDocument
+            {
+                Id = Guid.NewGuid(),
+                Title = request.Title,
+                Content = request.Content,
+                Source = request.Source,
+                BodyZone = "General",
+                UserId = userId,
+                Embedding = new Vector(embeddingArray)
+            };
+
+            await _researchDocumentRepository.AddDocumentAsync(
+                document,
+                cancellationToken);
+
+            _ragLogger.LogInfo(
+                "Vector inserted. DocumentId={DocumentId}, UserId={UserId}, Dimensions={Dimensions}.",
+                document.Id,
+                userId,
+                embeddingArray.Length);
+
+            return Ok(new { Message = "Document ingested successfully.", Id = document.Id });
         }
-
-        var document = new ResearchDocument
+        catch (Exception ex)
         {
-            Id = Guid.NewGuid(),
-            Title = request.Title,
-            Content = request.Content,
-            Source = request.Source,
-            Embedding = new Vector(embeddingArray)
-        };
+            _ragLogger.LogError(
+                ex,
+                "Document ingestion failed for UserId={UserId}.",
+                userId);
 
-        await _researchDocumentRepository.AddDocumentAsync(document);
-
-        return Ok(new { Message = "Document ingested successfully.", Id = document.Id });
+            throw;
+        }
     }
 
     [HttpPost("seed")]
-    public async Task<IActionResult> Seed()
+    public async Task<IActionResult> Seed(CancellationToken cancellationToken = default)
     {
-        if (await _researchDocumentRepository.HasDocumentsAsync())
+        if (await _researchDocumentRepository.HasDocumentsAsync(cancellationToken))
         {
             return BadRequest("La base de datos ya contiene documentos.");
         }
+
+        var userId = await ResolveUserIdAsync(null, cancellationToken);
 
         var documents = new[]
         {
@@ -66,24 +111,71 @@ public class KnowledgeController : ControllerBase
             new { Title = "Nutritional Supplements Evidence 2025", Source = "PubMed Morphology", Content = "Para hipertrofia, la ingesta de proteína óptima es de 1.6 g a 2.2 g por kilogramo de peso corporal al día. La creatina monohidrato (5g diarios) actúa como amplificador celular, mientras que el HMB es condicional." }
         };
 
-        foreach (var item in documents)
+        try
         {
-            var vectorArray = await _aiService.GenerateEmbeddingAsync(item.Content);
-
-            var doc = new ResearchDocument
+            foreach (var item in documents)
             {
-                Id = Guid.NewGuid(),
-                Title = item.Title,
-                Content = item.Content,
-                Source = item.Source,
-                Embedding = new Vector(vectorArray)
-            };
+                var vectorArray = await _aiService.GenerateEmbeddingAsync(
+                    item.Content,
+                    cancellationToken);
 
-            await _researchDocumentRepository.AddDocumentAsync(doc);
+                var doc = new ResearchDocument
+                {
+                    Id = Guid.NewGuid(),
+                    Title = item.Title,
+                    Content = item.Content,
+                    Source = item.Source,
+                    BodyZone = "General",
+                    UserId = userId,
+                    Embedding = new Vector(vectorArray)
+                };
+
+                await _researchDocumentRepository.AddDocumentAsync(doc, cancellationToken);
+
+                _ragLogger.LogInfo(
+                    "Vector inserted. DocumentId={DocumentId}, UserId={UserId}, Dimensions={Dimensions}.",
+                    doc.Id,
+                    userId,
+                    vectorArray.Length);
+            }
+        }
+        catch (Exception ex)
+        {
+            _ragLogger.LogError(
+                ex,
+                "Knowledge seeding failed for UserId={UserId}.",
+                userId);
+
+            throw;
         }
 
         return Ok("Conocimiento científico inyectado correctamente.");
     }
+
+    private async Task<int> ResolveUserIdAsync(
+        int? requestedUserId,
+        CancellationToken cancellationToken)
+    {
+        if (requestedUserId.HasValue && requestedUserId.Value > 0)
+        {
+            var user = await _userRepository.GetByIdAsync(
+                requestedUserId.Value,
+                cancellationToken);
+
+            if (user is not null)
+            {
+                return user.Id;
+            }
+        }
+
+        var defaultUser = await _userRepository.EnsureSeedUserAsync(cancellationToken);
+
+        return defaultUser.Id;
+    }
 }
 
-public record AddDocumentRequest(string Title, string Content, string Source);
+public record AddDocumentRequest(
+    string Title,
+    string Content,
+    string Source,
+    int? UserId = null);

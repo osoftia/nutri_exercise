@@ -10,6 +10,13 @@ export const routes: Routes = [
         (m) => m.AnalyticsPage,
       ),
   },
+  {
+    path: 'logs',
+    loadComponent: () =>
+      import('./pages/log-viewer/log-viewer.component').then(
+        (m) => m.LogViewerComponent,
+      ),
+  },
   { path: 'admin-dashboard', redirectTo: '/history', pathMatch: 'full' },
   { path: '', redirectTo: '/history', pathMatch: 'full' },
 ];

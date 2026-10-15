@@ -1,0 +1,75 @@
+name: Backend .NET CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/dotnet-ci.yml'
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/dotnet-ci.yml'
+
+concurrency:
+  group: dotnet-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Restore, Build, Test & Package
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    env:
+      DOTNET_NOLOGO: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore NutriExercise.sln
+
+      - name: Build solution
+        run: dotnet build NutriExercise.sln --no-restore --configuration Release
+
+      - name: Run unit tests
+        run: >
+          dotnet test NutriExercise.Tests/NutriExercise.Tests.csproj
+          --no-build --configuration Release --verbosity normal
+          --logger "trx;LogFileName=unit-tests.trx"
+          --results-directory ./TestResults
+
+      - name: Run BDD (Reqnroll/Gherkin) tests
+        run: >
+          dotnet test NutriExercise.Specs/NutriExercise.Specs.csproj
+          --no-build --configuration Release --verbosity normal
+          --logger "trx;LogFileName=bdd-tests.trx"
+          --results-directory ./TestResults
+
+      - name: Publish API
+        run: >
+          dotnet publish NutriExercise.Api/NutriExercise.Api.csproj
+          --no-build --configuration Release -o ./publish
+          /p:UseAppHost=false
+
+      - name: Upload validated build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-backend-build
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            backend/publish/
+            backend/TestResults/
+            backend/NutriExercise.Specs/Features/**

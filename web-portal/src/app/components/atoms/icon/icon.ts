@@ -4,6 +4,7 @@ export type IconName =
   | 'dashboard'
   | 'history'
   | 'analytics'
+  | 'logs'
   | 'workout'
   | 'nutrition'
   | 'schedule'

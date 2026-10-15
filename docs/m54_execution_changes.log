@@ -1,0 +1,146 @@
+# M54 Execution Changes Log — Default User, RAG Ingestion & Tagged Logging
+
+> **Milestone:** 54 — DB seed, RAG document ingestion and tagged logging
+> **Prompt:** `PROMPT-BACKEND-DB-RAG-USER-54.txt`
+> **Role:** @Coder (Clean Architecture, EF Core, structured logging)
+
+## 1. Summary
+
+Closed the RAG feature loop requested by prompt 54:
+
+1. A default test user (`Id = 1`, `Name = 'Test User'`,
+   `Email = 'test@nutriexercise.local'`) is guaranteed to exist on startup.
+2. A new document ingestion endpoint `POST /api/rag/ingest` accepts
+   `Title`, `Content` and `BodyZone`, generates an embedding, stores it through
+   pgvector and associates the row with the default test user.
+3. Both `/api/rag/query` and `/api/rag/ingest` resolve to `UserId = 1` when no
+   explicit `UserId`/auth token is supplied.
+4. All RAG events are emitted through `IRagLogger` with the explicit
+   `[RAG-INFO]:` / `[RAG-ERROR]:` prefixes.
+5. Code is production-ready: DI-complete, analyzer-clean and covered by tests.
+
+## 2. Baseline state found
+
+The working tree already contained the pieces delivered by prompts 50/51:
+
+- `DefaultUser`, `IUserRepository`/`UserRepository.EnsureSeedUserAsync` and
+  `DbInitializer.InitializeAsync` (seeded the default user and ran migrations).
+- `RagLogger` emitting `[RAG-INFO]:` / `[RAG-ERROR]:` through
+  `ILogger<RagLogger>`.
+- `RealRagOrchestrator` / `MockRagOrchestrator` behind the `UseMockMode` toggle,
+  plus `POST /api/rag/query` with default-user resolution.
+
+Gaps addressed here:
+
+- `ResearchDocument` had **no ownership or body-zone fields**, so ingestion could
+  not associate a document with the user or classify it by body zone.
+- There was **no `/api/rag/ingest` endpoint** on `RagController`; the only
+  ingestion path was `KnowledgeController` and it discarded the resolved user.
+- `IRagOrchestrator` only exposed `ExecuteQueryAsync`.
+
+## 3. Files modified
+
+### `NutriExercise.Core/Entities/ResearchDocument.cs`
+Added `string BodyZone` (default `string.Empty`) and `int UserId` so documents
+carry their anatomical region and owner.
+
+### `NutriExercise.Core/DTOs/RagContracts.cs`
+Added the ingestion contract:
+
+```csharp
+public record RagIngestRequest(
+    string Title,
+    string Content,
+    string BodyZone,
+    int? UserId = null);
+
+public record RagIngestResponse(
+    Guid Id,
+    string Title,
+    string BodyZone,
+    int UserId,
+    int Dimensions,
+    string Message);
+```
+
+`UserId` is optional in the request so the controller can fall back to the
+default user when no authentication token is present.
+
+### `NutriExercise.Core/Interfaces/IRagOrchestrator.cs`
+Added `IngestAsync(RagIngestRequest, int userId, CancellationToken)` so the
+mock/real strategy toggle governs ingestion as well as querying.
+
+### `NutriExercise.Infrastructure/Services/RealRagOrchestrator.cs`
+- Injects `IAiService` (embeddings) and `IResearchDocumentRepository` (persistence).
+- `IngestAsync` generates the embedding, rejects empty embeddings with an
+  `InvalidOperationException`, builds a `ResearchDocument` owned by `userId`
+  with the supplied `BodyZone`, persists it, and logs the successful insertion:
+
+  ```
+  [RAG-INFO]: Vector inserted. DocumentId=…, UserId=…, BodyZone=…, Dimensions=…
+  ```
+
+  Failures (e.g. pgvector/DB exceptions) are logged via
+  `[RAG-ERROR]: Document ingestion failed. …` and rethrown so the global
+  exception middleware returns a 500.
+
+### `NutriExercise.Infrastructure/Services/MockRagOrchestrator.cs`
+Added the offline `IngestAsync` counterpart returning a deterministic
+`RagIngestResponse` and an informational log, keeping the toggle symmetrical.
+
+### `NutriExercise.Api/Controllers/RagController.cs`
+Added `POST /api/rag/ingest`:
+
+- Validates `Title`, `Content` and `BodyZone` (400 when any is blank).
+- Resolves the effective user via the shared `ResolveUserIdAsync` helper
+  (existing user when a valid `UserId` is supplied, otherwise the seeded
+  default user `Id = 1`).
+- Delegates to `IRagOrchestrator.IngestAsync` and logs the endpoint completion
+  with `[RAG-INFO]:`.
+
+### `NutriExercise.Api/Controllers/KnowledgeController.cs`
+Both the single-document and bulk-seed paths now persist `UserId = <resolved>`
+and `BodyZone = "General"` instead of discarding the resolved user.
+
+## 4. Database migration
+
+`dotnet ef migrations add AddDocumentOwnershipAndBodyZone` produced
+`20260921144114_AddDocumentOwnershipAndBodyZone`:
+
+- `ResearchDocuments.BodyZone` (`text`, not null, default `''`).
+- `ResearchDocuments.UserId` (`integer`, not null, default `0`).
+- A backfill `UPDATE "ResearchDocuments" SET "UserId" = 1 WHERE "UserId" = 0;`
+  so documents seeded before this milestone are owned by the default user.
+
+The model snapshot was regenerated automatically.
+
+## 5. Tests
+
+Added to `NutriExercise.Tests`:
+
+- `RagControllerTests` — valid ingest delegates to the orchestrator and returns
+  200; missing `UserId` associates the default test user; explicit `UserId`
+  uses the existing user and never seeds; blank `Title`/`Content`/`BodyZone`
+  returns 400 without touching the orchestrator; success logs `[RAG-INFO]`.
+- `RealRagOrchestratorTests` — ingest embeds and persists an owned document,
+  empty embeddings log `[RAG-ERROR]` and skip persistence, null request throws.
+- `MockRagOrchestratorTests` — mock ingest returns the resolved user and a
+  non-empty document id; null request throws.
+
+## 6. Verification status
+
+- `dotnet build NutriExercise.sln` — **0 warnings, 0 errors**.
+- `dotnet test NutriExercise.sln` — **60/60 passing** (45 unit + 15 specs).
+
+## 7. Requirements traceability
+
+| Prompt requirement | Delivered by |
+|---|---|
+| Default test user seeder | `DefaultUser`, `UserRepository.EnsureSeedUserAsync`, `DbInitializer` |
+| `POST /api/rag/ingest` (Title, Content, Body Zone) | `RagController.Ingest`, `RagIngestRequest` |
+| pgvector embedding persistence | `RealRagOrchestrator.IngestAsync` + `ResearchDocument.Embedding` |
+| Associate `UserId = 1` by default | `RagController.ResolveUserIdAsync` |
+| Query/ingest default to `UserId = 1` | shared `ResolveUserIdAsync` on both endpoints |
+| `[RAG-INFO]:` success/telemetry/insert/seed | `RagLogger.LogInfo` call sites |
+| `[RAG-ERROR]:` pgvector/DB/internal errors | `RagLogger.LogError` call sites |
+| Production-ready C# for a local Mac server | Clean Architecture DI, analyzer-clean build |

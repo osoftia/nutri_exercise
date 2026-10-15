@@ -98,6 +98,72 @@ namespace NutriExercise.Infrastructure.Migrations
                     b.ToTable("AiTrainingTraces");
                 });
 
+            modelBuilder.Entity("NutriExercise.Core.Entities.ClinicalDiagnosisReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Conditions")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DiagnosticReport")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MealSuggestions")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ModelUsed")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Preferences")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClinicalDiagnosisReports");
+                });
+
+            modelBuilder.Entity("NutriExercise.Core.Entities.ClinicalMenuPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MenuJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ModelUsed")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClinicalMenuPlans");
+                });
+
             modelBuilder.Entity("NutriExercise.Core.Entities.DailyLogRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -136,6 +202,31 @@ namespace NutriExercise.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DailyLogRecords");
+                });
+
+            modelBuilder.Entity("NutriExercise.Core.Entities.DailySymptomLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActiveConditions")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Symptoms")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DailySymptomLogs");
                 });
 
             modelBuilder.Entity("NutriExercise.Core.Entities.Diet", b =>
@@ -188,11 +279,54 @@ namespace NutriExercise.Infrastructure.Migrations
                     b.ToTable("ErrorLogs");
                 });
 
+            modelBuilder.Entity("NutriExercise.Core.Entities.HealthMetric", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MetricType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("Value")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "MetricType", "Timestamp")
+                        .IsUnique();
+
+                    b.ToTable("HealthMetrics");
+                });
+
             modelBuilder.Entity("NutriExercise.Core.Entities.ResearchDocument", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("BodyZone")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -208,6 +342,9 @@ namespace NutriExercise.Infrastructure.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

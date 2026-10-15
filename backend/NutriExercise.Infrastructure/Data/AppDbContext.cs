@@ -26,10 +26,34 @@ public class AppDbContext : DbContext
 
     public virtual DbSet<ErrorLog> ErrorLogs => Set<ErrorLog>();
 
+    public virtual DbSet<ClinicalDiagnosisReport> ClinicalDiagnosisReports => Set<ClinicalDiagnosisReport>();
+
+    public virtual DbSet<DailySymptomLog> DailySymptomLogs => Set<DailySymptomLog>();
+
+    public virtual DbSet<ClinicalMenuPlan> ClinicalMenuPlans => Set<ClinicalMenuPlan>();
+
+    public virtual DbSet<HealthMetric> HealthMetrics => Set<HealthMetric>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        ArgumentNullException.ThrowIfNull(modelBuilder);
+
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.HasPostgresExtension("vector");
+        modelBuilder.Entity<HealthMetric>(metric =>
+        {
+            metric.Property(m => m.MetricType).HasMaxLength(64).IsRequired();
+            metric.Property(m => m.Unit).HasMaxLength(32).IsRequired();
+            metric.HasIndex(m => new { m.UserId, m.MetricType, m.Timestamp }).IsUnique();
+        });
+
+        if (Database.IsNpgsql())
+        {
+            modelBuilder.HasPostgresExtension("vector");
+            return;
+        }
+
+        // Non-relational/test providers cannot map the pgvector type.
+        modelBuilder.Entity<ResearchDocument>().Ignore(document => document.Embedding);
     }
 }

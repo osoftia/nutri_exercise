@@ -12,5 +12,9 @@ public class ResearchDocument
 
     public string Source { get; set; } = string.Empty;
 
+    public string BodyZone { get; set; } = string.Empty;
+
+    public int UserId { get; set; }
+
     public Vector? Embedding { get; set; }
 }
